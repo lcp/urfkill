@@ -20,10 +20,10 @@
 static GMainLoop *loop = NULL;
 
 /**
- * urfkill_main_acquire_name_on_proxy:
+ * urf_main_acquire_name_on_proxy:
  **/
 static gboolean
-urfkill_main_acquire_name_on_proxy (DBusGProxy *bus_proxy, const gchar *name)
+urf_main_acquire_name_on_proxy (DBusGProxy *bus_proxy, const gchar *name)
 {
 	GError *error = NULL;
 	guint result;
@@ -64,10 +64,10 @@ out:
 } 
 
 /**
- * urfkill_main_sigint_handler:
+ * urf_main_sigint_handler:
  **/
 static void
-urfkill_main_sigint_handler (gint sig)
+urf_main_sigint_handler (gint sig)
 {
 	egg_debug ("Handling SIGINT");
 
@@ -79,12 +79,12 @@ urfkill_main_sigint_handler (gint sig)
 }
 
 /**
- * urfkill_main_timed_exit_cb:
+ * urf_main_timed_exit_cb:
  *
  * Exits the main loop, which is helpful for valgrinding.
  **/
 static gboolean
-urfkill_main_timed_exit_cb (GMainLoop *loop)
+urf_main_timed_exit_cb (GMainLoop *loop)
 {
 	g_main_loop_quit (loop);
 	return FALSE;
@@ -97,7 +97,7 @@ gint
 main (gint argc, gchar **argv)
 {
 	GError *error = NULL;
-	UrfkillDaemon *daemon = NULL
+	UrfDaemon *daemon = NULL
 	GOptionContext *context;
 	DBusGProxy *bus_proxy;
 	DBusGConnection *bus;
@@ -142,22 +142,22 @@ main (gint argc, gchar **argv)
 	}
 
 	/* aquire name */
-        ret = urfkill_main_acquire_name_on_proxy (bus_proxy, URFKILL_SERVICE_NAME);
+        ret = urf_main_acquire_name_on_proxy (bus_proxy, URFKILL_SERVICE_NAME);
 	if (!ret) {
 		egg_warning ("Could not acquire name; bailing out");
 		goto out;
 	}
 
 	/* do stuff on ctrl-c */
-	signal (SIGINT, urfkill_main_sigint_handler);
+	signal (SIGINT, urf_main_sigint_handler);
 
 	egg_debug ("Starting upowerd version %s", PACKAGE_VERSION);
 
 	/* TODO */
 	/* handle everything below */
-	daemon = urfkill_daemon_new ();
+	daemon = urf_daemon_new ();
 	loop = g_main_loop_new (NULL, FALSE);
-	ret = urfkill_daemon_startup (daemon);
+	ret = urf_daemon_startup (daemon);
 	if (!ret) {
 		egg_warning ("Could not startup; bailing out");
 		goto out;
@@ -165,15 +165,15 @@ main (gint argc, gchar **argv)
 
 	/* only timeout and close the mainloop if we have specified it on the command line */
 	if (timed_exit) {
-		timer_id = g_timeout_add_seconds (30, (GSourceFunc) urfkill_main_timed_exit_cb, loop);
+		timer_id = g_timeout_add_seconds (30, (GSourceFunc) urf_main_timed_exit_cb, loop);
 #if GLIB_CHECK_VERSION(2,25,8)
-		g_source_set_name_by_id (timer_id, "[UrfkillMain] idle");
+		g_source_set_name_by_id (timer_id, "[UrfMain] idle");
 #endif
 	}
 
 	/* immediatly exit */
 	if (immediate_exit)
-		g_timeout_add (50, (GSourceFunc) urfkill_main_timed_exit_cb, loop);
+		g_timeout_add (50, (GSourceFunc) urf_main_timed_exit_cb, loop);
 
 	/* wait for input or timeout */
 	g_main_loop_run (loop);

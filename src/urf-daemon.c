@@ -33,11 +33,11 @@
 
 #include "egg-debug.h"
 
-#include "urfkill-polkit.h"
-#include "urfkill-daemon.h"
+//#include "urf-polkit.h"
+#include "urf-daemon.h"
 
-#include "urfkill-daemon-glue.h"
-#include "urfkill-marshal.h"
+#include "urf-daemon-glue.h"
+#include "urf-marshal.h"
 
 enum
 {
@@ -48,35 +48,46 @@ enum
 
 enum
 {
-        SIGNAL_DEVICE_ADDED,
-        SIGNAL_DEVICE_REMOVED,
-        SIGNAL_DEVICE_CHANGED,
         SIGNAL_CHANGED,
         SIGNAL_LAST,
 };
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-struct UrfkillDaemonPrivate
+struct UrfDaemonPrivate
 {
-	DBusGConnection         *connection;
-	DBusGProxy              *proxy;
+	DBusGConnection	*connection;
+	DBusGProxy	*proxy;
 }
 
-static void urfkill_daemon_finalize (GObject *object);
+static void urf_daemon_finalize (GObject *object);
 
-G_DEFINE_TYPE (UrfkillDaemon, urfkill_daemon, G_TYPE_OBJECT)
+G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 
-#define URFKILL_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URFKILL_TYPE_DAEMON, UrfkillDaemonPrivate))
+#define URF_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
+				URF_TYPE_DAEMON, UrfDaemonPrivate))
 
 /**
- * urfkill_daemon_get_property:
+ * urf_daemon_startup:
+ **/
+gboolean
+urf_daemon_startup (UrfDaemon *daemon)
+{
+	gboolean ret;
+	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
+
+	/* TODO */
+	/* start to monitor rfkill interfaces */
+}
+
+/**
+ * urf_daemon_get_property:
  **/
 static void
-urfkill_daemon_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+urf_daemon_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-	UrfkillDaemon *daemon = URFKILL_DAEMON (object);
-	UrfkillDaemonPrivate *priv = GET_PRIVATE (daemon);
+	UrfDaemon *daemon = URF_DAEMON (object);
+	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
@@ -89,10 +100,10 @@ urfkill_daemon_get_property (GObject *object, guint prop_id, GValue *value, GPar
 }
 
 /**
- * urfkill_daemon_set_property:
+ * urf_daemon_set_property:
  **/
 static void
-urfkill_daemon_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+urf_daemon_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
 	switch (prop_id) {
 	default:
@@ -101,17 +112,17 @@ urfkill_daemon_set_property (GObject *object, guint prop_id, const GValue *value
 	}
 }
 /**
- * urfkill_daemon_class_init:
+ * urf_daemon_class_init:
  **/
 static void
-urfkill_daemon_class_init (UpDaemonClass *klass)
+urf_daemon_class_init (UpDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = urfkill_daemon_finalize;
-	object_class->get_property = urfkill_daemon_get_property;
-	object_class->set_property = urfkill_daemon_set_property;
+	object_class->finalize = urf_daemon_finalize;
+	object_class->get_property = urf_daemon_get_property;
+	object_class->set_property = urf_daemon_set_property;
 
-	g_type_class_add_private (klass, sizeof (UrfkillDaemonPrivate));
+	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
 	/* TODO setup signals for dbus */
 
@@ -123,34 +134,34 @@ urfkill_daemon_class_init (UpDaemonClass *klass)
 							      NULL,
 							      G_PARAM_READABLE));
 
-	dbus_g_object_type_install_info (URFKILL_TYPE_DAEMON, &dbus_glib_urfkill_daemon_object_info);
-	dbus_g_error_domain_register (URFKILL_DAEMON_ERROR, NULL, URFKILL_DAEMON_TYPE_ERROR);
+	dbus_g_object_type_install_info (URF_TYPE_DAEMON, &dbus_glib_urf_daemon_object_info);
+	dbus_g_error_domain_register (URF_DAEMON_ERROR, NULL, URF_DAEMON_TYPE_ERROR);
 }
 
 /**
- * urfkill_daemon_finalize:
+ * urf_daemon_finalize:
  **/
 static void
-urfkill_daemon_finalize (GObject *object)
+urf_daemon_finalize (GObject *object)
 {
-	UrfkillDaemon *daemon = URFKILL_DAEMON (object);
-	UrfkillDaemonPrivate *priv = GET_PRIVATE (daemon);
+	UrfDaemon *daemon = URF_DAEMON (object);
+	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
 
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
 	if (priv->connection != NULL)
 		dbus_g_connection_unref (priv->connection);
 
-	G_OBJECT_CLASS (urfkill_daemon_parent_class)->finalize (object);
+	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
 }
 
 /**
- * urfkill_daemon_new:
+ * urf_daemon_new:
  **/
-UrfkillDaemon *
-urfkill_daemon_new (void)
+UrfDaemon *
+urf_daemon_new (void)
 {
-	UrfkillDaemon *daemon;
-	daemon = URFKILL_DAEMON (g_object_new (URFKILL_TYPE_DAEMON, NULL));
+	UrfDaemon *daemon;
+	daemon = URF_DAEMON (g_object_new (URF_TYPE_DAEMON, NULL));
 	return daemon;
 }
