@@ -59,6 +59,7 @@ struct UrfDaemonPrivate
 {
 	DBusGConnection	*connection;
 	DBusGProxy	*proxy;
+	UrfKillswitch   *killswitch;
 }
 
 static void urf_daemon_finalize (GObject *object);
@@ -129,6 +130,33 @@ out:
 }
 
 /**
+ * urf_daemon_killswitch_state_cb:
+ **/
+static void
+urf_daemon_killswitch_state_cb (UrfKillswitch *killswitch, KillswitchState state)
+{
+	/* TODO */
+	/* Take care of state change */
+}
+
+/**
+ * urf_daemon_init:
+ **/
+static void
+urf_daemon_init (UrfDaemon *daemon)
+{
+	gboolean ret;
+	GError *error = NULL;
+
+	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
+	//FIXME daemon->priv->polkit = up_polkit_new ();
+
+	daemon->priv->killswitch = urf_killswitch_new ();
+	g_signal_connect (daemon->priv->killswitch, "state-changed",
+			  G_CALLBACK (urf_daemon_killswitch_state_cb), daemon);
+}
+
+/**
  * urf_daemon_get_property:
  **/
 static void
@@ -159,6 +187,7 @@ urf_daemon_set_property (GObject *object, guint prop_id, const GValue *value, GP
 		break;
 	}
 }
+
 /**
  * urf_daemon_class_init:
  **/
@@ -172,7 +201,13 @@ urf_daemon_class_init (UpDaemonClass *klass)
 
 	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
-	/* TODO setup signals for dbus */
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
