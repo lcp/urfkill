@@ -55,14 +55,14 @@ typedef struct {
 	KillswitchState state;
 } UrfIndKillswitch;
 
-typedef struct {
+struct UrfKillswitchPrivate{
 	int fd;
 	GIOChannel *channel;
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
 	GHashTable *type_map;
 	//UrfKillswitchPrivate *priv;
-} UrfKillswitchPrivate;
+};
 
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 
@@ -253,17 +253,15 @@ urf_killswitch_rf_type (UrfKillswitch *killswitch,
 			const char *type_name)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	gpointer ptr;
-	gint type;
+	gint *type;
 	char *key = g_ascii_strup (type_name, -1);
 
-	ptr = g_hash_table_lookup(priv->type_map, key);
+	type = g_hash_table_lookup(priv->type_map, key);
 	g_free (key);
 
-	if (ptr == NULL)
+	if (type == NULL)
 		return -1;
 
-	type = (gint) (*ptr);
 	return type;
 }
 

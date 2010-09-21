@@ -44,6 +44,8 @@ typedef enum {
 #define URF_GET_KILLSWITCH_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
 					URF_TYPE_KILLSWITCH, UrfKillswitchClass))
 
+typedef struct UrfKillswitchPrivate UrfKillswitchPrivate;
+
 typedef struct {
 	GObject parent;
 	UrfKillswitchPrivate *priv;

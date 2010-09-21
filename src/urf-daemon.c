@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include <glib.h>
-#include <glib/gi18n-lib.h>
+//#include <glib/gi18n-lib.h>
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
@@ -140,13 +140,13 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 	int type;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		return;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return FALSE;
+		return;
 
-	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED)
+	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
 }
 
 /**
@@ -159,13 +159,13 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 	int type;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		return;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return FALSE;
+		return;
 
-	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED)
+	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
 }
 
 /**
@@ -231,7 +231,7 @@ urf_daemon_set_property (GObject *object, guint prop_id, const GValue *value, GP
  * urf_daemon_class_init:
  **/
 static void
-urf_daemon_class_init (UpDaemonClass *klass)
+urf_daemon_class_init (UrfDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = urf_daemon_finalize;

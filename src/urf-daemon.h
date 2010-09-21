@@ -25,7 +25,7 @@
 #include <polkit/polkit.h>
 #include <dbus/dbus-glib.h>
 
-#include "urf-types.h"
+//#include "urf-types.h"
 
 G_BEGIN_DECLS
 

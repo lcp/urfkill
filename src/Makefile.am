@@ -57,9 +57,10 @@ urfkilld_CPPFLAGS =						\
 	-DG_LOG_DOMAIN=\"urf-daemon\"				\
 	$(AM_CPPFLAGS)
 
-upowerd_LDADD =							\
+urfkilld_LDADD =						\
 	-lm							\
 	$(GIO_LIBS)						\
+	$(POLKIT_LIBS)						\
 	$(DBUS_GLIB_LIBS)
 
 servicedir       = $(datadir)/dbus-1/system-services
