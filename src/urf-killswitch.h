@@ -57,12 +57,13 @@ typedef struct {
         void (*state_changed) (UrfKillswitch *killswitch, KillswitchState state);
 } UrfKillswitchClass;
 
-GType		 urf_killswitch_get_type (void);
-UrfKillswitch	*urf_killswitch_new	 (void);
+GType		urf_killswitch_get_type (void);
+UrfKillswitch  *urf_killswitch_new	(void);
 
-gboolean	 urf_killswitch_has_killswitches (UrfKillswitch *killswitch);
-void		 urf_killswitch_set_state	 (UrfKillswitch *killswitch, guint type, KillswitchState state);
-KillswitchState	 urf_killswitch_get_state	 (UrfKillswitch *killswitch, guint type);
+gboolean	urf_killswitch_has_killswitches	(UrfKillswitch *killswitch);
+void		urf_killswitch_set_state	(UrfKillswitch *killswitch, guint type, KillswitchState state);
+KillswitchState urf_killswitch_get_state	(UrfKillswitch *killswitch, guint type);
+gint		urf_killswitch_rf_type		(UrfKillswitch *killswitch, const char *type_name);
 
 G_END_DECLS
 

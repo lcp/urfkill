@@ -60,7 +60,8 @@ typedef struct {
 	GIOChannel *channel;
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
-	UrfKillswitchPrivate *priv;
+	GHashTable *type_map;
+	//UrfKillswitchPrivate *priv;
 } UrfKillswitchPrivate;
 
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
@@ -247,6 +248,23 @@ add_killswitch (UrfKillswitch *killswitch,
 	priv->killswitches = g_list_append (priv->killswitches, ind);
 }
 
+gint
+urf_killswitch_rf_type (UrfKillswitch *killswitch,
+			const char *type_name)
+{
+	UrfKillswitchPrivate *priv = Urf_KILLSWITCH_GET_PRIVATE (killswitch);
+	gpointer ptr;
+	gint type;
+
+	ptr = g_hash_table_lookup(priv->type_map, type_name);
+
+	if (ptr == NULL)
+		return -1;
+
+	type = (gint)*ptr;
+	return type;
+}
+
 static const char *
 type_to_string (unsigned int type)
 {
@@ -357,6 +375,20 @@ event_cb (GIOChannel *source,
 	return TRUE;
 }
 
+static GHashTable*
+construct_type_map ()
+{
+	GHashTable *map;
+	unsigned int i;
+
+	map = g_hash_table_new(g_str_hash, g_int_equal);
+
+	for (i = RFKILL_TYPE_ALL; i< NUM_RFKILL_TYPES; i++)
+		g_hash_table_insert(map, type_to_string (i), i);
+
+	return map;
+}
+
 static void
 urf_killswitch_init (UrfKillswitch *killswitch)
 {
@@ -365,6 +397,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	int fd;
 
 	killswitch->priv = priv;
+	killswitch->priv->type_map = construct_type_map ();
 
 	fd = open("/dev/rfkill", O_RDWR);
 	if (fd < 0) {
