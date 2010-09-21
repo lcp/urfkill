@@ -33,7 +33,7 @@
 
 #include "egg-debug.h"
 
-//#include "urf-polkit.h"
+#include "urf-polkit.h"
 #include "urf-daemon.h"
 #include "urf-killswitch.h"
 
@@ -59,6 +59,7 @@ struct UrfDaemonPrivate
 {
 	DBusGConnection	*connection;
 	DBusGProxy	*proxy;
+	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
 }
 
@@ -187,7 +188,7 @@ urf_daemon_init (UrfDaemon *daemon)
 	GError *error = NULL;
 
 	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
-	//FIXME daemon->priv->polkit = up_polkit_new ();
+	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
 	g_signal_connect (daemon->priv->killswitch, "state-changed",
@@ -273,6 +274,8 @@ urf_daemon_finalize (GObject *object)
 	if (priv->connection != NULL)
 		dbus_g_connection_unref (priv->connection);
 
+	g_object_unref (priv->polkit);
+	g_object_unref (priv->killswitch);
 	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
 }
 

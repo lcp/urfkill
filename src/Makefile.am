@@ -16,6 +16,7 @@ INCLUDES = \
 	-I$(top_srcdir)						\
 	$(GIO_CFLAGS)						\
 	$(DBUS_GLIB_CFLAGS)					\
+	$(POLKIT_CFLAGS)					\
 	$(GLIB_CFLAGS)
 
 
@@ -44,6 +45,8 @@ urfkilld_SOURCES =						\
 	egg-debug.h						\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
+	urf-polkit.h						\
+	urf-polkit.c						\
 	urf-daemon.h						\
 	urf-daemon.c						\
 	urf-main.c						\
