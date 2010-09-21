@@ -100,7 +100,7 @@ update_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
-	gunit type;
+	guint type;
 	gboolean changed = FALSE;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
@@ -213,7 +213,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
-	gunit type;
+	guint type;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
 		UrfIndKillswitch *ind = l->data;
@@ -237,7 +237,7 @@ add_killswitch (UrfKillswitch *killswitch,
 		KillswitchState state)
 
 {
-	UrfKillswitchPrivate *priv = Urf_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
 
 	g_message ("adding killswitch idx %d state %s", index, state_to_string (state));
@@ -252,10 +252,10 @@ gint
 urf_killswitch_rf_type (UrfKillswitch *killswitch,
 			const char *type_name)
 {
-	UrfKillswitchPrivate *priv = Urf_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	gpointer ptr;
 	gint type;
-	char *key = g_ascii_strup (type_name);
+	char *key = g_ascii_strup (type_name, -1);
 
 	ptr = g_hash_table_lookup(priv->type_map, key);
 	g_free (key);
@@ -263,7 +263,7 @@ urf_killswitch_rf_type (UrfKillswitch *killswitch,
 	if (ptr == NULL)
 		return -1;
 
-	type = (gint)*ptr;
+	type = (gint) (*ptr);
 	return type;
 }
 
@@ -328,7 +328,7 @@ event_cb (GIOChannel *source,
 		GIOStatus status;
 		struct rfkill_event event;
 		gsize read;
-		gunit type;
+		guint type;
 		gboolean changed = FALSE;
 
 		status = g_io_channel_read_chars (source,
@@ -402,8 +402,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	struct rfkill_event event;
 	int fd;
 
-	killswitch->priv = priv;
-	killswitch->priv->type_map = construct_type_map ();
+	priv->type_map = construct_type_map ();
 
 	fd = open("/dev/rfkill", O_RDWR);
 	if (fd < 0) {
