@@ -1,12 +1,15 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<node name="/org/freedesktop/URfkill">
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
   <interface name="org.freedesktop.URfkill">
     <method name="Block">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="type" direction="in" />
     </method>
     <method name="Unblock">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value="true"/>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="type" direction="in" />
     </method>
   </interface>

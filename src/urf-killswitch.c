@@ -255,8 +255,10 @@ urf_killswitch_rf_type (UrfKillswitch *killswitch,
 	UrfKillswitchPrivate *priv = Urf_KILLSWITCH_GET_PRIVATE (killswitch);
 	gpointer ptr;
 	gint type;
+	char *key = g_ascii_strup (type_name);
 
-	ptr = g_hash_table_lookup(priv->type_map, type_name);
+	ptr = g_hash_table_lookup(priv->type_map, key);
+	g_free (key);
 
 	if (ptr == NULL)
 		return -1;

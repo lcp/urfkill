@@ -62,12 +62,18 @@ typedef enum
 GType urf_daemon_error_get_type (void);
 #define URF_DAEMON_TYPE_ERROR (urf_daemon_error_get_type ())
 
-//GQuark		 urf_daemon_error_quark		(void);
-GType		 urf_daemon_get_type		(void);
-UrfDaemon	*urf_daemon_new			(void);
-//void		 urf_daemon_test			(gpointer	 user_data);
+//GQuark	 urf_daemon_error_quark		(void);
+GType		 urf_daemon_get_type	(void);
+UrfDaemon	*urf_daemon_new		(void);
+//void		 urf_daemon_test		(gpointer  user_data);
 
-gboolean	 urf_daemon_startup			(UrfDaemon	*daemon);
+gboolean	 urf_daemon_startup	(UrfDaemon		*daemon);
+void		 urf_daemon_block	(UrfDaemon		*daemon,
+					 const char		*type_name,
+					 DBusGMethodInvocation  *context);
+void		 urf_daemon_unblock	(UrfDaemon		*daemon,
+					 const char 		*type_name,
+					 DBusGMethodInvocation	*context);
 
 G_END_DECLS
 
