@@ -379,12 +379,16 @@ static GHashTable*
 construct_type_map ()
 {
 	GHashTable *map;
-	unsigned int i;
+	unsigned int *value;
+	int i;
 
-	map = g_hash_table_new(g_str_hash, g_int_equal);
+	map = g_hash_table_new (g_str_hash, g_int_equal);
+	value = g_malloc0 (sizeof(unsigned int)*NUM_RFKILL_TYPES);
 
-	for (i = RFKILL_TYPE_ALL; i< NUM_RFKILL_TYPES; i++)
-		g_hash_table_insert(map, type_to_string (i), i);
+	for (i = RFKILL_TYPE_ALL; i< NUM_RFKILL_TYPES; i++) {
+		value[i] = i;
+		g_hash_table_insert(map, type_to_string (i), &value[i]);
+	}
 
 	return map;
 }
