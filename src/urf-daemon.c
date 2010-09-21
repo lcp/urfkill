@@ -35,21 +35,22 @@
 
 //#include "urf-polkit.h"
 #include "urf-daemon.h"
+#include "urf-killswitch.h"
 
 #include "urf-daemon-glue.h"
 #include "urf-marshal.h"
 
 enum
 {
-        PROP_0,
-        PROP_DAEMON_VERSION,
-        PROP_LAST
+	PROP_0,
+	PROP_DAEMON_VERSION,
+	PROP_LAST
 };
 
 enum
 {
-        SIGNAL_CHANGED,
-        SIGNAL_LAST,
+	SIGNAL_CHANGED,
+	SIGNAL_LAST,
 };
 
 static guint signals[SIGNAL_LAST] = { 0 };
@@ -68,16 +69,63 @@ G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 				URF_TYPE_DAEMON, UrfDaemonPrivate))
 
 /**
+ * urf_daemon_register_rfkill_daemon:
+ **/
+static gboolean
+urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
+{
+	GError *error = NULL;
+	gboolean ret = FALSE;
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+
+	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (priv->connection == NULL) {
+		if (error != NULL) {
+			g_critical ("error getting system bus: %s", error->message);
+			g_error_free (error);
+		}
+		goto out;
+	}
+
+	/* connect to DBUS */
+	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
+						 DBUS_SERVICE_DBUS,
+						 DBUS_PATH_DBUS,
+						 DBUS_INTERFACE_DBUS);
+
+	/* register GObject */
+	dbus_g_connection_register_g_object (priv->connection,
+					     "/org/freedesktop/URfkill",
+					     G_OBJECT (daemon));
+
+	/* success */
+	ret = TRUE;
+out:
+	return ret;
+}
+
+/**
  * urf_daemon_startup:
  **/
 gboolean
 urf_daemon_startup (UrfDaemon *daemon)
 {
 	gboolean ret;
-	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+
+	/* register on bus */
+	ret = urf_daemon_register_rfkill_daemon (daemon);
+	if (!ret) {
+		egg_warning ("failed to register");
+		goto out;
+	}
 
 	/* TODO */
 	/* start to monitor rfkill interfaces */
+
+
+out:
+	return ret;
 }
 
 /**
@@ -87,7 +135,7 @@ static void
 urf_daemon_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
@@ -145,7 +193,7 @@ static void
 urf_daemon_finalize (GObject *object)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
