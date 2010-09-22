@@ -61,7 +61,7 @@ struct UrfDaemonPrivate
 	DBusGProxy	*proxy;
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
-}
+};
 
 static void urf_daemon_finalize (GObject *object);
 
