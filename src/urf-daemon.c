@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include <glib.h>
-//#include <glib/gi18n-lib.h>
+#include <glib/gi18n-lib.h>
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
@@ -196,6 +196,18 @@ urf_daemon_init (UrfDaemon *daemon)
 }
 
 /**
+ *  * urf_daemon_error_quark:
+ *   **/
+GQuark
+urf_daemon_error_quark (void)
+{
+	static GQuark ret = 0;
+	if (ret == 0)
+		ret = g_quark_from_static_string ("urf_daemon_error");
+	return ret;
+}
+
+/**
  * urf_daemon_get_property:
  **/
 static void
@@ -225,6 +237,28 @@ urf_daemon_set_property (GObject *object, guint prop_id, const GValue *value, GP
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
+/**
+ * urf_daemon_error_get_type:
+ **/
+GType
+urf_daemon_error_get_type (void)
+{
+	static GType etype = 0;
+
+	if (etype == 0) {
+		static const GEnumValue values[] = {
+			ENUM_ENTRY (URF_DAEMON_ERROR_GENERAL, "GeneralError"),
+			ENUM_ENTRY (URF_DAEMON_ERROR_NOT_SUPPORTED, "NotSupported"),
+			ENUM_ENTRY (URF_DAEMON_ERROR_NO_SUCH_DEVICE, "NoSuchDevice"),
+			{ 0, 0, 0 }
+		};
+		g_assert (URF_DAEMON_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
+		etype = g_enum_register_static ("UrfDaemonError", values);
+	}
+	return etype;
 }
 
 /**

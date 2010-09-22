@@ -15,6 +15,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 
 #include "egg-debug.h"
+#include "urf-daemon.h"
 
 #define URFKILL_SERVICE_NAME "org.freedesktop.URfkill"
 static GMainLoop *loop = NULL;
@@ -61,7 +62,7 @@ urf_main_acquire_name_on_proxy (DBusGProxy *bus_proxy, const gchar *name)
 	}
 out:
 	return ret;
-} 
+}
 
 /**
  * urf_main_sigint_handler:
@@ -97,7 +98,7 @@ gint
 main (gint argc, gchar **argv)
 {
 	GError *error = NULL;
-	UrfDaemon *daemon = NULL
+	UrfDaemon *daemon = NULL;
 	GOptionContext *context;
 	DBusGProxy *bus_proxy;
 	DBusGConnection *bus;
