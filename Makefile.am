@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src liburfkill-glib
+SUBDIRS = liburfkill-glib src
 
 # Creating ChangeLog from git log (taken from cairo/Makefile.am):
 ChangeLog: $(srcdir)/ChangeLog

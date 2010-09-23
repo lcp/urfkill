@@ -94,7 +94,7 @@ urf_client_set_unblock (UrfClient *client, const char *type)
 void
 urf_client_set_wlan_block (UrfClient *client)
 {
-	urf_client_set_block (client, "WLAN", cancellable, error);
+	urf_client_set_block (client, "WLAN");
 }
 
 /**
@@ -103,7 +103,7 @@ urf_client_set_wlan_block (UrfClient *client)
 void
 urf_client_set_wlan_unblock (UrfClient *client)
 {
-	urf_client_set_unblock (client, "WLAN", cancellable, error);
+	urf_client_set_unblock (client, "WLAN");
 }
 
 /**
@@ -112,7 +112,7 @@ urf_client_set_wlan_unblock (UrfClient *client)
 void
 urf_client_set_bluetooth_block (UrfClient *client)
 {
-	urf_client_set_block (client, "BLUETOOTH", cancellable, error);
+	urf_client_set_block (client, "BLUETOOTH");
 }
 
 /**
@@ -121,7 +121,7 @@ urf_client_set_bluetooth_block (UrfClient *client)
 void
 urf_client_set_bluetooth_unblock (UrfClient *client)
 {
-	urf_client_set_unblock (client, "BLUETOOTH", cancellable, error);
+	urf_client_set_unblock (client, "BLUETOOTH");
 }
 
 /**
@@ -130,7 +130,7 @@ urf_client_set_bluetooth_unblock (UrfClient *client)
 void
 urf_client_set_wwan_block (UrfClient *client)
 {
-	urf_client_set_block (client, "WWAN", cancellable, error);
+	urf_client_set_block (client, "WWAN");
 }
 
 /**
@@ -139,7 +139,7 @@ urf_client_set_wwan_block (UrfClient *client)
 void
 urf_client_set_wwan_unblock (UrfClient *client)
 {
-	urf_client_set_unblock (client, "WWAN", cancellable, error);
+	urf_client_set_unblock (client, "WWAN");
 }
 
 /*
