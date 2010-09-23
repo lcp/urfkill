@@ -93,6 +93,31 @@ state_to_string (KillswitchState state)
 	}
 }
 
+static const char *
+type_to_string (unsigned int type)
+{
+	switch (type) {
+	case RFKILL_TYPE_ALL:
+		return "ALL";
+	case RFKILL_TYPE_WLAN:
+		return "WLAN";
+	case RFKILL_TYPE_BLUETOOTH:
+		return "BLUETOOTH";
+	case RFKILL_TYPE_UWB:
+		return "UWB";
+	case RFKILL_TYPE_WIMAX:
+		return "WIMAX";
+	case RFKILL_TYPE_WWAN:
+		return "WWAN";
+	case RFKILL_TYPE_GPS:
+		return "GPS";
+	case RFKILL_TYPE_FM:
+		return "FM";
+	default:
+		g_assert_not_reached ();
+	}
+}
+
 static void
 update_killswitch (UrfKillswitch *killswitch,
 		   guint index, guint soft, guint hard)
@@ -191,7 +216,8 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 		state = ind->state;
 	}
 
-	g_message ("killswitches state %s", state_to_string (state));
+	g_message ("killswitches %s state %s",
+		   type_to_string (type), state_to_string (state));
 
 	return state;
 }
@@ -262,31 +288,6 @@ urf_killswitch_rf_type (UrfKillswitch *killswitch,
 		return -1;
 
 	return *type;
-}
-
-static const char *
-type_to_string (unsigned int type)
-{
-	switch (type) {
-	case RFKILL_TYPE_ALL:
-		return "ALL";
-	case RFKILL_TYPE_WLAN:
-		return "WLAN";
-	case RFKILL_TYPE_BLUETOOTH:
-		return "BLUETOOTH";
-	case RFKILL_TYPE_UWB:
-		return "UWB";
-	case RFKILL_TYPE_WIMAX:
-		return "WIMAX";
-	case RFKILL_TYPE_WWAN:
-		return "WWAN";
-	case RFKILL_TYPE_GPS:
-		return "GPS";
-	case RFKILL_TYPE_FM:
-		return "FM";
-	default:
-		g_assert_not_reached ();
-	}
 }
 
 static const char *
