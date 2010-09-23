@@ -382,12 +382,12 @@ construct_type_map ()
 	unsigned int *value;
 	int i;
 
-	map = g_hash_table_new (g_str_hash, g_int_equal);
-	value = g_malloc0 (sizeof(unsigned int)*NUM_RFKILL_TYPES);
+	map = g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
 
-	for (i = RFKILL_TYPE_ALL; i< NUM_RFKILL_TYPES; i++) {
-		value[i] = i;
-		g_hash_table_insert(map, g_strdup (type_to_string (i)), &value[i]);
+	for (i =0 ; i< NUM_RFKILL_TYPES; i++) {
+		value = g_malloc0 (sizeof(unsigned int));
+		*value = i;
+		g_hash_table_insert(map, g_strdup (type_to_string (i)), value);
 	}
 
 	return map;
@@ -473,6 +473,8 @@ urf_killswitch_finalize (GObject *object)
 	g_list_foreach (priv->killswitches, (GFunc) g_free, NULL);
 	g_list_free (priv->killswitches);
 	priv->killswitches = NULL;
+
+	g_hash_table_destroy (priv->type_map);
 
 	G_OBJECT_CLASS(urf_killswitch_parent_class)->finalize(object);
 }
