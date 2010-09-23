@@ -28,5 +28,8 @@ EXTRA_DIST = 			\
 snapshot:
 	$(MAKE) dist distdir=$(PACKAGE)-$(VERSION)-`date +"%Y%m%d"`
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = urfkill-glib.pc
+
 clean-local :
 	rm -f *~
