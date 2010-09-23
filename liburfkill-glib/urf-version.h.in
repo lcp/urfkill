@@ -1,0 +1,55 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+ *
+ * Copyright (C) 2010 Gary Ching-Pang Lin <glin@novell.com>
+ *
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifndef __URF_VERSION_H
+#define __URF_VERSION_H
+
+/**
+ * URF_CHECK_VERSION:
+ *
+ * The compile-time major version
+ */
+#define URF_MAJOR_VERSION				(@URF_MAJOR_VERSION@)
+
+/**
+ * URF_CHECK_MINOR:
+ *
+ * The compile-time minor version
+ */
+#define URF_MINOR_VERSION				(@URF_MINOR_VERSION@)
+
+/**
+ * URF_MICRO_VERSION:
+ *
+ * The compile-time micro version
+ */
+#define URF_MICRO_VERSION				(@URF_MICRO_VERSION@)
+
+/* check whether a URfkill version equal to or greater than
+ * major.minor.micro.
+ */
+#define URF_CHECK_VERSION(major,minor,micro)    \
+    (URF_MAJOR_VERSION > (major) || \
+     (URF_MAJOR_VERSION == (major) && URF_MINOR_VERSION > (minor)) || \
+     (URF_MAJOR_VERSION == (major) && URF_MINOR_VERSION == (minor) && \
+      URF_MICRO_VERSION >= (micro)))
+
+#endif /* __URF_VERSION_H */
