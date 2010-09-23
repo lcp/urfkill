@@ -136,7 +136,7 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 	ssize_t len;
 
 	g_return_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED);
-	g_return_if_fail (type >= NUM_RFKILL_TYPES);
+	g_return_if_fail (type < NUM_RFKILL_TYPES);
 
 	memset (&event, 0, sizeof(event));
 	event.op = RFKILL_OP_CHANGE_ALL;
