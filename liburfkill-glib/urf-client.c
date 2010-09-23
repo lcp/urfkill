@@ -64,67 +64,35 @@ G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
  * urf_client_block
  **/
 void
-urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
+urf_client_set_block (UrfClient *client, const char *type)
 {
-	GError *error_local = NULL;
-
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	dbus_g_proxy_call_no_reply (client->priv->proxy, "Block", &error_local,
+	dbus_g_proxy_call_no_reply (client->priv->proxy, "Block",
 				    G_TYPE_STRING, type,
 				    G_TYPE_INVALID, G_TYPE_INVALID);
-	if (error_local) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
-		g_warning ("Failed to set block: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-	}
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
 }
 
 /**
  * urf_client_unblock
  **/
 void
-urf_client_set_unblock (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
+urf_client_set_unblock (UrfClient *client, const char *type)
 {
-	GError *error_local = NULL;
-
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	dbus_g_proxy_call_no_reply (client->priv->proxy, "Unblock", &error_local,
+	dbus_g_proxy_call_no_reply (client->priv->proxy, "Unblock",
 				    G_TYPE_STRING, type,
 				    G_TYPE_INVALID, G_TYPE_INVALID);
-	if (error_local) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
-		g_warning ("Failed to set unblock: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-	}
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
 }
 
 /**
  * urf_client_set_wlan_block
  **/
 void
-urf_client_set_wlan_block (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_wlan_block (UrfClient *client)
 {
 	urf_client_set_block (client, "WLAN", cancellable, error);
 }
@@ -133,7 +101,7 @@ urf_client_set_wlan_block (UrfClient *client, GCancellable *cancellable, GError 
  * urf_client_set_wlan_block
  **/
 void
-urf_client_set_wlan_unblock (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_wlan_unblock (UrfClient *client)
 {
 	urf_client_set_unblock (client, "WLAN", cancellable, error);
 }
@@ -142,7 +110,7 @@ urf_client_set_wlan_unblock (UrfClient *client, GCancellable *cancellable, GErro
  * urf_client_set_bluetooth_block
  **/
 void
-urf_client_set_bluetooth_block (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_bluetooth_block (UrfClient *client)
 {
 	urf_client_set_block (client, "BLUETOOTH", cancellable, error);
 }
@@ -151,7 +119,7 @@ urf_client_set_bluetooth_block (UrfClient *client, GCancellable *cancellable, GE
  * urf_client_set_bluetooth_unblock
  **/
 void
-urf_client_set_bluetooth_unblock (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_bluetooth_unblock (UrfClient *client)
 {
 	urf_client_set_unblock (client, "BLUETOOTH", cancellable, error);
 }
@@ -160,7 +128,7 @@ urf_client_set_bluetooth_unblock (UrfClient *client, GCancellable *cancellable, 
  * urf_client_set_wwan_block
  **/
 void
-urf_client_set_wwan_block (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_wwan_block (UrfClient *client)
 {
 	urf_client_set_block (client, "WWAN", cancellable, error);
 }
@@ -169,7 +137,7 @@ urf_client_set_wwan_block (UrfClient *client, GCancellable *cancellable, GError 
  * urf_client_set_wwan_unblock
  **/
 void
-urf_client_set_wwan_unblock (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_wwan_unblock (UrfClient *client)
 {
 	urf_client_set_unblock (client, "WWAN", cancellable, error);
 }
