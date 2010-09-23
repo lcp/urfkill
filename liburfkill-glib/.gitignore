@@ -1,0 +1,13 @@
+.deps
+.libs
+*.o
+*.la
+*.lo
+*-marshal.c
+*-marshal.h
+*.gcov
+*.gcda
+*.gcno
+urf-version.h
+*.gir
+*.typelib
