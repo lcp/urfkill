@@ -54,18 +54,22 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
-void		 urf_client_set_block 			(UrfClient	*client,
-							 const char	*type);
-void		 urf_client_set_unblock			(UrfClient	*client,
-							 const char	*type);
+gboolean	 urf_client_set_block 			(UrfClient	*client,
+							 const char	*type,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 urf_client_set_unblock			(UrfClient	*client,
+							 const char	*type,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 /* specific */
-void		 urf_client_set_wlan_block		(UrfClient	*client);
-void		 urf_client_set_wlan_unblock		(UrfClient	*client);
-void		 urf_client_set_bluetooth_block		(UrfClient	*client);
-void		 urf_client_set_bluetooth_unblock	(UrfClient	*client);
-void		 urf_client_set_wwan_block		(UrfClient	*client);
-void		 urf_client_set_wwan_unblock		(UrfClient	*client);
+gboolean	 urf_client_set_wlan_block		(UrfClient	*client);
+gboolean	 urf_client_set_wlan_unblock		(UrfClient	*client);
+gboolean	 urf_client_set_bluetooth_block		(UrfClient	*client);
+gboolean	 urf_client_set_bluetooth_unblock	(UrfClient	*client);
+gboolean	 urf_client_set_wwan_block		(UrfClient	*client);
+gboolean	 urf_client_set_wwan_unblock		(UrfClient	*client);
 
 G_END_DECLS
 

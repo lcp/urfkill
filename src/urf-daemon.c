@@ -129,39 +129,45 @@ out:
 /**
  * urf_daemon_block:
  **/
-void
+gboolean
 urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
+	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return;
+		return FALSE;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return;
+		return FALSE;
 
-	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
+	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
+
+	return ret;
 }
 
 /**
  * urf_daemon_unblock:
  **/
-void
+gboolean
 urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
+	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return;
+		return FALSE;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return;
+		return FALSE;
 
-	urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
+	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
+
+	return ret;
 }
 
 /**

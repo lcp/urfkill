@@ -25,8 +25,6 @@
 #include <polkit/polkit.h>
 #include <dbus/dbus-glib.h>
 
-//#include "urf-types.h"
-
 G_BEGIN_DECLS
 
 #define URF_TYPE_DAEMON		(urf_daemon_get_type ())
@@ -68,10 +66,10 @@ UrfDaemon	*urf_daemon_new		(void);
 //void		 urf_daemon_test		(gpointer  user_data);
 
 gboolean	 urf_daemon_startup	(UrfDaemon		*daemon);
-void		 urf_daemon_block	(UrfDaemon		*daemon,
+gboolean	 urf_daemon_block	(UrfDaemon		*daemon,
 					 const char		*type_name,
 					 DBusGMethodInvocation  *context);
-void		 urf_daemon_unblock	(UrfDaemon		*daemon,
+gboolean	 urf_daemon_unblock	(UrfDaemon		*daemon,
 					 const char 		*type_name,
 					 DBusGMethodInvocation	*context);
 

@@ -151,7 +151,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 }
 
-void
+gboolean
 urf_killswitch_set_state (UrfKillswitch *killswitch,
 			  guint type,
 			  KillswitchState state)
@@ -174,9 +174,12 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 		g_assert_not_reached ();
 
 	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0)
+	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
 			   g_strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 KillswitchState
