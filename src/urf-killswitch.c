@@ -61,7 +61,6 @@ struct UrfKillswitchPrivate{
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
 	GHashTable *type_map;
-	//UrfKillswitchPrivate *priv;
 };
 
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
@@ -163,7 +162,7 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 	GList *l;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
-	g_return_val_if_fail (type >= NUM_RFKILL_TYPES, state);
+	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
 
 	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 
@@ -262,7 +261,7 @@ urf_killswitch_rf_type (UrfKillswitch *killswitch,
 	if (type == NULL)
 		return -1;
 
-	return type;
+	return *type;
 }
 
 static const char *
@@ -387,7 +386,7 @@ construct_type_map ()
 
 	for (i = RFKILL_TYPE_ALL; i< NUM_RFKILL_TYPES; i++) {
 		value[i] = i;
-		g_hash_table_insert(map, type_to_string (i), &value[i]);
+		g_hash_table_insert(map, g_strdup (type_to_string (i)), &value[i]);
 	}
 
 	return map;
