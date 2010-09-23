@@ -122,10 +122,6 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
-	/* TODO */
-	/* start to monitor rfkill interfaces */
-
-
 out:
 	return ret;
 }
