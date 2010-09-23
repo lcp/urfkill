@@ -418,6 +418,9 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 		return;
 	}
 
+	/* Disable rfkill input */
+	ioctl(fd, RFKILL_IOCTL_NOINPUT);
+
 	while (1) {
 		KillswitchState state;
 		ssize_t len;
