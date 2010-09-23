@@ -50,8 +50,38 @@ typedef struct
 } UrfClientClass;
 
 /* general */
-GType		 urf_client_get_type	(void);
-UrfClient	*urf_client_new		(void);
+GType		 urf_client_get_type			(void);
+UrfClient	*urf_client_new				(void);
+
+/* generic */
+void		 urf_client_set_block 			(UrfClient	*client,
+							 const char	*type,
+							 GCancellable	*cancellable,
+							 GError		**error);
+void		 urf_client_set_unblock			(UrfClient	*client,
+							 const char	*type,
+							 GCancellable	*cancellable,
+							 GError		**error);
+
+/* specific */
+void		 urf_client_set_wlan_block		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
+void		 urf_client_set_wlan_unblock		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
+void		 urf_client_set_bluetooth_block		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
+void		 urf_client_set_bluetooth_unblock	(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
+void		 urf_client_set_wwan_block		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
+void		 urf_client_set_wwan_unblock		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error)
 
 G_END_DECLS
 

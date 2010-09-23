@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: urfkill-glib
+Description: URfkill is a system daemon for managing killswitches
+Version: @VERSION@
+Requires.private: dbus-1, gthread-2.0
+Requires: glib-2.0, gobject-2.0
+Libs: -L${libdir} -lurfkill-glib
+Cflags: -I${includedir}/liburfkill-glib
+

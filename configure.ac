@@ -188,7 +188,10 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
 AC_CONFIG_FILES([
 Makefile
+urfkill-glib.pc
 src/Makefile
+liburfkill-glib/Makefile
+liburfkill-glib/urf-version.h
 po/Makefile.in
 ])
 AC_OUTPUT
