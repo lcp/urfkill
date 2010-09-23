@@ -68,8 +68,8 @@ urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancell
 {
 	GError *error_local = NULL;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
 
 	dbus_g_proxy_call_no_reply (client->priv->proxy, "Block", &error_local,
 				    G_TYPE_STRING, type,
@@ -98,8 +98,8 @@ urf_client_set_unblock (UrfClient *client, const char *type, GCancellable *cance
 {
 	GError *error_local = NULL;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
 
 	dbus_g_proxy_call_no_reply (client->priv->proxy, "Unblock", &error_local,
 				    G_TYPE_STRING, type,
@@ -169,7 +169,7 @@ urf_client_set_wwan_block (UrfClient *client, GCancellable *cancellable, GError 
  * urf_client_set_wwan_unblock
  **/
 void
-urf_client_set_wlan_unblock (UrfClient *client, GCancellable *cancellable, GError **error)
+urf_client_set_wwan_unblock (UrfClient *client, GCancellable *cancellable, GError **error)
 {
 	urf_client_set_unblock (client, "WWAN", cancellable, error);
 }
@@ -183,7 +183,7 @@ urf_client_class_init (UrfClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->get_property = urf_client_get_property;
+	//object_class->get_property = urf_client_get_property;
 	object_class->finalize = urf_client_finalize;
 
 	/* TODO */

@@ -66,22 +66,22 @@ void		 urf_client_set_unblock			(UrfClient	*client,
 /* specific */
 void		 urf_client_set_wlan_block		(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 void		 urf_client_set_wlan_unblock		(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 void		 urf_client_set_bluetooth_block		(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 void		 urf_client_set_bluetooth_unblock	(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 void		 urf_client_set_wwan_block		(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 void		 urf_client_set_wwan_unblock		(UrfClient	*client,
 							 GCancellable	*cancellable,
-							 GError		**error)
+							 GError		**error);
 
 G_END_DECLS
 
