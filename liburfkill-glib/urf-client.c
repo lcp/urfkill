@@ -66,7 +66,7 @@ G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 gboolean
 urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
 {
-	gboolean ret;
+	gboolean ret, status;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
