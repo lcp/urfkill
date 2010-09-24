@@ -50,12 +50,6 @@ static int signals[LAST_SIGNAL] = { 0 };
 #define URF_KILLSWITCH_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                 URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
-typedef struct {
-	guint index;
-	guint type;
-	KillswitchState state;
-} UrfIndKillswitch;
-
 struct UrfKillswitchPrivate{
 	int fd;
 	GIOChannel *channel;
@@ -234,6 +228,16 @@ urf_killswitch_has_killswitches (UrfKillswitch *killswitch)
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), FALSE);
 
 	return (priv->killswitches != NULL);
+}
+
+GList*
+urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
+
+	return priv->killswitches;
 }
 
 static void

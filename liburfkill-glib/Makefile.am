@@ -15,6 +15,7 @@ liburfkill_glib_includedir = $(includedir)/liburfkill-glib
 liburfkill_glib_include_HEADERS =				\
 	urfkill.h						\
 	urf-version.h						\
+	urf-killswitch.h					\
 	urf-client.h
 
 liburfkill_glib_la_SOURCES =					\

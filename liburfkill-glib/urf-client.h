@@ -25,26 +25,9 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "urf-killswitch.h"
+
 G_BEGIN_DECLS
-
-typedef enum {
-        KILLSWITCH_STATE_NO_ADAPTER = -1,
-        KILLSWITCH_STATE_SOFT_BLOCKED = 0,
-        KILLSWITCH_STATE_UNBLOCKED,
-        KILLSWITCH_STATE_HARD_BLOCKED
-} KillswitchState;
-
-typedef enum {
-        RFKILL_TYPE_ALL = 0,
-        RFKILL_TYPE_WLAN,
-        RFKILL_TYPE_BLUETOOTH,
-        RFKILL_TYPE_UWB,
-        RFKILL_TYPE_WIMAX,
-        RFKILL_TYPE_WWAN,
-        RFKILL_TYPE_GPS,
-        RFKILL_TYPE_FM,
-        NUM_RFKILL_TYPES,
-} KillswitchType;
 
 #define URF_TYPE_CLIENT			(urf_client_get_type ())
 #define URF_CLIENT(o)			(G_TYPE_CHECK_INSTANCE_CAST ((o), URF_TYPE_CLIENT, UrfClient))
@@ -73,6 +56,9 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
+GPtrArray	*urf_client_get_all_states		(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 const char	*type,
 							 GCancellable	*cancellable,

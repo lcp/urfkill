@@ -70,6 +70,12 @@ G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 #define URF_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
 				URF_TYPE_DAEMON, UrfDaemonPrivate))
 
+#define URF_DAEMON_STATES_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",	\
+								G_TYPE_UINT,	\
+								G_TYPE_UINT,	\
+								G_TYPE_INT,	\
+								G_TYPE_STRING))
+
 /**
  * urf_daemon_register_rfkill_daemon:
  **/
@@ -170,6 +176,79 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
 
 	dbus_g_method_return (context, ret);
+
+	return TRUE;
+}
+
+/**
+ * get_rfkill_name:
+ **/
+static char *
+get_rfkill_name (guint index)
+{
+	char *filename;
+	char *content;
+	gsize length;
+	GError *error = NULL;
+
+	filename = g_strdup_printf ("/sys/class/rfkill/rfkill%u/name", index);
+
+	g_file_get_contents(filename, &content, &length, &error);
+	g_free (filename);
+
+	if (!error) {
+		g_warning ("Get rfkill name: %s", error->message);
+		return NULL;
+	}
+
+	return content;
+}
+
+/**
+ * urf_daemon_get_all_states:
+ **/
+gboolean
+urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	GError *error;
+	GPtrArray *complex;
+	GList *killswitches = NULL, *item = NULL;
+	GValue *value;
+	UrfIndKillswitch *ind;
+	char *device_name;
+
+	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
+
+	killswitches = urf_killswitch_get_killswitches (priv->killswitch);
+
+	if (!killswitches) {
+		error = g_error_new (URF_DAEMON_ERROR,
+				     URF_DAEMON_ERROR_GENERAL,
+				     "No killswithes");
+		dbus_g_method_return_error (context, error);
+		return TRUE;
+	}
+
+	complex = g_ptr_array_sized_new (g_list_length(killswitches));
+	for (item = killswitches; item; item = g_list_next (item)) {
+		ind = (UrfIndKillswitch *)item->data;
+
+		device_name = get_rfkill_name (ind->index);
+
+		value = g_new0 (GValue, 1);
+		g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
+		g_value_take_boxed (value, dbus_g_type_specialized_construct (URF_DAEMON_STATES_STRUCT_TYPE));
+		dbus_g_type_struct_set (value,
+					0, ind->index,
+					1, ind->type,
+					2, ind->state,
+					3, device_name, -1);
+		g_ptr_array_add (complex, g_value_get_boxed (value));
+		g_free (value); 
+	}
+
+	dbus_g_method_return (context, complex);
 
 	return TRUE;
 }

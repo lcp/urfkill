@@ -32,6 +32,12 @@ typedef enum {
 	KILLSWITCH_STATE_HARD_BLOCKED
 } KillswitchState;
 
+typedef struct {
+	guint index;
+	guint type;
+	KillswitchState state;
+} UrfIndKillswitch;
+
 #define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())
 #define URF_KILLSWITCH(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
 					URF_TYPE_KILLSWITCH, UrfKillswitch))
@@ -57,10 +63,11 @@ typedef struct {
         void (*state_changed) (UrfKillswitch *killswitch, KillswitchState state);
 } UrfKillswitchClass;
 
-GType		 urf_killswitch_get_type	(void);
-UrfKillswitch	*urf_killswitch_new		(void);
+GType		 urf_killswitch_get_type		(void);
+UrfKillswitch	*urf_killswitch_new			(void);
 
 gboolean	 urf_killswitch_has_killswitches	(UrfKillswitch	*killswitch);
+GList		*urf_killswitch_get_killswitches	(UrfKillswitch	*killswitch);
 gboolean	 urf_killswitch_set_state		(UrfKillswitch	*killswitch,
 							 guint		 type,
 							 KillswitchState state);

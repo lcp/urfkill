@@ -61,6 +61,84 @@ static gpointer urf_client_object = NULL;
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
 /**
+ * urf_client_get_all_states:
+ **/
+GPtrArray *
+urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError **error)
+{
+	GError *error_local = NULL;
+	GType g_type_gvalue_array;
+	GPtrArray *gvalue_ptr_array = NULL;
+	GValueArray *gva;
+	GValue *gv;
+	guint i;
+	UrfKillSwitch *killswitch;
+	GPtrArray *array = NULL;
+	gboolean ret;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
+						dbus_g_type_get_struct("GValueArray",
+							G_TYPE_UINT,
+							G_TYPE_UINT,
+							G_TYPE_INT,
+							G_TYPE_STRING,
+							G_TYPE_INVALID));
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "GetAllStates", &error_local,
+				 G_TYPE_STRING, type,
+				 G_TYPE_INVALID,
+				 g_type_gvalue_array, &gvalue_ptr_array,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* an actual error */
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		g_error_free (error_local);
+		goto out:
+	}
+
+	/* no data */
+	if (gvalue_ptr_array->len == 0) {
+		g_set_error_literal (error, 1, 0, "no data");
+		goto out;
+	}
+
+	/* convert */
+	array = g_ptr_array_new ();
+
+	for (i=0; i<gvalue_ptr_array->len; i++) {
+		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
+		killswitch = g_new0 (UrfKillSwitch, 1);
+
+		/* 0: index */
+		gv = g_value_array_get_nth (gva, 0);
+		killswitch->index = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 1: type */
+		gv = g_value_array_get_nth (gva, 1);
+		killswitch->type = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 2: state */
+		gv = g_value_array_get_nth (gva, 2);
+		killswitch->state = g_value_get_int (gv);
+		g_value_unset (gv);
+		/* 3: name */
+		gv = g_value_array_get_nth (gva, 3);
+		killswitch->name = g_value_dup_string (gv);
+		g_value_unset (gv);
+
+		g_ptr_array_add (array, killswitch);
+		g_value_array_free (gva);
+	}
+out:
+	if (gvalue_ptr_array != NULL)
+		g_ptr_array_free (gvalue_ptr_array, TRUE);
+	return array;
+}
+
+/**
  * urf_client_block
  **/
 gboolean
