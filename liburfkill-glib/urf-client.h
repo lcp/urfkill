@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "rfkill.h"
+
 G_BEGIN_DECLS
 
 #define URF_TYPE_CLIENT			(urf_client_get_type ())
