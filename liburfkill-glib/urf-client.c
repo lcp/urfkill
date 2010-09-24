@@ -74,7 +74,9 @@ urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancell
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
 				 G_TYPE_STRING, type,
-				 G_TYPE_INVALID, G_TYPE_INVALID);
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_INVALID);
 	if (!ret) {
 		/* DBus might time out, which is okay */
 		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
