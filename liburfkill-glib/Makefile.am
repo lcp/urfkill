@@ -13,7 +13,6 @@ lib_LTLIBRARIES =						\
 
 liburfkill_glib_includedir = $(includedir)/liburfkill-glib
 liburfkill_glib_include_HEADERS =				\
-	rfkill.h						\
 	urfkill.h						\
 	urf-version.h						\
 	urf-client.h

@@ -14,7 +14,6 @@ INCLUDES = \
 	-DUP_COMPILATION					\
 	-DUP_DISABLE_DEPRECATED					\
 	-I$(top_srcdir)						\
-	-I$(top_srcdir)/liburfkill-glib				\
 	$(GIO_CFLAGS)						\
 	$(DBUS_GLIB_CFLAGS)					\
 	$(POLKIT_CFLAGS)					\
