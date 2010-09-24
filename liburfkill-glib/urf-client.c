@@ -88,7 +88,6 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 							G_TYPE_INVALID));
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "GetAllStates", &error_local,
-				 G_TYPE_STRING, type,
 				 G_TYPE_INVALID,
 				 g_type_gvalue_array, &gvalue_ptr_array,
 				 G_TYPE_INVALID);
@@ -96,7 +95,7 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 		/* an actual error */
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		g_error_free (error_local);
-		goto out:
+		goto out;
 	}
 
 	/* no data */
