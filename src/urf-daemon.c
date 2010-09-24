@@ -145,7 +145,9 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
 
-	return ret;
+	dbus_g_method_return (context, ret);
+
+	return TRUE;
 }
 
 /**
@@ -167,7 +169,9 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
 
-	return ret;
+	dbus_g_method_return (context, ret);
+
+	return TRUE;
 }
 
 /**

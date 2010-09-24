@@ -79,18 +79,18 @@ urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancell
 		/* DBus might time out, which is okay */
 		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
 			g_debug ("DBUS timed out, but recovering");
-			ret = TRUE;
 			goto out;
 		}
 
 		/* an actual error */
-		g_warning ("Couldn't sent that we were about to sleep: %s", error_local->message);
+		g_warning ("Couldn't sent BLOCK: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
+		status = FALSE;
 	}
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
-	return ret;
+	return status;
 }
 
 /**
@@ -99,7 +99,7 @@ out:
 gboolean
 urf_client_set_unblock (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
 {
-	gboolean ret;
+	gboolean ret, status;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
@@ -107,23 +107,25 @@ urf_client_set_unblock (UrfClient *client, const char *type, GCancellable *cance
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Unblock", &error_local,
 				 G_TYPE_STRING, type,
-				 G_TYPE_INVALID, G_TYPE_INVALID);
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_INVALID);
 	if (!ret) {
 		/* DBus might time out, which is okay */
 		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
 			g_debug ("DBUS timed out, but recovering");
-			ret = TRUE;
 			goto out;
 		}
 
 		/* an actual error */
-		g_warning ("Couldn't sent that we were about to sleep: %s", error_local->message);
+		g_warning ("Couldn't sent UNBLOCK: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
+		status = FALSE;
 	}
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
-	return ret;
+	return status;
 }
 
 /**
