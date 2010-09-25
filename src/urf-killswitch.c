@@ -409,6 +409,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	int fd;
 
 	priv->type_map = construct_type_map ();
+	priv->killswitches = NULL;
 
 	fd = open("/dev/rfkill", O_RDWR);
 	if (fd < 0) {

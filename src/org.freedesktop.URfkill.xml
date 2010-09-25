@@ -16,7 +16,7 @@
     </method>
     <method name="GetAllStates">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="a(uuis)" name="data" direction="out" />
+      <arg type="a(uuis)" name="array" direction="out" />
     </method>
   </interface>
 </node>

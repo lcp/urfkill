@@ -66,14 +66,14 @@ UrfDaemon	*urf_daemon_new			(void);
 //void		 urf_daemon_test		(gpointer  user_data);
 
 gboolean	 urf_daemon_startup		(UrfDaemon		*daemon);
-gboolean	 urf_daemon_get_all_states	(UrfDaemon		*daemon,
-						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
 						 const char		*type_name,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_unblock		(UrfDaemon		*daemon,
 						 const char 		*type_name,
 						 DBusGMethodInvocation	*context);
+gboolean	 urf_daemon_get_all_states	(UrfDaemon		*daemon,
+						 DBusGMethodInvocation  *context);
 
 G_END_DECLS
 

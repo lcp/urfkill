@@ -74,7 +74,8 @@ G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 								G_TYPE_UINT,	\
 								G_TYPE_UINT,	\
 								G_TYPE_INT,	\
-								G_TYPE_STRING))
+								G_TYPE_STRING,	\
+								G_TYPE_INVALID))
 
 /**
  * urf_daemon_register_rfkill_daemon:
@@ -212,7 +213,7 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	GError *error;
-	GPtrArray *complex;
+	GPtrArray *array;
 	GList *killswitches = NULL, *item = NULL;
 	GValue *value;
 	UrfIndKillswitch *ind;
@@ -230,7 +231,7 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 		return TRUE;
 	}
 
-	complex = g_ptr_array_sized_new (g_list_length(killswitches));
+	array = g_ptr_array_sized_new (g_list_length(killswitches));
 	for (item = killswitches; item; item = g_list_next (item)) {
 		ind = (UrfIndKillswitch *)item->data;
 
@@ -244,11 +245,11 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 					1, ind->type,
 					2, ind->state,
 					3, device_name, -1);
-		g_ptr_array_add (complex, g_value_get_boxed (value));
-		g_free (value); 
+		g_ptr_array_add (array, g_value_get_boxed (value));
+		g_free (value);
 	}
 
-	dbus_g_method_return (context, complex);
+	dbus_g_method_return (context, array);
 
 	return TRUE;
 }
