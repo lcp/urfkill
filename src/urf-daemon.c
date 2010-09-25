@@ -223,14 +223,6 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 
 	killswitches = urf_killswitch_get_killswitches (priv->killswitch);
 
-	if (!killswitches) {
-		error = g_error_new (URF_DAEMON_ERROR,
-				     URF_DAEMON_ERROR_GENERAL,
-				     "No killswithes");
-		dbus_g_method_return_error (context, error);
-		return TRUE;
-	}
-
 	array = g_ptr_array_sized_new (g_list_length(killswitches));
 	for (item = killswitches; item; item = g_list_next (item)) {
 		ind = (UrfIndKillswitch *)item->data;
