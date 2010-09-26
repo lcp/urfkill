@@ -184,24 +184,26 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 /**
  * get_rfkill_name:
  **/
-static char *
+char *
 get_rfkill_name (guint index)
 {
 	char *filename;
 	char *content;
 	gsize length;
+	gboolean ret;
 	GError *error = NULL;
 
 	filename = g_strdup_printf ("/sys/class/rfkill/rfkill%u/name", index);
 
-	g_file_get_contents(filename, &content, &length, &error);
+	ret = g_file_get_contents(filename, &content, &length, &error);
 	g_free (filename);
 
-	if (!error) {
+	if (!ret) {
 		g_warning ("Get rfkill name: %s", error->message);
 		return NULL;
 	}
 
+	g_strstrip (content);
 	return content;
 }
 
