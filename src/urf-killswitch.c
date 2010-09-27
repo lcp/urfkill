@@ -41,7 +41,9 @@
 #include "urf-killswitch.h"
 
 enum {
-	STATE_CHANGED,
+	RFKILL_ADDED,
+	RFKILL_REMOVED,
+	RFKILL_CHANGED,
 	LAST_SIGNAL
 };
 
@@ -50,7 +52,7 @@ static int signals[LAST_SIGNAL] = { 0 };
 #define URF_KILLSWITCH_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                 URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
-struct UrfKillswitchPrivate{
+struct UrfKillswitchPrivate {
 	int fd;
 	GIOChannel *channel;
 	guint watch_id;
@@ -140,9 +142,7 @@ update_killswitch (UrfKillswitch *killswitch,
 		g_message ("updating killswitch status %d to %s",
 			   index,
 			   state_to_string (urf_killswitch_get_state (killswitch, type)));
-		g_signal_emit (G_OBJECT (killswitch),
-			       signals[STATE_CHANGED],
-			       0, urf_killswitch_get_state (killswitch, type));
+		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
 	}
 }
 
@@ -255,9 +255,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 			priv->killswitches = g_list_remove (priv->killswitches, ind);
 			g_message ("removing killswitch idx %d", index);
 			g_free (ind);
-			g_signal_emit (G_OBJECT (killswitch),
-				       signals[STATE_CHANGED],
-				       0, urf_killswitch_get_state (killswitch, type));
+			g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 			return;
 		}
 	}
@@ -279,6 +277,8 @@ add_killswitch (UrfKillswitch *killswitch,
 	ind->type  = type;
 	ind->state = state;
 	priv->killswitches = g_list_append (priv->killswitches, ind);
+
+	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
 }
 
 gint
@@ -334,8 +334,6 @@ event_cb (GIOChannel *source,
 		GIOStatus status;
 		struct rfkill_event event;
 		gsize read;
-		guint type;
-		gboolean changed = FALSE;
 
 		status = g_io_channel_read_chars (source,
 						  (char *) &event,
@@ -348,18 +346,12 @@ event_cb (GIOChannel *source,
 
 			if (event.op == RFKILL_OP_CHANGE) {
 				update_killswitch (killswitch, event.idx, event.soft, event.hard);
-				type = event.type;
-				changed = TRUE;
 			} else if (event.op == RFKILL_OP_DEL) {
 				remove_killswitch (killswitch, event.idx);
-				type = event.type;
-				changed = TRUE;
 			} else if (event.op == RFKILL_OP_ADD) {
 				KillswitchState state;
 				state = event_to_state (event.soft, event.hard);
 				add_killswitch (killswitch, event.idx, event.type, state);
-				type = event.type;
-				changed = TRUE;
 			}
 
 			status = g_io_channel_read_chars (source,
@@ -368,13 +360,6 @@ event_cb (GIOChannel *source,
 							  &read,
 							  NULL);
 		}
-
-		/* FIXME */
-		/* Emit a more reasonable state */
-		if (changed)
-			g_signal_emit (G_OBJECT (killswitch),
-				       signals[STATE_CHANGED],
-				       0, urf_killswitch_get_state (killswitch, type));
 	} else {
 		g_message ("something else happened");
 		return FALSE;
@@ -461,11 +446,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 				(GIOFunc) event_cb,
 				killswitch);
 
-	/* FIXME */
-	/* Emit a more reasonable state*/
-	g_signal_emit (G_OBJECT (killswitch),
-		       signals[STATE_CHANGED],
-		       0, urf_killswitch_get_state (killswitch, event.type));
+	/* TODO emit a reasonable signal */
 }
 
 static void
@@ -500,10 +481,28 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 	object_class->finalize = urf_killswitch_finalize;
 
 	signals[STATE_CHANGED] =
-		g_signal_new ("state-changed",
+		g_signal_new ("rfkill-added",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, state_changed),
+			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_added),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
+
+	signals[STATE_CHANGED] =
+		g_signal_new ("rfkill-removed",
+			      G_TYPE_FROM_CLASS (klass),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_removed),
+			      NULL, NULL,
+			      g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
+
+	signals[STATE_CHANGED] =
+		g_signal_new ("rfkill-changed",
+			      G_TYPE_FROM_CLASS (klass),
+			      G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_changed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__INT,
 			      G_TYPE_NONE, 1, G_TYPE_INT);
