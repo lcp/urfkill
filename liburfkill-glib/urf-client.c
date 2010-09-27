@@ -46,7 +46,9 @@ struct UrfClientPrivate
 };
 
 enum {
-	URF_CLIENT_CHANGED,
+	URF_CLIENT_RFKILL_ADDED,
+	URF_CLIENT_RFKILL_REMOVED,
+	URF_CLIENT_RFKILL_CHANGED,
 	URF_CLIENT_LAST_SIGNAL
 };
 
@@ -281,6 +283,29 @@ urf_client_class_init (UrfClientClass *klass)
 
 	/* TODO */
 	/* install properties and signals */
+        signals[SIGNAL_RFKILL_ADDED] =
+                g_signal_new ("rfkill-added",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0, NULL, NULL,
+                              g_cclosure_marshal_VOID__UINT,
+                              G_TYPE_NONE, 1, G_TYPE_UINT);
+
+        signals[SIGNAL_RFKILL_REMOVED] =
+                g_signal_new ("rfkill-removed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0, NULL, NULL,
+                              g_cclosure_marshal_VOID__UINT,
+                              G_TYPE_NONE, 1, G_TYPE_UINT);
+
+        signals[SIGNAL_RFKILL_CHANGED] =
+                g_signal_new ("rfkill-changed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0, NULL, NULL,
+                              g_cclosure_marshal_VOID__UINT,
+                              G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	g_type_class_add_private (klass, sizeof (UrfClientPrivate));
 }

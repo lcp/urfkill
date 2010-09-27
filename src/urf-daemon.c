@@ -36,6 +36,7 @@
 #include "urf-polkit.h"
 #include "urf-daemon.h"
 #include "urf-killswitch.h"
+#include "urf-utils.h"
 
 #include "urf-daemon-glue.h"
 #include "urf-marshal.h"
@@ -49,7 +50,9 @@ enum
 
 enum
 {
-	SIGNAL_CHANGED,
+	SIGNAL_RFKILL_ADDED,
+	SIGNAL_RFKILL_REMOVED,
+	SIGNAL_RFKILL_CHANGED,
 	SIGNAL_LAST,
 };
 
@@ -182,32 +185,6 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 }
 
 /**
- * get_rfkill_name:
- **/
-char *
-get_rfkill_name (guint index)
-{
-	char *filename;
-	char *content;
-	gsize length;
-	gboolean ret;
-	GError *error = NULL;
-
-	filename = g_strdup_printf ("/sys/class/rfkill/rfkill%u/name", index);
-
-	ret = g_file_get_contents(filename, &content, &length, &error);
-	g_free (filename);
-
-	if (!ret) {
-		g_warning ("Get rfkill name: %s", error->message);
-		return NULL;
-	}
-
-	g_strstrip (content);
-	return content;
-}
-
-/**
  * urf_daemon_get_all_states:
  **/
 gboolean
@@ -229,7 +206,7 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 	for (item = killswitches; item; item = g_list_next (item)) {
 		ind = (UrfIndKillswitch *)item->data;
 
-		device_name = get_rfkill_name (ind->index);
+		device_name = get_rfkill_name_by_index (ind->index);
 
 		value = g_new0 (GValue, 1);
 		g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
@@ -249,13 +226,36 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 }
 
 /**
- * urf_daemon_killswitch_state_cb:
+ * urf_daemon_killswitch_added_cb:
  **/
 static void
-urf_daemon_killswitch_state_cb (UrfKillswitch *killswitch, KillswitchState state)
+urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
 {
 	/* TODO */
-	/* Take care of state change */
+	/* Take care of rfkill change */
+	/* Emit a dbus signal */
+}
+
+/**
+ * urf_daemon_killswitch_removed_cb:
+ **/
+static void
+urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
+{
+	/* TODO */
+	/* Take care of rfkill change */
+	/* Emit a dbus signal */
+}
+
+/**
+ * urf_daemon_killswitch_changed_cb:
+ **/
+static void
+urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
+{
+	/* TODO */
+	/* Take care of rfkill change */
+	/* Emit a dbus signal */
 }
 
 /**
@@ -271,13 +271,18 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
-	g_signal_connect (daemon->priv->killswitch, "state-changed",
-			  G_CALLBACK (urf_daemon_killswitch_state_cb), daemon);
+
+	g_signal_connect (daemon->priv->killswitch, "rfkill-added",
+			  G_CALLBACK (urf_daemon_killswitch_added_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "rfkill-removed",
+			  G_CALLBACK (urf_daemon_killswitch_removed_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "rfkill-changed",
+			  G_CALLBACK (urf_daemon_killswitch_changed_cb), daemon);
 }
 
 /**
- *  * urf_daemon_error_quark:
- *   **/
+ * urf_daemon_error_quark:
+ **/
 GQuark
 urf_daemon_error_quark (void)
 {
@@ -354,13 +359,29 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 
 	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
-	signals[SIGNAL_CHANGED] =
-		g_signal_new ("changed",
+	signals[SIGNAL_RFKILL_ADDED] =
+		g_signal_new ("rfkill-added",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE, 0);
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	signals[SIGNAL_RFKILL_REMOVED] =
+		g_signal_new ("rfkill-removed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	signals[SIGNAL_RFKILL_CHANGED] =
+		g_signal_new ("rfkill-changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,

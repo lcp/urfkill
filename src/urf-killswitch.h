@@ -60,7 +60,9 @@ typedef struct {
 typedef struct {
         GObjectClass parent_class;
 
-        void (*state_changed) (UrfKillswitch *killswitch, KillswitchState state);
+        void (*rfkill_added)   (UrfKillswitch *killswitch, guint index);
+        void (*rfkill_removed) (UrfKillswitch *killswitch, guint index);
+        void (*rfkill_changed) (UrfKillswitch *killswitch, guint index);
 } UrfKillswitchClass;
 
 GType		 urf_killswitch_get_type		(void);

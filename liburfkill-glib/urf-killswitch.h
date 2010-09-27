@@ -48,5 +48,4 @@ typedef struct {
 	char *name;
 } UrfKillSwitch;
 
-
 #endif /* __URF_KILLSWITCH_H */
