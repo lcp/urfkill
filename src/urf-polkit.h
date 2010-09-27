@@ -52,23 +52,6 @@ GType		 urf_polkit_get_type		(void);
 UrfPolkit	*urf_polkit_new			(void);
 void		 urf_polkit_test		(gpointer		 user_data);
 
-PolkitSubject	*urf_polkit_get_subject		(UrfPolkit		*polkit,
-						 DBusGMethodInvocation	*context);
-gboolean	 urf_polkit_check_auth		(UrfPolkit		*polkit,
-						 PolkitSubject		*subject,
-						 const gchar		*action_id,
-						 DBusGMethodInvocation	*context);
-gboolean	 urf_polkit_is_allowed		(UrfPolkit		*polkit,
-						 PolkitSubject		*subject,
-						 const gchar		*action_id,
-						 GError		 	**error);
-gboolean         urf_polkit_get_uid		(UrfPolkit              *polkit,
-                                                 PolkitSubject          *subject,
-                                                 uid_t                  *uid);
-gboolean         urf_polkit_get_pid		(UrfPolkit              *polkit,
-                                                 PolkitSubject          *subject,
-                                                 pid_t                  *pid);
-
 G_END_DECLS
 
 #endif /* __URF_POLKIT_H */
