@@ -47,6 +47,8 @@ urfkilld_SOURCES =						\
 	urf-killswitch.c					\
 	urf-polkit.h						\
 	urf-polkit.c						\
+	urf-utils.h						\
+	urf-utils.c						\
 	urf-daemon.h						\
 	urf-daemon.c						\
 	urf-main.c						\

@@ -36,6 +36,7 @@
 #include "urf-polkit.h"
 #include "urf-daemon.h"
 #include "urf-killswitch.h"
+#include "urf-utils.h"
 
 #include "urf-daemon-glue.h"
 #include "urf-marshal.h"
@@ -182,30 +183,6 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 }
 
 /**
- * get_rfkill_name:
- **/
-static char *
-get_rfkill_name (guint index)
-{
-	char *filename;
-	char *content;
-	gsize length;
-	GError *error = NULL;
-
-	filename = g_strdup_printf ("/sys/class/rfkill/rfkill%u/name", index);
-
-	g_file_get_contents(filename, &content, &length, &error);
-	g_free (filename);
-
-	if (!error) {
-		g_warning ("Get rfkill name: %s", error->message);
-		return NULL;
-	}
-
-	return content;
-}
-
-/**
  * urf_daemon_get_all_states:
  **/
 gboolean
@@ -227,7 +204,7 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 	for (item = killswitches; item; item = g_list_next (item)) {
 		ind = (UrfIndKillswitch *)item->data;
 
-		device_name = get_rfkill_name (ind->index);
+		device_name = get_rfkill_name_by_index (ind->index);
 
 		value = g_new0 (GValue, 1);
 		g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
