@@ -229,7 +229,9 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
  * urf_daemon_killswitch_added_cb:
  **/
 static void
-urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
+urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
+				guint index,
+				UrfDaemon *daemon)
 {
 	/* TODO */
 	/* Take care of rfkill change */
@@ -240,7 +242,9 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch, guint index, UrfDaemo
  * urf_daemon_killswitch_removed_cb:
  **/
 static void
-urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
+urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
+				  guint index,
+				  UrfDaemon *daemon)
 {
 	/* TODO */
 	/* Take care of rfkill change */
@@ -251,7 +255,9 @@ urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch, guint index, UrfDae
  * urf_daemon_killswitch_changed_cb:
  **/
 static void
-urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch, guint index, UrfDaemon *daemon)
+urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
+				  guint index,
+				  UrfDaemon *daemon)
 {
 	/* TODO */
 	/* Take care of rfkill change */

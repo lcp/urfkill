@@ -480,7 +480,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 	g_type_class_add_private(klass, sizeof(UrfKillswitchPrivate));
 	object_class->finalize = urf_killswitch_finalize;
 
-	signals[STATE_CHANGED] =
+	signals[RFKILL_ADDED] =
 		g_signal_new ("rfkill-added",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
@@ -489,7 +489,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      g_cclosure_marshal_VOID__INT,
 			      G_TYPE_NONE, 1, G_TYPE_INT);
 
-	signals[STATE_CHANGED] =
+	signals[RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
@@ -498,7 +498,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      g_cclosure_marshal_VOID__INT,
 			      G_TYPE_NONE, 1, G_TYPE_INT);
 
-	signals[STATE_CHANGED] =
+	signals[RFKILL_CHANGED] =
 		g_signal_new ("rfkill-changed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
