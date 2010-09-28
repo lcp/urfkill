@@ -269,6 +269,46 @@ urf_client_set_wwan_unblock (UrfClient *client)
 	return urf_client_set_unblock (client, "WWAN", NULL, NULL);
 }
 
+/**
+ * urf_rfkill_added_cb:
+ **/
+static void
+urf_rfkill_added_cb (DBusGProxy *proxy,
+		     guint index,
+		     guint type,
+		     gint state
+		     const gchar *name,
+		     UrfClient *client)
+{
+	/* TODO */
+	/* Fill UrfKillSwitch and emit URF_CLIENT_RFKILL_ADDED */
+}
+
+/**
+ * urf_rfkill_removed_cb:
+ **/
+static void
+urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
+{
+	/* TODO */
+	/* emit URF_CLIENT_RFKILL_REMOVEED */
+}
+
+/**
+ * urf_rfkill_changed_cb:
+ **/
+static void
+urf_rfkill_changed_cb (DBusGProxy *proxy,
+		       guint index,
+		       guint type,
+		       gint state
+		       const gchar *name,
+		       UrfClient *client)
+{
+	/* TODO */
+	/* Fill UrfKillSwitch and emit URF_CLIENT_RFKILL_CHANGED */
+}
+
 /*
  * urf_client_class_init:
  * @klass: The UrfClientClass
@@ -339,8 +379,22 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	/* TODO */
-	/* Take care of dbus signals and callback functions */
+	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
+				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+				 G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillRemoved",
+				 G_TYPE_UINT,
+				 G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillChanged",
+				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+				 G_TYPE_INVALID);
+	/* callbacks */
+	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillAdded",
+				     G_CALLBACK (urf_rfkill_added_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillRemoved",
+				     G_CALLBACK (urf_rfkill_removed_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillChanged",
+				     G_CALLBACK (urf_rfkill_changed_cb), client, NULL);
 
 out:
 	return;
