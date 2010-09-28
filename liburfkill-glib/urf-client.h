@@ -52,7 +52,7 @@ typedef struct
 	void			(*rfkill_added)		(UrfClient	*client,
 							 UrfKillswitch	*killswitch);
 	void			(*rfkill_removed)	(UrfClient	*client,
-							 UrfKillswitch	*killswitch);
+							 guint		 index);
 	void			(*rfkill_changed)	(UrfClient	*client,
 							 UrfKillswitch	*killswitch);
 } UrfClientClass;
