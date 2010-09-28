@@ -18,5 +18,22 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="a(uuis)" name="array" direction="out" />
     </method>
+
+    <signal name="RfkillAdded">
+      <arg type="u" name="index" />
+      <arg type="u" name="type"  />
+      <arg type="i" name="state" />
+      <arg type="s" name="name"  />
+    </signal>
+    <signal name="RfkillRemoved">
+      <arg type="u" name="index" />
+    </signal>
+    <signal name="RfkillChanged">
+      <arg type="u" name="index" />
+      <arg type="u" name="type"  />
+      <arg type="i" name="state" />
+      <arg type="s" name="name"  />
+    </signal>
+
   </interface>
 </node>

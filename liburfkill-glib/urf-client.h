@@ -49,6 +49,12 @@ typedef struct
 typedef struct
 {
 	GObjectClass		 parent_class;
+	void			(*rfkill_added)		(UrfClient	*client,
+							 UrfKillSwitch	*killswitch);
+	void			(*rfkill_removed)	(UrfClient	*client,
+							 UrfKillSwitch	*killswitch);
+	void			(*rfkill_changed)	(UrfClient	*client,
+							 UrfKillSwitch	*killswitch);
 } UrfClientClass;
 
 /* general */

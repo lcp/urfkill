@@ -50,7 +50,9 @@ enum
 
 enum
 {
-	SIGNAL_CHANGED,
+	SIGNAL_RFKILL_ADDED,
+	SIGNAL_RFKILL_REMOVED,
+	SIGNAL_RFKILL_CHANGED,
 	SIGNAL_LAST,
 };
 
@@ -224,13 +226,59 @@ urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
 }
 
 /**
- * urf_daemon_killswitch_state_cb:
+ * urf_daemon_killswitch_added_cb:
  **/
 static void
-urf_daemon_killswitch_state_cb (UrfKillswitch *killswitch, KillswitchState state)
+urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
+				guint index,
+				UrfDaemon *daemon)
 {
-	/* TODO */
-	/* Take care of state change */
+	UrfIndKillswitch *ind;
+	char *device_name;
+
+	g_return_if_fail (URF_IS_DAEMON (daemon));
+	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+
+	ind = urf_killswitch_get_killswitch (killswitch, index);
+
+	device_name = get_rfkill_name_by_index (ind->index);
+
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, index, ind->type, ind->state, device_name);
+}
+
+/**
+ * urf_daemon_killswitch_removed_cb:
+ **/
+static void
+urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
+				  guint index,
+				  UrfDaemon *daemon)
+{
+	g_return_if_fail (URF_IS_DAEMON (daemon));
+	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_REMOVED], 0, index);
+}
+
+/**
+ * urf_daemon_killswitch_changed_cb:
+ **/
+static void
+urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
+				  guint index,
+				  UrfDaemon *daemon)
+{
+	UrfIndKillswitch *ind;
+	char *device_name;
+
+	g_return_if_fail (URF_IS_DAEMON (daemon));
+	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+
+	ind = urf_killswitch_get_killswitch (killswitch, index);
+
+	device_name = get_rfkill_name_by_index (ind->index);
+
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0, index, ind->type, ind->state, device_name);
 }
 
 /**
@@ -246,13 +294,18 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
-	g_signal_connect (daemon->priv->killswitch, "state-changed",
-			  G_CALLBACK (urf_daemon_killswitch_state_cb), daemon);
+
+	g_signal_connect (daemon->priv->killswitch, "rfkill-added",
+			  G_CALLBACK (urf_daemon_killswitch_added_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "rfkill-removed",
+			  G_CALLBACK (urf_daemon_killswitch_removed_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "rfkill-changed",
+			  G_CALLBACK (urf_daemon_killswitch_changed_cb), daemon);
 }
 
 /**
- *  * urf_daemon_error_quark:
- *   **/
+ * urf_daemon_error_quark:
+ **/
 GQuark
 urf_daemon_error_quark (void)
 {
@@ -329,13 +382,29 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 
 	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
-	signals[SIGNAL_CHANGED] =
-		g_signal_new ("changed",
+	signals[SIGNAL_RFKILL_ADDED] =
+		g_signal_new ("rfkill-added",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE, 0);
+			      urf_marshal_VOID__UINT_UINT_INT_STRING,
+			      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING);
+
+	signals[SIGNAL_RFKILL_REMOVED] =
+		g_signal_new ("rfkill-removed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
+
+	signals[SIGNAL_RFKILL_CHANGED] =
+		g_signal_new ("rfkill-changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      urf_marshal_VOID__UINT_UINT_INT_STRING,
+			      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
