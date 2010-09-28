@@ -241,7 +241,10 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 
 	ind = urf_killswitch_get_killswitch (killswitch, index);
 
-	device_name = get_rfkill_name_by_index (ind->index);
+	device_name = get_rfkill_name_by_index (index);
+
+	if (!ind)
+		return;
 
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, index, ind->type, ind->state, device_name);
 }
@@ -276,7 +279,10 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 
 	ind = urf_killswitch_get_killswitch (killswitch, index);
 
-	device_name = get_rfkill_name_by_index (ind->index);
+	if (!ind)
+		return;
+
+	device_name = get_rfkill_name_by_index (index);
 
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0, index, ind->type, ind->state, device_name);
 }
