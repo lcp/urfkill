@@ -74,7 +74,7 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 	GValueArray *gva;
 	GValue *gv;
 	guint i;
-	UrfKillSwitch *killswitch;
+	UrfKillswitch *killswitch;
 	GPtrArray *array = NULL;
 	gboolean ret;
 
@@ -111,7 +111,7 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 
 	for (i=0; i<gvalue_ptr_array->len; i++) {
 		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
-		killswitch = g_new0 (UrfKillSwitch, 1);
+		killswitch = g_new0 (UrfKillswitch, 1);
 
 		/* 0: index */
 		gv = g_value_array_get_nth (gva, 0);
@@ -281,7 +281,7 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 		     UrfClient *client)
 {
 	/* TODO */
-	/* Fill UrfKillSwitch and emit URF_CLIENT_RFKILL_ADDED */
+	/* Fill UrfKillswitch and emit URF_CLIENT_RFKILL_ADDED */
 }
 
 /**
@@ -306,7 +306,7 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 		       UrfClient *client)
 {
 	/* TODO */
-	/* Fill UrfKillSwitch and emit URF_CLIENT_RFKILL_CHANGED */
+	/* Fill UrfKillswitch and emit URF_CLIENT_RFKILL_CHANGED */
 }
 
 /*
