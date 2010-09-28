@@ -276,7 +276,7 @@ static void
 urf_rfkill_added_cb (DBusGProxy *proxy,
 		     guint index,
 		     guint type,
-		     gint state
+		     gint state,
 		     const gchar *name,
 		     UrfClient *client)
 {
@@ -301,7 +301,7 @@ static void
 urf_rfkill_changed_cb (DBusGProxy *proxy,
 		       guint index,
 		       guint type,
-		       gint state
+		       gint state,
 		       const gchar *name,
 		       UrfClient *client)
 {
