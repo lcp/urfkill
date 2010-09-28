@@ -504,8 +504,8 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_added),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__INT,
-			      G_TYPE_NONE, 1, G_TYPE_INT);
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	signals[RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",
@@ -513,8 +513,8 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_removed),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__INT,
-			      G_TYPE_NONE, 1, G_TYPE_INT);
+			      g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	signals[RFKILL_CHANGED] =
 		g_signal_new ("rfkill-changed",
@@ -522,7 +522,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_changed),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__INT,
+			      g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_INT);
 
 }
