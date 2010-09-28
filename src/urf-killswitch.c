@@ -245,7 +245,7 @@ urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
-	Glist *item;
+	GList *item;
 	
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 

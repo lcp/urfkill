@@ -19,7 +19,7 @@
       <arg type="a(uuis)" name="array" direction="out" />
     </method>
     <signal name="RfkillAdded">
-      <arg type="(uuis)" name="value">
+      <arg type="(uuis)" name="value" />
     </signal>
   </interface>
 </node>
