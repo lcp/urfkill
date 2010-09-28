@@ -249,7 +249,7 @@ urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 	
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
-	for (item = priv->killswitches; item; g_list_next (item)) {
+	for (item = priv->killswitches; item; item = g_list_next (item)) {
 		ind = (UrfIndKillswitch *)item->data;
 		if (ind->index == index)
 			return ind;
