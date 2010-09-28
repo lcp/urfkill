@@ -233,9 +233,28 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 				guint index,
 				UrfDaemon *daemon)
 {
-	/* TODO */
-	/* Take care of rfkill change */
-	/* Emit a dbus signal */
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfIndKillswitch *ind;
+	char *device_name;
+	GValue *value;
+
+	g_return_if_fail (URF_IS_DAEMON (daemon));
+	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+
+	ind = urf_killswitch_get_killswitch (killswitch, index);
+
+	device_name = get_rfkill_name_by_index (ind->index);
+
+	value = g_new0 (GValue, 1);
+	g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
+	g_value_take_boxed (value, dbus_g_type_specialized_construct (URF_DAEMON_STATES_STRUCT_TYPE));
+	dbus_g_type_struct_set (value,
+				0, ind->index,
+				1, ind->type,
+				2, ind->state,
+				3, device_name, -1);
+
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, (gpointer)value);
 }
 
 /**
@@ -370,8 +389,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__POINTER,
+			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
 	signals[SIGNAL_RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",

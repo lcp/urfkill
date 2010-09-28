@@ -240,6 +240,24 @@ urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
 	return priv->killswitches;
 }
 
+UrfIndKillswitch *
+urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
+{
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfIndKillswitch *ind;
+	Glist *item;
+	
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
+
+	for (item = priv->killswitches; item; g_list_next (item)) {
+		ind = (UrfIndKillswitch *)item->data;
+		if (ind->index == index)
+			return ind;
+	}
+
+	return NULL;
+}
+
 static void
 remove_killswitch (UrfKillswitch *killswitch,
 		   guint index)
