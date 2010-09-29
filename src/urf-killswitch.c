@@ -286,12 +286,13 @@ add_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
+	int state = event_to_state (soft, hard);
 
 	g_message ("adding killswitch idx %d state %s", index, state_to_string (state));
 	ind = g_new0 (UrfIndKillswitch, 1);
 	ind->index = index;
 	ind->type  = type;
-	ind->state = event_to_state (soft, hard);
+	ind->state = state;
 	ind->soft  = soft;
 	ind->hard  = hard;
 	priv->killswitches = g_list_append (priv->killswitches, ind);

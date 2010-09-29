@@ -127,15 +127,15 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		killswitch->state = g_value_get_int (gv);
 		g_value_unset (gv);
 		/* 3: soft */
-		gv = g_value_array_get_nth (gva, 0);
+		gv = g_value_array_get_nth (gva, 3);
 		killswitch->soft = g_value_get_uint (gv);
 		g_value_unset (gv);
 		/* 4: hard */
-		gv = g_value_array_get_nth (gva, 0);
+		gv = g_value_array_get_nth (gva, 4);
 		killswitch->hard = g_value_get_uint (gv);
 		g_value_unset (gv);
 		/* 5: name */
-		gv = g_value_array_get_nth (gva, 3);
+		gv = g_value_array_get_nth (gva, 5);
 		killswitch->name = g_value_dup_string (gv);
 		g_value_unset (gv);
 
@@ -340,9 +340,11 @@ urf_client_set_wwan_unblock (UrfClient *client)
  **/
 static void
 urf_rfkill_added_cb (DBusGProxy *proxy,
-		     guint index,
-		     guint type,
-		     gint state,
+		     const guint index,
+		     const guint type,
+		     const gint state,
+		     const guint soft,
+		     const guint hard,
 		     const gchar *name,
 		     UrfClient *client)
 {
@@ -376,9 +378,9 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 		       const guint index,
 		       const guint type,
 		       const gint state,
-		       const gchar *name,
 		       const guint soft,
 		       const guint hard,
+		       const gchar *name,
 		       UrfClient *client)
 {
 	UrfKillswitch *killswitch;

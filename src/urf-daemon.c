@@ -439,8 +439,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_UINT_INT_STRING,
-			      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING);
+			      urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
+			      G_TYPE_NONE, 6, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
 
 	signals[SIGNAL_RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",
@@ -455,8 +455,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_UINT_INT_STRING,
-			      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING);
+			      urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
+			      G_TYPE_NONE, 6, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
