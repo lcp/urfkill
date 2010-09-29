@@ -278,8 +278,15 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 		     const gchar *name,
 		     UrfClient *client)
 {
-	/* TODO */
-	/* Fill UrfKillswitch and emit URF_CLIENT_RFKILL_ADDED */
+	UrfKillswitch *killswitch;
+
+	killswitch = g_new0 (UrfKillswitch, 1);
+	killswitch->index = index;
+	killswitch->type  = type;
+	killswitch->state = state;
+	killswitch->name  = g_strdup (name);
+
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, (gpointer)killswitch);
 }
 
 /**
@@ -288,8 +295,7 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 static void
 urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
 {
-	/* TODO */
-	/* emit URF_CLIENT_RFKILL_REMOVEED */
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, index);
 }
 
 /**
@@ -303,8 +309,15 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 		       const gchar *name,
 		       UrfClient *client)
 {
-	/* TODO */
-	/* Fill UrfKillswitch and emit URF_CLIENT_RFKILL_CHANGED */
+	UrfKillswitch *killswitch;
+
+	killswitch = g_new0 (UrfKillswitch, 1);
+	killswitch->index = index;
+	killswitch->type  = type;
+	killswitch->state = state;
+	killswitch->name  = g_strdup (name);
+
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, (gpointer)killswitch);
 }
 
 /*
@@ -323,27 +336,24 @@ urf_client_class_init (UrfClientClass *klass)
 	/* install properties and signals */
         signals[URF_CLIENT_RFKILL_ADDED] =
                 g_signal_new ("rfkill-added",
-                              G_OBJECT_CLASS_TYPE (klass),
-                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0, NULL, NULL,
-                              g_cclosure_marshal_VOID__UINT,
-                              G_TYPE_NONE, 1, G_TYPE_UINT);
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfClientClass, rfkill_added),
+			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
         signals[URF_CLIENT_RFKILL_REMOVED] =
                 g_signal_new ("rfkill-removed",
-                              G_OBJECT_CLASS_TYPE (klass),
-                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0, NULL, NULL,
-                              g_cclosure_marshal_VOID__UINT,
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfClientClass, rfkill_removed),
+			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
                               G_TYPE_NONE, 1, G_TYPE_UINT);
 
         signals[URF_CLIENT_RFKILL_CHANGED] =
                 g_signal_new ("rfkill-changed",
-                              G_OBJECT_CLASS_TYPE (klass),
-                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0, NULL, NULL,
-                              g_cclosure_marshal_VOID__UINT,
-                              G_TYPE_NONE, 1, G_TYPE_UINT);
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfClientClass, rfkill_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
 	g_type_class_add_private (klass, sizeof (UrfClientPrivate));
 }
