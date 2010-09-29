@@ -36,6 +36,8 @@ typedef struct {
 	guint index;
 	guint type;
 	KillswitchState state;
+	guint soft;
+	guint hard;
 } UrfIndKillswitch;
 
 #define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())

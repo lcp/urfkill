@@ -45,6 +45,8 @@ typedef struct {
 	unsigned int index;
 	KillswitchType type;
 	KillswitchState state;
+	unsigned int soft;
+	unsigned int hard;
 	char *name;
 } UrfKillswitch;
 

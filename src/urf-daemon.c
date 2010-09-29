@@ -77,6 +77,8 @@ G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 								G_TYPE_UINT,	\
 								G_TYPE_UINT,	\
 								G_TYPE_INT,	\
+								G_TYPE_UINT,	\
+								G_TYPE_UINT,	\
 								G_TYPE_STRING,	\
 								G_TYPE_INVALID))
 
@@ -215,7 +217,9 @@ urf_daemon_get_all (UrfDaemon *daemon, DBusGMethodInvocation *context)
 					0, ind->index,
 					1, ind->type,
 					2, ind->state,
-					3, device_name, -1);
+					3, ind->soft,
+					4, ind->hard,
+					5, device_name, -1);
 		g_ptr_array_add (array, g_value_get_boxed (value));
 		g_free (value);
 	}
@@ -238,6 +242,7 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 	UrfIndKillswitch *ind;
 	char *device_name;
 	int type, state;
+	guint soft, hard;
 
 	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
 
@@ -248,14 +253,18 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 	if (ind == NULL) {
 		type = -1;
 		state = -1;
+		soft = 1;
+		hard = 1;
 		device_name = NULL;
 	} else {
 		type = ind->type;
 		state = ind->state;
+		soft = ind->soft;
+		hard = ind->hard;
 		device_name = get_rfkill_name_by_index (index);
 	}
 	
-	dbus_g_method_return (context, type, state, device_name);
+	dbus_g_method_return (context, type, state, soft, hard, device_name);
 
 	return TRUE;
 }
@@ -281,7 +290,8 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 	if (!ind)
 		return;
 
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, index, ind->type, ind->state, device_name);
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0,
+		       index, ind->type, ind->state, ind->soft, ind->hard, device_name);
 }
 
 /**
@@ -319,7 +329,8 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 
 	device_name = get_rfkill_name_by_index (index);
 
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0, index, ind->type, ind->state, device_name);
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0,
+		       index, ind->type, ind->state, ind->soft, ind->hard, device_name);
 }
 
 /**

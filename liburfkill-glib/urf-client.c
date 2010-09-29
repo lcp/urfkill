@@ -87,6 +87,8 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 							G_TYPE_UINT,
 							G_TYPE_UINT,
 							G_TYPE_INT,
+							G_TYPE_UINT,
+							G_TYPE_UINT,
 							G_TYPE_STRING,
 							G_TYPE_INVALID));
 
@@ -124,7 +126,15 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		gv = g_value_array_get_nth (gva, 2);
 		killswitch->state = g_value_get_int (gv);
 		g_value_unset (gv);
-		/* 3: name */
+		/* 3: soft */
+		gv = g_value_array_get_nth (gva, 0);
+		killswitch->soft = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 4: hard */
+		gv = g_value_array_get_nth (gva, 0);
+		killswitch->hard = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 5: name */
 		gv = g_value_array_get_nth (gva, 3);
 		killswitch->name = g_value_dup_string (gv);
 		g_value_unset (gv);
@@ -147,6 +157,7 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 	UrfKillswitch *killswitch = NULL;
 	gboolean ret;
 	int type, state;
+	guint soft, hard;
 	char *name = NULL;
 	GError *error_local = NULL;
 
@@ -158,6 +169,8 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 				 G_TYPE_INVALID,
 				 G_TYPE_INT, &type,
 				 G_TYPE_INT, &state,
+				 G_TYPE_UINT, &soft,
+				 G_TYPE_UINT, &hard,
 				 G_TYPE_STRING, &name,
 				 G_TYPE_INVALID);
 	if (!ret) {
@@ -181,6 +194,8 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 	killswitch->index = index;
 	killswitch->type  = type;
 	killswitch->state = state;
+	killswitch->soft  = soft;
+	killswitch->hard  = hard;
 	killswitch->name  = g_strdup (name);
 
 out:
@@ -337,6 +352,8 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 	killswitch->index = index;
 	killswitch->type  = type;
 	killswitch->state = state;
+	killswitch->soft  = soft;
+	killswitch->hard  = hard;
 	killswitch->name  = g_strdup (name);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, (gpointer)killswitch);
@@ -356,10 +373,12 @@ urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
  **/
 static void
 urf_rfkill_changed_cb (DBusGProxy *proxy,
-		       guint index,
-		       guint type,
-		       gint state,
+		       const guint index,
+		       const guint type,
+		       const gint state,
 		       const gchar *name,
+		       const guint soft,
+		       const guint hard,
 		       UrfClient *client)
 {
 	UrfKillswitch *killswitch;
@@ -368,6 +387,8 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 	killswitch->index = index;
 	killswitch->type  = type;
 	killswitch->state = state;
+	killswitch->soft  = soft;
+	killswitch->hard  = hard;
 	killswitch->name  = g_strdup (name);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, (gpointer)killswitch);
@@ -440,19 +461,19 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_STRING,
+	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
 					   G_TYPE_NONE,
-					   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+					   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
 					   G_TYPE_INVALID);
 
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
-				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillRemoved",
 				 G_TYPE_UINT,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillChanged",
-				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	/* callbacks */
 	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillAdded",
