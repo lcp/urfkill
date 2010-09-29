@@ -139,6 +139,58 @@ out:
 }
 
 /**
+ * urf_client_get_killswitch:
+ **/
+UrfKillswitch *
+urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
+{
+	UrfKillswitch *killswitch = NULL;
+	gboolean ret;
+	int type, state;
+	char *name;
+	GError *error_local = NULL;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "GetKillswitch", &error_local,
+				 G_TYPE_UINT, index,
+				 G_TYPE_INVALID,
+				 G_TYPE_INT, &type,
+				 G_TYPE_INT, &state,
+				 G_TYPE_STRING, name,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* DBus might time out, which is okay */
+		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
+			g_debug ("DBUS timed out, but recovering");
+		}
+
+		/* an actual error */
+		g_warning ("Couldn't got killswitch: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		goto out;
+	}
+
+	if (type < 0) {
+		killswitch = NULL;
+		goto out;
+	}
+
+	killswitch = g_new0 (UrfKillswitch, 1);
+	killswitch->index = index;
+	killswitch->type  = type;
+	killswitch->state = state;
+	killswitch->name  = g_strdup (name);
+
+out:
+	if (error_local != NULL)
+		g_error_free (error_local);
+
+	return killswitch;
+}
+
+/**
  * urf_client_block
  **/
 gboolean

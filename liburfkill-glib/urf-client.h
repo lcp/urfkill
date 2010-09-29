@@ -65,6 +65,10 @@ UrfClient	*urf_client_new				(void);
 GList		*urf_client_get_all			(UrfClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
+UrfKillswitch	*urf_client_get_killswitch		(UrfClient	*client,
+							 const guint	 index,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 const char	*type,
 							 GCancellable	*cancellable,
