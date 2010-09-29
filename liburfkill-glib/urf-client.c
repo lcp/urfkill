@@ -128,7 +128,7 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		killswitch->name = g_value_dup_string (gv);
 		g_value_unset (gv);
 
-		g_list_append (killswitches, (gpointer)killswitch);
+		killswitches = g_list_append (killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
 	}
 out:
