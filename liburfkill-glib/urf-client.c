@@ -27,6 +27,7 @@
 #include <dbus/dbus-glib.h>
 
 #include "urf-client.h"
+#include "urf-marshal.h"
 
 static void	urf_client_class_init	(UrfClientClass	*klass);
 static void	urf_client_init		(UrfClient	*client);
@@ -386,6 +387,11 @@ urf_client_init (UrfClient *client)
 		g_warning ("Couldn't connect to proxy");
 		goto out;
 	}
+
+	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_STRING,
+					   G_TYPE_NONE,
+					   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
+					   G_TYPE_INVALID);
 
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
 				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_STRING,
