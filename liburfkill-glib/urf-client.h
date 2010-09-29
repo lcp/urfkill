@@ -50,11 +50,11 @@ typedef struct
 {
 	GObjectClass		 parent_class;
 	void			(*rfkill_added)		(UrfClient	*client,
-							 UrfKillSwitch	*killswitch);
+							 UrfKillswitch	*killswitch);
 	void			(*rfkill_removed)	(UrfClient	*client,
-							 UrfKillSwitch	*killswitch);
+							 guint		 index);
 	void			(*rfkill_changed)	(UrfClient	*client,
-							 UrfKillSwitch	*killswitch);
+							 UrfKillswitch	*killswitch);
 } UrfClientClass;
 
 /* general */
@@ -62,7 +62,11 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
-GPtrArray	*urf_client_get_all_states		(UrfClient	*client,
+GList		*urf_client_get_all			(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+UrfKillswitch	*urf_client_get_killswitch		(UrfClient	*client,
+							 const guint	 index,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 urf_client_set_block 			(UrfClient	*client,

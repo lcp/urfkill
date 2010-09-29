@@ -46,6 +46,6 @@ typedef struct {
 	KillswitchType type;
 	KillswitchState state;
 	char *name;
-} UrfKillSwitch;
+} UrfKillswitch;
 
 #endif /* __URF_KILLSWITCH_H */

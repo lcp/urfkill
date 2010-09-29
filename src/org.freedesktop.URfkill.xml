@@ -14,25 +14,32 @@
       <arg type="s" name="type" direction="in" />
       <arg type="b" name="ret" direction="out" />
     </method>
-    <method name="GetAllStates">
+    <method name="GetAll">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="a(uuis)" name="array" direction="out" />
     </method>
+    <method name="GetKillswitch">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="u" name="index" direction="in" />
+      <arg type="i" name="type"  direction="out" />
+      <arg type="i" name="state" direction="out" />
+      <arg type="s" name="name"  direction="out" />
+    </method>
 
     <signal name="RfkillAdded">
-      <arg type="u" name="index" />
-      <arg type="u" name="type"  />
-      <arg type="i" name="state" />
-      <arg type="s" name="name"  />
+      <arg type="u" name="index" direction="out" />
+      <arg type="u" name="type"  direction="out" />
+      <arg type="i" name="state" direction="out" />
+      <arg type="s" name="name"  direction="out" />
     </signal>
     <signal name="RfkillRemoved">
-      <arg type="u" name="index" />
+      <arg type="u" name="index" direction="out" />
     </signal>
     <signal name="RfkillChanged">
-      <arg type="u" name="index" />
-      <arg type="u" name="type"  />
-      <arg type="i" name="state" />
-      <arg type="s" name="name"  />
+      <arg type="u" name="index" direction="out" />
+      <arg type="u" name="type"  direction="out" />
+      <arg type="i" name="state" direction="out" />
+      <arg type="s" name="name"  direction="out" />
     </signal>
 
   </interface>
