@@ -225,6 +225,41 @@ urf_daemon_get_all (UrfDaemon *daemon, DBusGMethodInvocation *context)
 	return TRUE;
 }
 
+
+/**
+ * urf_daemon_get_killswitch:
+ **/
+gboolean
+urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	GError *error;
+	UrfKillswitch *killswitch;
+	UrfIndKillswitch *ind;
+	char *device_name;
+
+	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
+
+	killswitch = priv->killswitch;
+
+	ind = urf_killswitch_get_killswitch (killswitch, index);
+	
+	if (ind == NULL) {
+		dbus_g_method_return (context, -1);
+		dbus_g_method_return (context, -1);
+		dbus_g_method_return (context, NULL);
+		return TRUE;
+	}
+
+	device_name = get_rfkill_name_by_index (index);
+	
+	dbus_g_method_return (context, ind->type);
+	dbus_g_method_return (context, ind->state);
+	dbus_g_method_return (context, device_name);
+
+	return TRUE;
+}
+
 /**
  * urf_daemon_killswitch_added_cb:
  **/
