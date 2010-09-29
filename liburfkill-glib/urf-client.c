@@ -358,7 +358,7 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 	killswitch->hard  = hard;
 	killswitch->name  = g_strdup (name);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, (gpointer)killswitch);
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, killswitch);
 }
 
 /**
@@ -393,7 +393,7 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 	killswitch->hard  = hard;
 	killswitch->name  = g_strdup (name);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, (gpointer)killswitch);
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, killswitch);
 }
 
 /*
