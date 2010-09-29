@@ -147,7 +147,7 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 	UrfKillswitch *killswitch = NULL;
 	gboolean ret;
 	int type, state;
-	char *name;
+	char *name = NULL;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
@@ -158,7 +158,7 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 				 G_TYPE_INVALID,
 				 G_TYPE_INT, &type,
 				 G_TYPE_INT, &state,
-				 G_TYPE_STRING, name,
+				 G_TYPE_STRING, &name,
 				 G_TYPE_INVALID);
 	if (!ret) {
 		/* DBus might time out, which is okay */
