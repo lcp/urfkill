@@ -237,6 +237,7 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 	UrfKillswitch *killswitch;
 	UrfIndKillswitch *ind;
 	char *device_name;
+	int type, state;
 
 	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
 
@@ -245,17 +246,16 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 	ind = urf_killswitch_get_killswitch (killswitch, index);
 	
 	if (ind == NULL) {
-		dbus_g_method_return (context, -1);
-		dbus_g_method_return (context, -1);
-		dbus_g_method_return (context, NULL);
-		return TRUE;
+		type = -1;
+		state = -1;
+		device_name = NULL;
+	} else {
+		type = ind->type;
+		state = ind->state;
+		device_name = get_rfkill_name_by_index (index);
 	}
-
-	device_name = get_rfkill_name_by_index (index);
 	
-	dbus_g_method_return (context, ind->type);
-	dbus_g_method_return (context, ind->state);
-	dbus_g_method_return (context, device_name);
+	dbus_g_method_return (context, type, state, device_name);
 
 	return TRUE;
 }
