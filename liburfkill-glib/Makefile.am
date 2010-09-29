@@ -8,7 +8,7 @@ INCLUDES = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\"			\
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
-BUILT_SOURCES =
+BUILT_SOURCES =							\
 	urf-marshal.h						\
 	urf-marshal.c
 
@@ -29,8 +29,8 @@ liburfkill_glib_include_HEADERS =				\
 	urf-client.h
 
 liburfkill_glib_la_SOURCES =					\
-	urf-marshal.c						\
-	urf-client.c
+	urf-client.c						\
+	$(BUILT_SOURCES)
 
 liburfkill_glib_la_LIBADD =					\
 	$(INTLLIBS)						\
