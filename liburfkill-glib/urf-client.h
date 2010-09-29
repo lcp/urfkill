@@ -62,7 +62,7 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
-GPtrArray	*urf_client_get_all_states		(UrfClient	*client,
+GList		*urf_client_get_all			(UrfClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 urf_client_set_block 			(UrfClient	*client,

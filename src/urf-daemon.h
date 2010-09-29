@@ -72,7 +72,7 @@ gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
 gboolean	 urf_daemon_unblock		(UrfDaemon		*daemon,
 						 const char 		*type_name,
 						 DBusGMethodInvocation	*context);
-gboolean	 urf_daemon_get_all_states	(UrfDaemon		*daemon,
+gboolean	 urf_daemon_get_all		(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 
 G_END_DECLS

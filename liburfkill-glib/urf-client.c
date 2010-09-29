@@ -63,10 +63,10 @@ static gpointer urf_client_object = NULL;
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
 /**
- * urf_client_get_all_states:
+ * urf_client_get_all:
  **/
-GPtrArray *
-urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError **error)
+GList *
+urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error)
 {
 	GError *error_local = NULL;
 	GType g_type_gvalue_array;
@@ -75,7 +75,7 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 	GValue *gv;
 	guint i;
 	UrfKillswitch *killswitch;
-	GPtrArray *array = NULL;
+	GList *killswitches = NULL;
 	gboolean ret;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
@@ -89,7 +89,7 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 							G_TYPE_STRING,
 							G_TYPE_INVALID));
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "GetAllStates", &error_local,
+	ret = dbus_g_proxy_call (client->priv->proxy, "GetAll", &error_local,
 				 G_TYPE_INVALID,
 				 g_type_gvalue_array, &gvalue_ptr_array,
 				 G_TYPE_INVALID);
@@ -107,8 +107,6 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 	}
 
 	/* convert */
-	array = g_ptr_array_new ();
-
 	for (i=0; i<gvalue_ptr_array->len; i++) {
 		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
 		killswitch = g_new0 (UrfKillswitch, 1);
@@ -130,13 +128,13 @@ urf_client_get_all_states (UrfClient *client, GCancellable *cancellable, GError 
 		killswitch->name = g_value_dup_string (gv);
 		g_value_unset (gv);
 
-		g_ptr_array_add (array, killswitch);
+		g_list_append (killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
 	}
 out:
 	if (gvalue_ptr_array != NULL)
 		g_ptr_array_free (gvalue_ptr_array, TRUE);
-	return array;
+	return killswitches;
 }
 
 /**

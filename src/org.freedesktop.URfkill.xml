@@ -14,7 +14,7 @@
       <arg type="s" name="type" direction="in" />
       <arg type="b" name="ret" direction="out" />
     </method>
-    <method name="GetAllStates">
+    <method name="GetAll">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="a(uuis)" name="array" direction="out" />
     </method>

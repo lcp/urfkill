@@ -185,10 +185,10 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 }
 
 /**
- * urf_daemon_get_all_states:
+ * urf_daemon_get_all:
  **/
 gboolean
-urf_daemon_get_all_states (UrfDaemon *daemon, DBusGMethodInvocation *context)
+urf_daemon_get_all (UrfDaemon *daemon, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	GError *error;
