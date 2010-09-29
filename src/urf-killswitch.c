@@ -281,19 +281,20 @@ remove_killswitch (UrfKillswitch *killswitch,
 
 static void
 add_killswitch (UrfKillswitch *killswitch,
-		guint index,
-		guint type,
-		KillswitchState state)
+		guint index, guint type, guint soft, guint hard)
 
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
+	int state = event_to_state (soft, hard);
 
 	g_message ("adding killswitch idx %d state %s", index, state_to_string (state));
 	ind = g_new0 (UrfIndKillswitch, 1);
 	ind->index = index;
 	ind->type  = type;
 	ind->state = state;
+	ind->soft  = soft;
+	ind->hard  = hard;
 	priv->killswitches = g_list_append (priv->killswitches, ind);
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
@@ -367,9 +368,7 @@ event_cb (GIOChannel *source,
 			} else if (event.op == RFKILL_OP_DEL) {
 				remove_killswitch (killswitch, event.idx);
 			} else if (event.op == RFKILL_OP_ADD) {
-				KillswitchState state;
-				state = event_to_state (event.soft, event.hard);
-				add_killswitch (killswitch, event.idx, event.type, state);
+				add_killswitch (killswitch, event.idx, event.type, event.soft, event.hard);
 			}
 
 			status = g_io_channel_read_chars (source,
@@ -451,9 +450,8 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 			continue;
 		if (event.type >= NUM_RFKILL_TYPES)
 			continue;
-		state = event_to_state (event.soft, event.hard);
 
-		add_killswitch (killswitch, event.idx, event.type, state);
+		add_killswitch (killswitch, event.idx, event.type, event.soft, event.hard);
 	}
 
 	/* Setup monitoring */

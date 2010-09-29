@@ -16,13 +16,15 @@
     </method>
     <method name="GetAll">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="a(uuis)" name="array" direction="out" />
+      <arg type="a(uuiuus)" name="array" direction="out" />
     </method>
     <method name="GetKillswitch">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="u" name="index" direction="in" />
       <arg type="i" name="type"  direction="out" />
       <arg type="i" name="state" direction="out" />
+      <arg type="u" name="soft"  direction="out" />
+      <arg type="u" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </method>
 
@@ -30,6 +32,8 @@
       <arg type="u" name="index" direction="out" />
       <arg type="u" name="type"  direction="out" />
       <arg type="i" name="state" direction="out" />
+      <arg type="u" name="soft"  direction="out" />
+      <arg type="u" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </signal>
     <signal name="RfkillRemoved">
@@ -39,6 +43,8 @@
       <arg type="u" name="index" direction="out" />
       <arg type="u" name="type"  direction="out" />
       <arg type="i" name="state" direction="out" />
+      <arg type="u" name="soft"  direction="out" />
+      <arg type="u" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </signal>
 
