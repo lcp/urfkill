@@ -44,6 +44,7 @@ struct UrfClientPrivate
 {
 	DBusGConnection		*bus;
 	DBusGProxy		*proxy;
+	GPtrArray		*killswitches;
 };
 
 enum {
@@ -63,89 +64,30 @@ static gpointer urf_client_object = NULL;
 
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
-/**
- * urf_client_get_all:
- **/
-GList *
-urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error)
+static UrfKillswitch *
+urf_client_find_killswitch (UrfClient *client, const guint index)
 {
-	GError *error_local = NULL;
-	GType g_type_gvalue_array;
-	GPtrArray *gvalue_ptr_array = NULL;
-	GValueArray *gva;
-	GValue *gv;
+	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfKillswitch *killswitch = NULL;
 	guint i;
-	UrfKillswitch *killswitch;
-	GList *killswitches = NULL;
-	gboolean ret;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
-						dbus_g_type_get_struct("GValueArray",
-							G_TYPE_UINT,
-							G_TYPE_UINT,
-							G_TYPE_INT,
-							G_TYPE_UINT,
-							G_TYPE_UINT,
-							G_TYPE_STRING,
-							G_TYPE_INVALID));
-
-	ret = dbus_g_proxy_call (client->priv->proxy, "GetAll", &error_local,
-				 G_TYPE_INVALID,
-				 g_type_gvalue_array, &gvalue_ptr_array,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		/* an actual error */
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		g_error_free (error_local);
-		goto out;
+	for (i=0; i<priv->killswitches->len; i++) {
+		killswitch = (UrfKillswitch *) g_ptr_array_index (priv->killswitches, i);
+		if (index == urf_killswitch_get_rfkill_index (killswitch))
+			return killswitch;
 	}
 
-	/* no data */
-	if (gvalue_ptr_array->len == 0) {
-		g_set_error_literal (error, 1, 0, "no data");
-		goto out;
-	}
+	return NULL;
+}
 
-	/* convert */
-	for (i=0; i<gvalue_ptr_array->len; i++) {
-		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
-		killswitch = g_new0 (UrfKillswitch, 1);
-
-		/* 0: index */
-		gv = g_value_array_get_nth (gva, 0);
-		killswitch->index = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 1: type */
-		gv = g_value_array_get_nth (gva, 1);
-		killswitch->type = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 2: state */
-		gv = g_value_array_get_nth (gva, 2);
-		killswitch->state = g_value_get_int (gv);
-		g_value_unset (gv);
-		/* 3: soft */
-		gv = g_value_array_get_nth (gva, 3);
-		killswitch->soft = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 4: hard */
-		gv = g_value_array_get_nth (gva, 4);
-		killswitch->hard = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 5: name */
-		gv = g_value_array_get_nth (gva, 5);
-		killswitch->name = g_value_dup_string (gv);
-		g_value_unset (gv);
-
-		killswitches = g_list_append (killswitches, (gpointer)killswitch);
-		g_value_array_free (gva);
-	}
-out:
-	if (gvalue_ptr_array != NULL)
-		g_ptr_array_free (gvalue_ptr_array, TRUE);
-	return killswitches;
+/**
+ * urf_client_get_killswitches:
+ **/
+GPtrArray *
+urf_client_get_killswitches (UrfClient *client)
+{
+	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	return g_ptr_array_ref (priv->killswitches);
 }
 
 /**
@@ -154,6 +96,7 @@ out:
 UrfKillswitch *
 urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
 {
+	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
 	UrfKillswitch *killswitch = NULL;
 	gboolean ret;
 	int type, state;
@@ -163,6 +106,10 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	killswitch = urf_client_find_killswitch (client, index);
+	if (killswitch != NULL)
+		return g_object_ref (killswitch);
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "GetKillswitch", &error_local,
 				 G_TYPE_UINT, index,
@@ -190,17 +137,16 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 		goto out;
 	}
 
-	killswitch = g_new0 (UrfKillswitch, 1);
-	killswitch->index = index;
-	killswitch->type  = type;
-	killswitch->state = state;
-	killswitch->soft  = soft;
-	killswitch->hard  = hard;
-	killswitch->name  = g_strdup (name);
+	killswitch = urf_killswitch_new ();
+	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+	g_ptr_array_add (priv->killswitches, killswitch);
 
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
+
+	if (killswitch != NULL)
+		return g_object_ref (killswitch);
 
 	return killswitch;
 }
@@ -348,15 +294,18 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 		     const gchar *name,
 		     UrfClient *client)
 {
+	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
 	UrfKillswitch *killswitch;
 
-	killswitch = g_new0 (UrfKillswitch, 1);
-	killswitch->index = index;
-	killswitch->type  = type;
-	killswitch->state = state;
-	killswitch->soft  = soft;
-	killswitch->hard  = hard;
-	killswitch->name  = g_strdup (name);
+	killswitch = urf_client_find_killswitch (client, index);
+
+	if (killswitch != NULL)
+		return;
+
+	killswitch = urf_killswitch_new ();
+	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+
+	g_ptr_array_add (priv->killswitches, killswitch);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, killswitch);
 }
@@ -367,7 +316,17 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 static void
 urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
 {
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, index);
+	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfKillswitch *killswitch;
+
+	killswitch = urf_client_find_killswitch (client, index);
+
+	if (killswitch == NULL)
+		return;
+
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, g_object_ref (killswitch));
+
+	g_ptr_array_remove (priv->killswitches, killswitch);
 }
 
 /**
@@ -385,15 +344,107 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 {
 	UrfKillswitch *killswitch;
 
-	killswitch = g_new0 (UrfKillswitch, 1);
-	killswitch->index = index;
-	killswitch->type  = type;
-	killswitch->state = state;
-	killswitch->soft  = soft;
-	killswitch->hard  = hard;
-	killswitch->name  = g_strdup (name);
+	killswitch = urf_client_find_killswitch (client, index);
+
+	if (killswitch == NULL)
+		return;
+
+	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, killswitch);
+}
+
+/**
+ * urf_client_get_all:
+ **/
+static GPtrArray *
+urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error)
+{
+	GError *error_local = NULL;
+	GType g_type_gvalue_array;
+	GPtrArray *gvalue_ptr_array = NULL;
+	GValueArray *gva;
+	GValue *gv;
+	guint i;
+	UrfKillswitch *killswitch;
+	GPtrArray *killswitches = NULL;
+	gboolean ret;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
+						dbus_g_type_get_struct("GValueArray",
+							G_TYPE_UINT,
+							G_TYPE_UINT,
+							G_TYPE_INT,
+							G_TYPE_UINT,
+							G_TYPE_UINT,
+							G_TYPE_STRING,
+							G_TYPE_INVALID));
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "GetAll", &error_local,
+				 G_TYPE_INVALID,
+				 g_type_gvalue_array, &gvalue_ptr_array,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* an actual error */
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		g_error_free (error_local);
+		goto out;
+	}
+
+	/* no data */
+	if (gvalue_ptr_array->len == 0) {
+		g_set_error_literal (error, 1, 0, "no data");
+		goto out;
+	}
+
+	killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	/* convert */
+	for (i=0; i<gvalue_ptr_array->len; i++) {
+		guint index, type, soft, hard;
+		gint state;
+		gchar *name;
+
+		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
+
+		/* 0: index */
+		gv = g_value_array_get_nth (gva, 0);
+		index = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 1: type */
+		gv = g_value_array_get_nth (gva, 1);
+		type = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 2: state */
+		gv = g_value_array_get_nth (gva, 2);
+		state = g_value_get_int (gv);
+		g_value_unset (gv);
+		/* 3: soft */
+		gv = g_value_array_get_nth (gva, 3);
+		soft = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 4: hard */
+		gv = g_value_array_get_nth (gva, 4);
+		hard = g_value_get_uint (gv);
+		g_value_unset (gv);
+		/* 5: name */
+		gv = g_value_array_get_nth (gva, 5);
+		name = g_value_dup_string (gv);
+		g_value_unset (gv);
+
+		killswitch = urf_killswitch_new ();
+		urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+
+		g_ptr_array_add (killswitches, (gpointer)killswitch);
+		g_value_array_free (gva);
+	}
+out:
+	if (gvalue_ptr_array != NULL)
+		g_ptr_array_free (gvalue_ptr_array, TRUE);
+	return killswitches;
 }
 
 /*
@@ -421,8 +472,8 @@ urf_client_class_init (UrfClientClass *klass)
                 g_signal_new ("rfkill-removed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfClientClass, rfkill_removed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-                              G_TYPE_NONE, 1, G_TYPE_UINT);
+			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
         signals[URF_CLIENT_RFKILL_CHANGED] =
                 g_signal_new ("rfkill-changed",
@@ -463,6 +514,9 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
+	client->priv->killswitches = urf_client_get_all (client, NULL, NULL);
+
+	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
 					   G_TYPE_NONE,
 					   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
@@ -506,6 +560,9 @@ urf_client_finalize (GObject *object)
 
 	if (client->priv->proxy != NULL)
 		g_object_unref (client->priv->proxy);
+
+	if (client->priv->killswitches != NULL)
+		g_ptr_array_unref (client->priv->killswitches);
 
 	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
 }

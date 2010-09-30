@@ -52,7 +52,7 @@ typedef struct
 	void			(*rfkill_added)		(UrfClient	*client,
 							 UrfKillswitch	*killswitch);
 	void			(*rfkill_removed)	(UrfClient	*client,
-							 guint		 index);
+							 UrfKillswitch	*killswitch);
 	void			(*rfkill_changed)	(UrfClient	*client,
 							 UrfKillswitch	*killswitch);
 } UrfClientClass;
@@ -62,9 +62,7 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
-GList		*urf_client_get_all			(UrfClient	*client,
-							 GCancellable	*cancellable,
-							 GError		**error);
+GPtrArray	*urf_client_get_killswitches		(UrfClient	*client);
 UrfKillswitch	*urf_client_get_killswitch		(UrfClient	*client,
 							 const guint	 index,
 							 GCancellable	*cancellable,
