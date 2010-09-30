@@ -129,9 +129,11 @@ update_killswitch (UrfKillswitch *killswitch,
 
 		if (ind->index == index) {
 			KillswitchState state = event_to_state (soft, hard);
-			if (state != ind->state) {
+			if (ind->soft != soft || ind->hard != hard) {
 				ind->state = state;
 				type = ind->type;
+				ind->soft = soft;
+				ind->hard = hard;
 				changed = TRUE;
 			}
 			break;
