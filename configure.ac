@@ -177,6 +177,7 @@ urfkill-glib.pc
 src/Makefile
 liburfkill-glib/Makefile
 liburfkill-glib/urf-version.h
+policy/Makefile
 po/Makefile.in
 ])
 AC_OUTPUT
