@@ -29,6 +29,7 @@ liburfkill_glib_include_HEADERS =				\
 	urf-client.h
 
 liburfkill_glib_la_SOURCES =					\
+	urf-killswitch.c					\
 	urf-client.c						\
 	$(BUILT_SOURCES)
 

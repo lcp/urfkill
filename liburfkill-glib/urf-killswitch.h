@@ -22,6 +22,9 @@
 #ifndef __URF_KILLSWITCH_H
 #define __URF_KILLSWITCH_H
 
+#include <glib-object.h>
+#include <gio/gio.h>
+
 typedef enum {
         RFKILL_TYPE_ALL = 0,
         RFKILL_TYPE_WLAN,
@@ -41,13 +44,48 @@ typedef enum {
         KILLSWITCH_STATE_HARD_BLOCKED
 } KillswitchState;
 
-typedef struct {
-	unsigned int index;
-	KillswitchType type;
-	KillswitchState state;
-	unsigned int soft;
-	unsigned int hard;
-	char *name;
+G_BEGIN_DECLS
+
+#define URF_TYPE_KILLSWITCH		(urf_killswitch_get_type ())
+#define URF_KILLSWITCH(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), URF_TYPE_KILLSWITCH, UrfKillswitch))
+#define URF_KILLSWITCH_CLASS(k)		(G_TYPE_CHECK_CLASS_CAST((k), URF_TYPE_KILLSWITCH, UrfKillswitchClass))
+#define URF_IS_KILLSWITCH(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), URF_TYPE_KILLSWITCH))
+#define URF_IS_KILLSWITCH_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), URF_TYPE_KILLSWITCH))
+#define URF_KILLSWITCH_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), URF_TYPE_KILLSWITCH, UrfKillswitchClass))
+#define URF_KILLSWITCH_ERROR		(urf_killswitch_error_quark ())
+#define URF_KILLSWITCH_TYPE_ERROR	(urf_killswitch_error_get_type ())
+
+typedef struct UrfKillswitchPrivate UrfKillswitchPrivate;
+
+typedef struct
+{
+	 GObject		 parent;
+	 UrfKillswitchPrivate	*priv;
 } UrfKillswitch;
+
+typedef struct
+{
+	GObjectClass		 parent_class;
+} UrfKillswitchClass;
+
+/* general */
+GType			 urf_killswitch_get_type		(void);
+UrfKillswitch		*urf_killswitch_new			(void);
+
+void			 urf_killswitch_setup			(UrfKillswitch	*killswitch,
+								 const guint	 index,
+								 const guint	 type,
+								 const gint	 state,
+								 const guint	 soft,
+								 const guint	 hard,
+								 const gchar	*name);
+guint			 urf_killswitch_get_rfkill_index	(UrfKillswitch	*killswitch);
+KillswitchType		 urf_killswitch_get_rfkill_type		(UrfKillswitch	*killswitch);
+KillswitchState		 urf_killswitch_get_rfkill_state	(UrfKillswitch	*killswitch);
+guint			 urf_killswitch_get_rfkill_soft		(UrfKillswitch	*killswitch);
+guint			 urf_killswitch_get_rfkill_hard		(UrfKillswitch	*killswitch);
+gchar			*urf_killswitch_get_rfkill_name		(UrfKillswitch	*killswitch);
+
+G_END_DECLS
 
 #endif /* __URF_KILLSWITCH_H */
