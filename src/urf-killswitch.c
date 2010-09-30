@@ -128,9 +128,8 @@ update_killswitch (UrfKillswitch *killswitch,
 		UrfIndKillswitch *ind = l->data;
 
 		if (ind->index == index) {
-			KillswitchState state = event_to_state (soft, hard);
 			if (ind->soft != soft || ind->hard != hard) {
-				ind->state = state;
+				ind->state = event_to_state (soft, hard);
 				type = ind->type;
 				ind->soft = soft;
 				ind->hard = hard;
