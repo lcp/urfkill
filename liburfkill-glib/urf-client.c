@@ -145,6 +145,9 @@ out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 
+	if (killswitch != NULL)
+		return g_object_ref (killswitch);
+
 	return killswitch;
 }
 
