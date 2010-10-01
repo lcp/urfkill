@@ -71,6 +71,9 @@ urf_client_find_killswitch (UrfClient *client, const guint index)
 	UrfKillswitch *killswitch = NULL;
 	guint i;
 
+	if (priv->killswitches == NULL)
+		return NULL;
+
 	for (i=0; i<priv->killswitches->len; i++) {
 		killswitch = (UrfKillswitch *) g_ptr_array_index (priv->killswitches, i);
 		if (index == urf_killswitch_get_rfkill_index (killswitch))
@@ -90,7 +93,7 @@ urf_client_get_killswitches (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
 	priv = URF_CLIENT_GET_PRIVATE (client);
-	return g_ptr_array_ref (priv->killswitches);
+	return (priv->killswitches ? g_ptr_array_ref (priv->killswitches) : NULL);
 }
 
 /**
