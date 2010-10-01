@@ -33,6 +33,7 @@
 #include <glib.h>
 
 #include "rfkill.h"
+#include "egg-debug.h"
 
 #ifndef RFKILL_EVENT_SIZE_V1
 #define RFKILL_EVENT_SIZE_V1    8
@@ -140,7 +141,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 
 	if (changed != FALSE) {
-		g_message ("updating killswitch status %d to %s",
+		egg_debug ("updating killswitch status %d to %s",
 			   index,
 			   state_to_string (urf_killswitch_get_state (killswitch, type)));
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
@@ -171,8 +172,8 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
+		egg_warning ("Failed to change RFKILL state: %s",
+			     g_strerror (errno));
 		return FALSE;
 	}
 	return TRUE;
@@ -199,7 +200,7 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 		if (ind->type != type && type != RFKILL_TYPE_ALL)
 			continue;
 
-		g_message ("killswitch %d is %s",
+		egg_debug ("killswitch %d is %s",
 			   ind->index, state_to_string (ind->state));
 
 		if (ind->state == KILLSWITCH_STATE_HARD_BLOCKED) {
@@ -215,7 +216,7 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 		state = ind->state;
 	}
 
-	g_message ("killswitches %s state %s",
+	egg_debug ("killswitches %s state %s",
 		   type_to_string (type), state_to_string (state));
 
 	return state;
@@ -272,7 +273,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 		if (ind->index == index) {
 			type = ind->type;
 			priv->killswitches = g_list_remove (priv->killswitches, ind);
-			g_message ("removing killswitch idx %d", index);
+			egg_debug ("removing killswitch idx %d", index);
 			g_free (ind);
 			g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 			return;
@@ -289,7 +290,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	UrfIndKillswitch *ind;
 	int state = event_to_state (soft, hard);
 
-	g_message ("adding killswitch idx %d state %s", index, state_to_string (state));
+	egg_debug ("adding killswitch idx %d state %s", index, state_to_string (state));
 	ind = g_new0 (UrfIndKillswitch, 1);
 	ind->index = index;
 	ind->type  = type;
@@ -338,7 +339,7 @@ op_to_string (unsigned int op)
 static void
 print_event (struct rfkill_event *event)
 {
-	g_message ("RFKILL event: idx %u type %u (%s) op %u (%s) soft %u hard %u",
+	egg_debug ("RFKILL event: idx %u type %u (%s) op %u (%s) soft %u hard %u",
 		   event->idx,
 		   event->type, type_to_string (event->type),
 		   event->op, op_to_string (event->op),
@@ -379,7 +380,7 @@ event_cb (GIOChannel *source,
 							  NULL);
 		}
 	} else {
-		g_message ("something else happened");
+		egg_debug ("something else happened");
 		return FALSE;
 	}
 
@@ -417,12 +418,12 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	fd = open("/dev/rfkill", O_RDWR);
 	if (fd < 0) {
 		if (errno == EACCES)
-			g_warning ("Could not open RFKILL control device, please verify your installation");
+			egg_warning ("Could not open RFKILL control device, please verify your installation");
 		return;
 	}
 
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		g_message ("Can't set RFKILL control device to non-blocking");
+		egg_debug ("Can't set RFKILL control device to non-blocking");
 		close(fd);
 		return;
 	}
@@ -438,12 +439,12 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 		if (len < 0) {
 			if (errno == EAGAIN)
 				break;
-			g_message ("Reading of RFKILL events failed");
+			egg_debug ("Reading of RFKILL events failed");
 			break;
 		}
 
 		if (len != RFKILL_EVENT_SIZE_V1) {
-			g_warning("Wrong size of RFKILL event\n");
+			egg_warning("Wrong size of RFKILL event\n");
 			continue;
 		}
 
