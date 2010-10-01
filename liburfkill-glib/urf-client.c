@@ -86,7 +86,10 @@ urf_client_find_killswitch (UrfClient *client, const guint index)
 GPtrArray *
 urf_client_get_killswitches (UrfClient *client)
 {
-	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfClientPrivate *priv;
+	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
+
+	priv = URF_CLIENT_GET_PRIVATE (client);
 	return g_ptr_array_ref (priv->killswitches);
 }
 
@@ -96,7 +99,7 @@ urf_client_get_killswitches (UrfClient *client)
 UrfKillswitch *
 urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
 {
-	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfClientPrivate *priv;
 	UrfKillswitch *killswitch = NULL;
 	gboolean ret;
 	int type, state;
@@ -107,11 +110,13 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
+	priv = URF_CLIENT_GET_PRIVATE (client);
+
 	killswitch = urf_client_find_killswitch (client, index);
 	if (killswitch != NULL)
 		return g_object_ref (killswitch);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "GetKillswitch", &error_local,
+	ret = dbus_g_proxy_call (priv->proxy, "GetKillswitch", &error_local,
 				 G_TYPE_UINT, index,
 				 G_TYPE_INVALID,
 				 G_TYPE_INT, &type,
