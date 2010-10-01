@@ -145,6 +145,7 @@ gboolean
 urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	PolkitSubject *subject = NULL;
 	int type;
 	gboolean ret;
 
@@ -155,10 +156,19 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 	if (type < 0)
 		return FALSE;
 
+	subject = urf_polkit_get_subject (priv->polkit, context);
+	if (subject == NULL)
+		goto out;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.block", context))
+		goto out;
+
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
 
 	dbus_g_method_return (context, ret);
-
+out:
+	if (subject != NULL)
+		g_object_unref (subject);
 	return TRUE;
 }
 
@@ -169,6 +179,7 @@ gboolean
 urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	PolkitSubject *subject = NULL;
 	int type;
 	gboolean ret;
 
@@ -179,10 +190,19 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 	if (type < 0)
 		return FALSE;
 
+	subject = urf_polkit_get_subject (priv->polkit, context);
+	if (subject == NULL)
+		goto out;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.unblock", context))
+		goto out;
+
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
 
 	dbus_g_method_return (context, ret);
-
+out:
+	if (subject != NULL)
+		g_object_unref (subject);
 	return TRUE;
 }
 
