@@ -1,4 +1,4 @@
-polkit_policydir = $(datadir)/polkit-1/actions
+polkit_policydir = $(datadir)/PolicyKit/policy
 polkit_policy_DATA =					\
 	org.freedesktop.urfkill.policy
 
