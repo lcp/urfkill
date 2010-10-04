@@ -146,6 +146,9 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
+	gchar *sender = NULL;
+	UrfPolkitCaller *caller;
+	GError *error = NULL;
 	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
@@ -155,9 +158,24 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 	if (type < 0)
 		return FALSE;
 
+	sender = dbus_g_method_get_sender (context);
+	caller = urf_polkit_caller_new_from_sender (priv->polkit, sender);
+	if (caller == NULL) {
+		error = g_error_new (URF_DAEMON_ERROR, URF_DAEMON_ERROR_GENERAL,
+				     "caller %s not found", sender);
+		dbus_g_method_return_error (context, error);
+		goto out;
+	}
+
+	if (!urf_polkit_check_auth (priv->polkit, caller, "org.freedesktop.urfkill.block", context))
+		goto out;
+
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
 
 	dbus_g_method_return (context, ret);
+out:
+	if (caller != NULL)
+		urf_polkit_caller_unref (caller);	
 
 	return TRUE;
 }
@@ -170,6 +188,9 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
+	gchar *sender = NULL;
+	UrfPolkitCaller *caller;
+	GError *error = NULL;
 	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
@@ -179,9 +200,24 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 	if (type < 0)
 		return FALSE;
 
+	sender = dbus_g_method_get_sender (context);
+	caller = urf_polkit_caller_new_from_sender (priv->polkit, sender);
+	if (caller == NULL) {
+		error = g_error_new (URF_DAEMON_ERROR, URF_DAEMON_ERROR_GENERAL,
+				     "caller %s not found", sender);
+		dbus_g_method_return_error (context, error);
+		goto out;
+	}
+
+	if (!urf_polkit_check_auth (priv->polkit, caller, "org.freedesktop.urfkill.unblock", context))
+		goto out;
+
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
 
 	dbus_g_method_return (context, ret);
+out:
+	if (caller != NULL)
+		urf_polkit_caller_unref (caller);	
 
 	return TRUE;
 }
