@@ -48,9 +48,20 @@ typedef struct
 	GObjectClass parent_class;
 } UrfPolkitClass;
 
-GType		 urf_polkit_get_type		(void);
-UrfPolkit	*urf_polkit_new			(void);
-void		 urf_polkit_test		(gpointer		 user_data);
+typedef struct UrfPolkitCaller_ UrfPolkitCaller;
+
+GType		 urf_polkit_get_type			(void);
+UrfPolkit	*urf_polkit_new				(void);
+void		 urf_polkit_test			(gpointer		 user_data);
+
+UrfPolkitCaller	*urf_polkit_caller_new_from_sender	(UrfPolkit		*polkit,
+							 const gchar		*sender);
+void		 urf_polkit_caller_unref		(UrfPolkitCaller	*caller);
+gboolean	 urf_polkit_check_auth			(UrfPolkit		*polkit,
+							 UrfPolkitCaller	*caller,
+							 const gchar		*action_id,
+							 DBusGMethodInvocation	*context);
+
 
 G_END_DECLS
 
