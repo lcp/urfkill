@@ -148,7 +148,10 @@ PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1 >= 0.76])
 AC_SUBST(DBUS_GLIB_CFLAGS)
 AC_SUBST(DBUS_GLIB_LIBS)
 
-PKG_CHECK_MODULES(POLKIT, [polkit >= 0.9])
+PKG_CHECK_MODULES(POLKIT, \
+		  polkit >= 0.9	\
+		  polkit-dbus >= 0.9 \
+		  polkit-grant >= 0.9)
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.16.1])
 AC_SUBST(GIO_CFLAGS)
