@@ -45,15 +45,13 @@ struct UrfPolkitPrivate
 	DBusConnection		*connection;
 };
 
-typedef PolKitCaller UrfPolkitCaller_;
-
 G_DEFINE_TYPE (UrfPolkit, urf_polkit, G_TYPE_OBJECT)
 static gpointer urf_polkit_object = NULL;
 
 /**
  * urf_polkit_caller_new_from_sender:
  **/
-UrfPolkitCaller *
+PolKitCaller *
 urf_polkit_caller_new_from_sender (UrfPolkit *polkit, const gchar *sender)
 {
 	PolKitCaller *caller;
@@ -61,7 +59,7 @@ urf_polkit_caller_new_from_sender (UrfPolkit *polkit, const gchar *sender)
 
 	g_return_val_if_fail (URF_IS_POLKIT (polkit), NULL);
 
-	/* get the UrfPolkitCaller information */
+	/* get the PolKitCaller information */
 	dbus_error_init (&dbus_error);
 	caller = polkit_caller_new_from_dbus_name (polkit->priv->connection, sender, &dbus_error);
 	if (dbus_error_is_set (&dbus_error)) {
@@ -69,24 +67,24 @@ urf_polkit_caller_new_from_sender (UrfPolkit *polkit, const gchar *sender)
 		dbus_error_free (&dbus_error);
 	}
 
-	return (UrfPolkitCaller *)caller;
+	return caller;
 }
 
 /**
  * urf_polkit_caller_unref:
  **/
 void
-urf_polkit_caller_unref (UrfPolkitCaller *caller)
+urf_polkit_caller_unref (PolKitCaller *caller)
 {
 	if (caller != NULL)
-		polkit_caller_unref ((PolKitCaller *)caller);
+		polkit_caller_unref (caller);
 }
 
 /**
  * urf_polkit_check_auth:
  **/
 gboolean
-urf_polkit_check_auth (UrfPolkit *polkit, UrfPolkitCaller *caller, const gchar *action_id, DBusGMethodInvocation *context)
+urf_polkit_check_auth (UrfPolkit *polkit, PolKitCaller *caller, const gchar *action_id, DBusGMethodInvocation *context)
 {
 	gboolean ret = FALSE;
 	GError *error;
@@ -103,7 +101,7 @@ urf_polkit_check_auth (UrfPolkit *polkit, UrfPolkitCaller *caller, const gchar *
 	polkit_action_set_action_id (action, action_id);
 
 	/* check auth */
-	result = polkit_context_is_caller_authorized (polkit->priv->pk_context, action, (PolKitCaller *)caller, TRUE, NULL);
+	result = polkit_context_is_caller_authorized (polkit->priv->pk_context, action, caller, TRUE, NULL);
 	if (result != POLKIT_RESULT_YES) {
 		ret = TRUE;
 	} else {

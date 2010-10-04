@@ -147,7 +147,7 @@ urf_daemon_block (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocatio
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
 	gchar *sender = NULL;
-	UrfPolkitCaller *caller;
+	PolKitCaller *caller;
 	GError *error = NULL;
 	gboolean ret;
 
@@ -189,7 +189,7 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	int type;
 	gchar *sender = NULL;
-	UrfPolkitCaller *caller;
+	PolKitCaller *caller;
 	GError *error = NULL;
 	gboolean ret;
 
