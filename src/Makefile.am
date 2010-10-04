@@ -32,7 +32,8 @@ urf-marshal.c: urf-marshal.list
 	echo "#include \"urf-marshal.h\"" > $@ && glib-genmarshal $< --prefix=urf_marshal --body >> $@
 
 urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
-	dbus-binding-tool --prefix=urf_daemon --mode=glib-server --output=urf-daemon-glue.h org.freedesktop.URfkill.xml
+	dbus-binding-tool --prefix=urf_daemon --mode=glib-server --output=urf-daemon-glue.h \
+	$(top_srcdir)/data/org.freedesktop.URfkill.xml
 
 libexec_PROGRAMS = urfkilld
 
