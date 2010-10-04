@@ -102,7 +102,7 @@ urf_polkit_check_auth (UrfPolkit *polkit, PolKitCaller *caller, const gchar *act
 
 	/* check auth */
 	result = polkit_context_is_caller_authorized (polkit->priv->pk_context, action, caller, TRUE, NULL);
-	if (result != POLKIT_RESULT_YES) {
+	if (result == POLKIT_RESULT_YES) {
 		ret = TRUE;
 	} else {
 		error = g_error_new (URF_DAEMON_ERROR, URF_DAEMON_ERROR_GENERAL, "not authorized");
