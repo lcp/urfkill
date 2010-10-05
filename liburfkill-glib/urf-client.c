@@ -117,7 +117,7 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 
 	killswitch = urf_client_find_killswitch (client, index);
 	if (killswitch != NULL)
-		return g_object_ref (killswitch);
+		return killswitch;
 
 	ret = dbus_g_proxy_call (priv->proxy, "GetKillswitch", &error_local,
 				 G_TYPE_UINT, index,
@@ -152,9 +152,6 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
-
-	if (killswitch != NULL)
-		return g_object_ref (killswitch);
 
 	return killswitch;
 }
