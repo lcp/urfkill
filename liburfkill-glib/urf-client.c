@@ -332,7 +332,7 @@ urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
 	if (killswitch == NULL)
 		return;
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, g_object_ref (killswitch));
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, killswitch);
 
 	g_ptr_array_remove (priv->killswitches, killswitch);
 }
