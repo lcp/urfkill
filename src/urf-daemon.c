@@ -66,7 +66,7 @@ struct UrfDaemonPrivate
 	UrfKillswitch   *killswitch;
 };
 
-static void urf_daemon_finalize (GObject *object);
+static void urf_daemon_dispose (GObject *object);
 
 G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 
@@ -448,7 +448,7 @@ static void
 urf_daemon_class_init (UrfDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = urf_daemon_finalize;
+	object_class->dispose = urf_daemon_dispose;
 	object_class->get_property = urf_daemon_get_property;
 	object_class->set_property = urf_daemon_set_property;
 
@@ -491,22 +491,35 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 }
 
 /**
- * urf_daemon_finalize:
+ * urf_daemon_dispose:
  **/
 static void
-urf_daemon_finalize (GObject *object)
+urf_daemon_dispose (GObject *object)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 
-	if (priv->proxy != NULL)
+	if (priv->proxy) {
 		g_object_unref (priv->proxy);
-	if (priv->connection != NULL)
-		dbus_g_connection_unref (priv->connection);
+		priv->proxy = NULL;
+	}
 
-	g_object_unref (priv->polkit);
-	g_object_unref (priv->killswitch);
-	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
+	if (priv->connection) {
+		dbus_g_connection_unref (priv->connection);
+		priv->connection = NULL;
+	}
+
+	if (priv->polkit) {
+		g_object_unref (priv->polkit);
+		priv->polkit = NULL;
+	}
+
+	if (priv->killswitch) {
+		g_object_unref (priv->killswitch);
+		priv->killswitch = NULL;
+	}
+
+	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
 }
 
 /**

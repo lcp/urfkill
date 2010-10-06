@@ -31,7 +31,7 @@
 
 static void	urf_client_class_init	(UrfClientClass	*klass);
 static void	urf_client_init		(UrfClient	*client);
-static void	urf_client_finalize	(GObject	*object);
+static void	urf_client_dispose	(GObject	*object);
 
 #define URF_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URF_TYPE_CLIENT, UrfClientPrivate))
 
@@ -457,11 +457,9 @@ urf_client_class_init (UrfClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	//object_class->get_property = urf_client_get_property;
-	object_class->finalize = urf_client_finalize;
+	object_class->dispose = urf_client_dispose;
 
-	/* TODO */
-	/* install properties and signals */
+	/* install signals */
         signals[URF_CLIENT_RFKILL_ADDED] =
                 g_signal_new ("rfkill-added",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
@@ -547,10 +545,10 @@ out:
 }
 
 /*
- * urf_client_finalize:
+ * urf_client_dispose:
  */
 static void
-urf_client_finalize (GObject *object)
+urf_client_dispose (GObject *object)
 {
 	UrfClient *client;
 
@@ -558,16 +556,22 @@ urf_client_finalize (GObject *object)
 
 	client = URF_CLIENT (object);
 
-	if (client->priv->bus)
+	if (client->priv->bus) {
 		dbus_g_connection_unref (client->priv->bus);
+		client->priv->bus = NULL;
+	}
 
-	if (client->priv->proxy != NULL)
+	if (client->priv->proxy) {
 		g_object_unref (client->priv->proxy);
+		client->priv->proxy = NULL;
+	}
 
-	if (client->priv->killswitches != NULL)
+	if (client->priv->killswitches) {
 		g_ptr_array_unref (client->priv->killswitches);
+		client->priv->killswitches = NULL;
+	}
 
-	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
+	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);
 }
 
 /**
