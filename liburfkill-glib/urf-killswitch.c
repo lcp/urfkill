@@ -200,10 +200,6 @@ urf_killswitch_finalize (GObject *object)
 	killswitch = URF_KILLSWITCH (object);
 	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 
-	priv->type = KILLSWITCH_TYPE_ALL;
-	priv->state = KILLSWITCH_STATE_NO_ADAPTER;
-	priv->soft = 1;
-	priv->hard = 1;
 	g_free (priv->name);
 
 	G_OBJECT_CLASS(urf_killswitch_parent_class)->finalize(object);
