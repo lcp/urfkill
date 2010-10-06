@@ -5,7 +5,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 
 <!--
-Policy definitions for UPower
+Policy definitions for URfkill
 
 Copyright (c) 2010 Gary Ching-Pang Lin <glin@novell.com>
 

@@ -172,7 +172,7 @@ main (gint argc, gchar **argv)
 	/* do stuff on ctrl-c */
 	signal (SIGINT, urf_main_sigint_handler);
 
-	egg_debug ("Starting upowerd version %s", PACKAGE_VERSION);
+	egg_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
 
 	/* TODO */
 	/* handle everything below */
