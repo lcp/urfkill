@@ -2,21 +2,21 @@
  *
  * Copyright (C) 2010 Gary Ching-Pang Lin <glin@novell.com>
  *
- * Licensed under the GNU General Public License Version 2
+ * Licensed under the GNU Lesser General Public License Version 2.1
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef __URF_KILLSWITCH_H
@@ -26,15 +26,15 @@
 #include <gio/gio.h>
 
 typedef enum {
-        RFKILL_TYPE_ALL = 0,
-        RFKILL_TYPE_WLAN,
-        RFKILL_TYPE_BLUETOOTH,
-        RFKILL_TYPE_UWB,
-        RFKILL_TYPE_WIMAX,
-        RFKILL_TYPE_WWAN,
-        RFKILL_TYPE_GPS,
-        RFKILL_TYPE_FM,
-        NUM_RFKILL_TYPES,
+        KILLSWITCH_TYPE_ALL = 0,
+        KILLSWITCH_TYPE_WLAN,
+        KILLSWITCH_TYPE_BLUETOOTH,
+        KILLSWITCH_TYPE_UWB,
+        KILLSWITCH_TYPE_WIMAX,
+        KILLSWITCH_TYPE_WWAN,
+        KILLSWITCH_TYPE_GPS,
+        KILLSWITCH_TYPE_FM,
+        NUM_KILLSWITCH_TYPES,
 } KillswitchType;
 
 typedef enum {
