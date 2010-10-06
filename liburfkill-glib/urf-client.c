@@ -93,7 +93,7 @@ urf_client_get_killswitches (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
 	priv = URF_CLIENT_GET_PRIVATE (client);
-	return (priv->killswitches ? g_ptr_array_ref (priv->killswitches) : NULL);
+	return g_ptr_array_ref (priv->killswitches);
 }
 
 /**
@@ -360,10 +360,10 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 }
 
 /**
- * urf_client_get_all:
+ * urf_client_get_killswitches_private:
  **/
-static GPtrArray *
-urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error)
+static void
+urf_client_get_killswitches_private (UrfClient *client, GError **error)
 {
 	GError *error_local = NULL;
 	GType g_type_gvalue_array;
@@ -372,11 +372,10 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 	GValue *gv;
 	guint i;
 	UrfKillswitch *killswitch;
-	GPtrArray *killswitches = NULL;
 	gboolean ret;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
 
 	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
 						dbus_g_type_get_struct("GValueArray",
@@ -404,8 +403,6 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		g_set_error_literal (error, 1, 0, "no data");
 		goto out;
 	}
-
-	killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
 	/* convert */
 	for (i=0; i<gvalue_ptr_array->len; i++) {
@@ -443,13 +440,12 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		killswitch = urf_killswitch_new ();
 		urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
 
-		g_ptr_array_add (killswitches, (gpointer)killswitch);
+		g_ptr_array_add (client->priv->killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
 	}
 out:
 	if (gvalue_ptr_array != NULL)
 		g_ptr_array_free (gvalue_ptr_array, TRUE);
-	return killswitches;
 }
 
 /*
@@ -519,7 +515,9 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->killswitches = urf_client_get_all (client, NULL, NULL);
+	client->priv->killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	urf_client_get_killswitches_private (client, NULL);
 
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
