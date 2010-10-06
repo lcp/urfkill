@@ -463,8 +463,6 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) event_cb,
 				killswitch);
-
-	/* TODO emit a reasonable signal */
 }
 
 static void

@@ -174,8 +174,7 @@ main (gint argc, gchar **argv)
 
 	egg_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
 
-	/* TODO */
-	/* handle everything below */
+	/* start the daemon */
 	daemon = urf_daemon_new ();
 	loop = g_main_loop_new (NULL, FALSE);
 	ret = urf_daemon_startup (daemon);

@@ -31,7 +31,7 @@
 
 static void	urf_client_class_init	(UrfClientClass	*klass);
 static void	urf_client_init		(UrfClient	*client);
-static void	urf_client_finalize	(GObject	*object);
+static void	urf_client_dispose	(GObject	*object);
 
 #define URF_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URF_TYPE_CLIENT, UrfClientPrivate))
 
@@ -93,7 +93,7 @@ urf_client_get_killswitches (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
 	priv = URF_CLIENT_GET_PRIVATE (client);
-	return (priv->killswitches ? g_ptr_array_ref (priv->killswitches) : NULL);
+	return g_ptr_array_ref (priv->killswitches);
 }
 
 /**
@@ -360,10 +360,10 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 }
 
 /**
- * urf_client_get_all:
+ * urf_client_get_killswitches_private:
  **/
-static GPtrArray *
-urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error)
+static void
+urf_client_get_killswitches_private (UrfClient *client, GError **error)
 {
 	GError *error_local = NULL;
 	GType g_type_gvalue_array;
@@ -372,11 +372,10 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 	GValue *gv;
 	guint i;
 	UrfKillswitch *killswitch;
-	GPtrArray *killswitches = NULL;
 	gboolean ret;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
 
 	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
 						dbus_g_type_get_struct("GValueArray",
@@ -404,8 +403,6 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		g_set_error_literal (error, 1, 0, "no data");
 		goto out;
 	}
-
-	killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
 	/* convert */
 	for (i=0; i<gvalue_ptr_array->len; i++) {
@@ -443,13 +440,12 @@ urf_client_get_all (UrfClient *client, GCancellable *cancellable, GError **error
 		killswitch = urf_killswitch_new ();
 		urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
 
-		g_ptr_array_add (killswitches, (gpointer)killswitch);
+		g_ptr_array_add (client->priv->killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
 	}
 out:
 	if (gvalue_ptr_array != NULL)
 		g_ptr_array_free (gvalue_ptr_array, TRUE);
-	return killswitches;
 }
 
 /*
@@ -461,11 +457,9 @@ urf_client_class_init (UrfClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	//object_class->get_property = urf_client_get_property;
-	object_class->finalize = urf_client_finalize;
+	object_class->dispose = urf_client_dispose;
 
-	/* TODO */
-	/* install properties and signals */
+	/* install signals */
         signals[URF_CLIENT_RFKILL_ADDED] =
                 g_signal_new ("rfkill-added",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
@@ -519,7 +513,9 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->killswitches = urf_client_get_all (client, NULL, NULL);
+	client->priv->killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	urf_client_get_killswitches_private (client, NULL);
 
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
@@ -549,10 +545,10 @@ out:
 }
 
 /*
- * urf_client_finalize:
+ * urf_client_dispose:
  */
 static void
-urf_client_finalize (GObject *object)
+urf_client_dispose (GObject *object)
 {
 	UrfClient *client;
 
@@ -560,16 +556,22 @@ urf_client_finalize (GObject *object)
 
 	client = URF_CLIENT (object);
 
-	if (client->priv->bus)
+	if (client->priv->bus) {
 		dbus_g_connection_unref (client->priv->bus);
+		client->priv->bus = NULL;
+	}
 
-	if (client->priv->proxy != NULL)
+	if (client->priv->proxy) {
 		g_object_unref (client->priv->proxy);
+		client->priv->proxy = NULL;
+	}
 
-	if (client->priv->killswitches != NULL)
+	if (client->priv->killswitches) {
 		g_ptr_array_unref (client->priv->killswitches);
+		client->priv->killswitches = NULL;
+	}
 
-	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
+	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);
 }
 
 /**
