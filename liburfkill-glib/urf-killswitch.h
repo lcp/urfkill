@@ -26,15 +26,15 @@
 #include <gio/gio.h>
 
 typedef enum {
-        RFKILL_TYPE_ALL = 0,
-        RFKILL_TYPE_WLAN,
-        RFKILL_TYPE_BLUETOOTH,
-        RFKILL_TYPE_UWB,
-        RFKILL_TYPE_WIMAX,
-        RFKILL_TYPE_WWAN,
-        RFKILL_TYPE_GPS,
-        RFKILL_TYPE_FM,
-        NUM_RFKILL_TYPES,
+        KILLSWITCH_TYPE_ALL = 0,
+        KILLSWITCH_TYPE_WLAN,
+        KILLSWITCH_TYPE_BLUETOOTH,
+        KILLSWITCH_TYPE_UWB,
+        KILLSWITCH_TYPE_WIMAX,
+        KILLSWITCH_TYPE_WWAN,
+        KILLSWITCH_TYPE_GPS,
+        KILLSWITCH_TYPE_FM,
+        NUM_KILLSWITCH_TYPES,
 } KillswitchType;
 
 typedef enum {

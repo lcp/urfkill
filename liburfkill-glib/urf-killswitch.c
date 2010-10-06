@@ -106,7 +106,7 @@ urf_killswitch_get_rfkill_type (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), RFKILL_TYPE_ALL);
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_TYPE_ALL);
 
 	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	return priv->type;
@@ -182,7 +182,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 
 	priv->index = 0;
-	priv->type = RFKILL_TYPE_ALL;
+	priv->type = KILLSWITCH_TYPE_ALL;
 	priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 	priv->soft = 1;
 	priv->hard = 1;
@@ -200,7 +200,7 @@ urf_killswitch_finalize (GObject *object)
 	killswitch = URF_KILLSWITCH (object);
 	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 
-	priv->type = RFKILL_TYPE_ALL;
+	priv->type = KILLSWITCH_TYPE_ALL;
 	priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 	priv->soft = 1;
 	priv->hard = 1;
