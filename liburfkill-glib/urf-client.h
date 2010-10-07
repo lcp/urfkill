@@ -71,8 +71,16 @@ gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 const char	*type,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
+							 const guint	 index,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 urf_client_set_unblock			(UrfClient	*client,
 							 const char	*type,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 urf_client_set_unblock_idx		(UrfClient	*client,
+							 const guint	 index,
 							 GCancellable	*cancellable,
 							 GError		**error);
 
