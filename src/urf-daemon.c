@@ -211,8 +211,9 @@ urf_daemon_block_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocatio
 
 	dbus_g_method_return (context, ret);
 out:
-	if (subject != NULL)
-		g_object_unref (subject);
+	if (caller != NULL)
+		urf_polkit_caller_unref (caller);	
+
 	return TRUE;
 }
 
@@ -289,8 +290,9 @@ urf_daemon_unblock_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocat
 
 	dbus_g_method_return (context, ret);
 out:
-	if (subject != NULL)
-		g_object_unref (subject);
+	if (caller != NULL)
+		urf_polkit_caller_unref (caller);	
+
 	return TRUE;
 }
 
