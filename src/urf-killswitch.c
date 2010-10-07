@@ -179,6 +179,51 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 	return TRUE;
 }
 
+gboolean
+urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
+			      guint index,
+			      KillswitchState state)
+{
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	struct rfkill_event event;
+	ssize_t len;
+	GList *l;
+	gboolean found = FALSE;
+
+	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
+
+	for (l = priv->killswitches; l; l = list->next) {
+		UrfIndKillswitch *ind = l->data;
+		if (ind->index == index) {
+			found = TRUE;
+			break;
+		}
+	}
+
+	if (!found) {
+		egg_warning ("Index not found: %u", index);
+		return FALSE;
+	}
+
+	memset (&event, 0, sizeof(event));
+	event.op = RFKILL_OP_CHANGE;
+	event.idx = index;
+	if (state == KILLSWITCH_STATE_SOFT_BLOCKED)
+		event.soft = 1;
+	else if (state == KILLSWITCH_STATE_UNBLOCKED)
+		event.soft = 0;
+	else
+		g_assert_not_reached ();
+
+	len = write (priv->fd, &event, sizeof(event));
+	if (len < 0) {
+		egg_warning ("Failed to change RFKILL state: %s",
+			     g_strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 KillswitchState
 urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 {
@@ -220,6 +265,31 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 		   type_to_string (type), state_to_string (state));
 
 	return state;
+}
+
+KillswitchState
+urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
+{
+	UrfKillswitchPrivate *priv;
+	GList *l;
+
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
+
+	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+
+	if (priv->killswitches == NULL)
+		return KILLSWITCH_STATE_NO_ADAPTER;
+
+	for (l = priv->killswitches ; l ; l = l->next) {
+		UrfIndKillswitch *ind = l->data;
+		if (ind->index == index) {
+			egg_debug ("killswitch %d is %s",
+				   ind->index, state_to_string (ind->state));
+			return ind->state;
+		}
+	}
+
+	return KILLSWITCH_STATE_NO_ADAPTER;
 }
 
 gboolean

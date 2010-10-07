@@ -18,6 +18,15 @@ file are instantly applied.
   <vendor>The URfkill Project</vendor>
 
   <action id="org.freedesktop.urfkill.block">
+    <_description>Block a specific killswitch type</_description>
+    <_message>Authentication is required to block the killswitches by type</_message>
+    <defaults>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.urfkill.blockidx">
     <_description>Block a specific killswitch</_description>
     <_message>Authentication is required to block the killswitch</_message>
     <defaults>
@@ -27,6 +36,15 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.urfkill.unblock">
+    <_description>Unblock a specific killswitch type</_description>
+    <_message>Authentication is required to unblock the killswitches by type</_message>
+    <defaults>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.urfkill.unblockidx">
     <_description>Unblock a specific killswitch</_description>
     <_message>Authentication is required to unblock the killswitch</_message>
     <defaults>

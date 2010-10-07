@@ -173,6 +173,35 @@ out:
 }
 
 /**
+ * urf_daemon_block_idx:
+ **/
+gboolean
+urf_daemon_block_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	PolkitSubject *subject = NULL;
+	gboolean ret;
+
+	if (!urf_killswitch_has_killswitches (priv->killswitch))
+		return FALSE;
+
+	subject = urf_polkit_get_subject (priv->polkit, context);
+	if (subject == NULL)
+		goto out;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.blockidx", context))
+		goto out;
+
+	ret = urf_killswitch_set_state (priv->killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+
+	dbus_g_method_return (context, ret);
+out:
+	if (subject != NULL)
+		g_object_unref (subject);
+	return TRUE;
+}
+
+/**
  * urf_daemon_unblock:
  **/
 gboolean
@@ -198,6 +227,35 @@ urf_daemon_unblock (UrfDaemon *daemon, const char *type_name, DBusGMethodInvocat
 		goto out;
 
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
+
+	dbus_g_method_return (context, ret);
+out:
+	if (subject != NULL)
+		g_object_unref (subject);
+	return TRUE;
+}
+
+/**
+ * urf_daemon_unblock_idx:
+ **/
+gboolean
+urf_daemon_unblock_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	PolkitSubject *subject = NULL;
+	gboolean ret;
+
+	if (!urf_killswitch_has_killswitches (priv->killswitch))
+		return FALSE;
+
+	subject = urf_polkit_get_subject (priv->polkit, context);
+	if (subject == NULL)
+		goto out;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.unblockidx", context))
+		goto out;
+
+	ret = urf_killswitch_set_state (priv->killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
 
 	dbus_g_method_return (context, ret);
 out:

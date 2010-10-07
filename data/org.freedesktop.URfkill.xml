@@ -9,9 +9,19 @@
       <arg type="s" name="type" direction="in" />
       <arg type="b" name="ret" direction="out" />
     </method>
+    <method name="BlockIdx">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="u" name="index" direction="in" />
+      <arg type="b" name="ret" direction="out" />
+    </method>
     <method name="Unblock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="type" direction="in" />
+      <arg type="b" name="ret" direction="out" />
+    </method>
+    <method name="UnblockIdx">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="u" name="index" direction="in" />
       <arg type="b" name="ret" direction="out" />
     </method>
     <method name="GetAll">
