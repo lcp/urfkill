@@ -187,17 +187,24 @@ gboolean
 urf_daemon_block_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	PolkitSubject *subject = NULL;
+	gchar *sender = NULL;
+	PolKitCaller *caller;
+	GError *error = NULL;
 	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
 		return FALSE;
 
-	subject = urf_polkit_get_subject (priv->polkit, context);
-	if (subject == NULL)
+	sender = dbus_g_method_get_sender (context);
+	caller = urf_polkit_caller_new_from_sender (priv->polkit, sender);
+	if (caller == NULL) {
+		error = g_error_new (URF_DAEMON_ERROR, URF_DAEMON_ERROR_GENERAL,
+				     "caller %s not found", sender);
+		dbus_g_method_return_error (context, error);
 		goto out;
+	}
 
-	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.blockidx", context))
+	if (!urf_polkit_check_auth (priv->polkit, caller, "org.freedesktop.urfkill.blockidx", context))
 		goto out;
 
 	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
@@ -258,17 +265,24 @@ gboolean
 urf_daemon_unblock_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	PolkitSubject *subject = NULL;
+	gchar *sender = NULL;
+	PolKitCaller *caller;
+	GError *error = NULL;
 	gboolean ret;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
 		return FALSE;
 
-	subject = urf_polkit_get_subject (priv->polkit, context);
-	if (subject == NULL)
+	sender = dbus_g_method_get_sender (context);
+	caller = urf_polkit_caller_new_from_sender (priv->polkit, sender);
+	if (caller == NULL) {
+		error = g_error_new (URF_DAEMON_ERROR, URF_DAEMON_ERROR_GENERAL,
+				     "caller %s not found", sender);
+		dbus_g_method_return_error (context, error);
 		goto out;
+	}
 
-	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.unblockidx", context))
+	if (!urf_polkit_check_auth (priv->polkit, caller, "org.freedesktop.urfkill.unblockidx", context))
 		goto out;
 
 	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
