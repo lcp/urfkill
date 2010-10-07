@@ -192,7 +192,7 @@ urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
 
 	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
 
-	for (l = priv->killswitches; l; l = list->next) {
+	for (l = priv->killswitches; l; l = l->next) {
 		UrfIndKillswitch *ind = l->data;
 		if (ind->index == index) {
 			found = TRUE;
@@ -273,7 +273,7 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
 	UrfKillswitchPrivate *priv;
 	GList *l;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_STATE_NO_ADAPTER);
 
 	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 

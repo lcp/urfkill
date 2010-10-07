@@ -192,7 +192,7 @@ urf_daemon_block_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocatio
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.blockidx", context))
 		goto out;
 
-	ret = urf_killswitch_set_state (priv->killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
 
 	dbus_g_method_return (context, ret);
 out:
@@ -255,7 +255,7 @@ urf_daemon_unblock_idx (UrfDaemon *daemon, const guint index, DBusGMethodInvocat
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.unblockidx", context))
 		goto out;
 
-	ret = urf_killswitch_set_state (priv->killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
 
 	dbus_g_method_return (context, ret);
 out:
