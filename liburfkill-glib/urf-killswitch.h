@@ -72,13 +72,6 @@ typedef struct
 GType			 urf_killswitch_get_type		(void);
 UrfKillswitch		*urf_killswitch_new			(void);
 
-void			 urf_killswitch_setup			(UrfKillswitch	*killswitch,
-								 const guint	 index,
-								 const guint	 type,
-								 const gint	 state,
-								 const guint	 soft,
-								 const guint	 hard,
-								 const gchar	*name);
 guint			 urf_killswitch_get_rfkill_index	(UrfKillswitch	*killswitch);
 KillswitchType		 urf_killswitch_get_rfkill_type		(UrfKillswitch	*killswitch);
 KillswitchState		 urf_killswitch_get_rfkill_state	(UrfKillswitch	*killswitch);
