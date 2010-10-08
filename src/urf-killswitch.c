@@ -116,6 +116,9 @@ type_to_string (unsigned int type)
 	}
 }
 
+/**
+ * update_killswitch:
+ **/
 static void
 update_killswitch (UrfKillswitch *killswitch,
 		   guint index, guint soft, guint hard)
@@ -148,6 +151,9 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 }
 
+/**
+ * urf_killswitch_set_state:
+ **/
 gboolean
 urf_killswitch_set_state (UrfKillswitch *killswitch,
 			  guint type,
@@ -179,6 +185,9 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 	return TRUE;
 }
 
+/**
+ * urf_killswitch_set_state_idx:
+ **/
 gboolean
 urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
 			      guint index,
@@ -224,6 +233,9 @@ urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
 	return TRUE;
 }
 
+/**
+ * urf_killswitch_get_state:
+ **/
 KillswitchState
 urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 {
@@ -267,6 +279,9 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 	return state;
 }
 
+/**
+ * urf_killswitch_get_state_idx:
+ **/
 KillswitchState
 urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
 {
@@ -292,6 +307,9 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
 	return KILLSWITCH_STATE_NO_ADAPTER;
 }
 
+/**
+ * urf_killswitch_has_killswitches:
+ **/
 gboolean
 urf_killswitch_has_killswitches (UrfKillswitch *killswitch)
 {
@@ -302,6 +320,9 @@ urf_killswitch_has_killswitches (UrfKillswitch *killswitch)
 	return (priv->killswitches != NULL);
 }
 
+/**
+ * urf_killswitch_get_killswitches:
+ **/
 GList*
 urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
 {
@@ -312,6 +333,9 @@ urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
 	return priv->killswitches;
 }
 
+/**
+ * urf_killswitch_get_killswitch:
+ **/
 UrfIndKillswitch *
 urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 {
@@ -330,6 +354,9 @@ urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 	return NULL;
 }
 
+/**
+ * remove_killswitch:
+ **/
 static void
 remove_killswitch (UrfKillswitch *killswitch,
 		   guint index)
@@ -351,6 +378,9 @@ remove_killswitch (UrfKillswitch *killswitch,
 	}
 }
 
+/**
+ * add_killswitch:
+ **/
 static void
 add_killswitch (UrfKillswitch *killswitch,
 		guint index, guint type, guint soft, guint hard)
@@ -372,9 +402,11 @@ add_killswitch (UrfKillswitch *killswitch,
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
 }
 
+/**
+ * urf_killswitch_rf_type:
+ **/
 gint
-urf_killswitch_rf_type (UrfKillswitch *killswitch,
-			const char *type_name)
+urf_killswitch_rf_type (UrfKillswitch *killswitch, const char *type_name)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	gint *type;
@@ -416,6 +448,9 @@ print_event (struct rfkill_event *event)
 		   event->soft, event->hard);
 }
 
+/**
+ * event_cb:
+ **/
 static gboolean
 event_cb (GIOChannel *source,
 	  GIOCondition condition,
@@ -475,6 +510,9 @@ construct_type_map ()
 	return map;
 }
 
+/**
+ * urf_killswitch_init:
+ **/
 static void
 urf_killswitch_init (UrfKillswitch *killswitch)
 {
@@ -535,6 +573,9 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 				killswitch);
 }
 
+/**
+ * urf_killswitch_finalize:
+ **/
 static void
 urf_killswitch_finalize (GObject *object)
 {
@@ -558,6 +599,9 @@ urf_killswitch_finalize (GObject *object)
 	G_OBJECT_CLASS(urf_killswitch_parent_class)->finalize(object);
 }
 
+/**
+ * urf_killswitch_class_init:
+ **/
 static void
 urf_killswitch_class_init(UrfKillswitchClass *klass)
 {
@@ -595,6 +639,9 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 
 }
 
+/**
+ * urf_killswitch_new:
+ **/
 UrfKillswitch *
 urf_killswitch_new (void)
 {
