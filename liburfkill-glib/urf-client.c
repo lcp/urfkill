@@ -146,7 +146,14 @@ urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *c
 	}
 
 	killswitch = urf_killswitch_new ();
-	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+	g_object_set (G_OBJECT (killswitch),
+		      "index", index,
+		      "type", type,
+		      "state", state,
+		      "soft", soft,
+		      "hard", hard,
+		      "name", name,
+		      NULL);
 	g_ptr_array_add (priv->killswitches, killswitch);
 
 out:
@@ -378,7 +385,14 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
 		return;
 
 	killswitch = urf_killswitch_new ();
-	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+	g_object_set (G_OBJECT (killswitch),
+		      "index", index,
+		      "type", type,
+		      "state", state,
+		      "soft", soft,
+		      "hard", hard,
+		      "name", name,
+		      NULL);
 
 	g_ptr_array_add (priv->killswitches, killswitch);
 
@@ -424,7 +438,14 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
 	if (killswitch == NULL)
 		return;
 
-	urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+	g_object_set (G_OBJECT (killswitch),
+		      "index", index,
+		      "type", type,
+		      "state", state,
+		      "soft", soft,
+		      "hard", hard,
+		      "name", name,
+		      NULL);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, killswitch);
 }
@@ -508,7 +529,14 @@ urf_client_get_killswitches_private (UrfClient *client, GError **error)
 		g_value_unset (gv);
 
 		killswitch = urf_killswitch_new ();
-		urf_killswitch_setup (killswitch, index, type, state, soft, hard, name);
+		g_object_set (G_OBJECT (killswitch),
+			      "index", index,
+			      "type", type,
+			      "state", state,
+			      "soft", soft,
+			      "hard", hard,
+			      "name", name,
+			      NULL);
 
 		g_ptr_array_add (client->priv->killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
