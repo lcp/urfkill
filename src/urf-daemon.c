@@ -127,6 +127,13 @@ urf_daemon_startup (UrfDaemon *daemon)
 	gboolean ret;
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 
+	/* start up the killswitch */
+	ret = urf_killswitch_startup (priv->killswitch);
+	if (!ret) {
+		egg_warning ("failed to setup killswitch");
+		goto out;
+	}
+
 	/* register on bus */
 	ret = urf_daemon_register_rfkill_daemon (daemon);
 	if (!ret) {
