@@ -29,6 +29,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <glib.h>
 
@@ -511,29 +514,45 @@ construct_type_map ()
 }
 
 /**
- * urf_killswitch_init:
+ * urf_killswitch_startup
  **/
-static void
-urf_killswitch_init (UrfKillswitch *killswitch)
+gboolean
+urf_killswitch_startup (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
-
-	priv->type_map = construct_type_map ();
-	priv->killswitches = NULL;
+	struct passwd *user;
+	const char *username = "urfkill";
 
 	fd = open("/dev/rfkill", O_RDWR);
 	if (fd < 0) {
 		if (errno == EACCES)
 			egg_warning ("Could not open RFKILL control device, please verify your installation");
-		return;
+		return FALSE;
 	}
 
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		egg_debug ("Can't set RFKILL control device to non-blocking");
 		close(fd);
-		return;
+		return FALSE;
+	}
+
+	/* Change uid/gid to "urfkill" and drop privilege */
+	if (!(user = getpwnam (username))) {
+		egg_warning ("Can't get urfkill's uid and gid");
+		close (fd);
+		return FALSE;
+	}
+	if (initgroups (username, user->pw_gid) != 0) {
+		egg_warning ("initgroups failed");
+		close (fd);
+		return FALSE;
+	}
+	if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
+		egg_warning ("Can't drop privilege");
+		close (fd);
+		return FALSE;
 	}
 
 	/* Disable rfkill input */
@@ -571,6 +590,19 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) event_cb,
 				killswitch);
+	return TRUE;
+}
+
+/**
+ * urf_killswitch_init:
+ **/
+static void
+urf_killswitch_init (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+
+	priv->type_map = construct_type_map ();
+	priv->killswitches = NULL;
 }
 
 /**

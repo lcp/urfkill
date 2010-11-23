@@ -127,6 +127,13 @@ urf_daemon_startup (UrfDaemon *daemon)
 	gboolean ret;
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 
+	/* start up the killswitch */
+	ret = urf_killswitch_startup (priv->killswitch);
+	if (!ret) {
+		egg_warning ("failed to setup killswitch");
+		goto out;
+	}
+
 	/* register on bus */
 	ret = urf_daemon_register_rfkill_daemon (daemon);
 	if (!ret) {
@@ -303,7 +310,6 @@ gboolean
 urf_daemon_get_all (UrfDaemon *daemon, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	GError *error;
 	GPtrArray *array;
 	GList *killswitches = NULL, *item = NULL;
 	GValue *value;
@@ -347,7 +353,6 @@ gboolean
 urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	GError *error;
 	UrfKillswitch *killswitch;
 	UrfIndKillswitch *ind;
 	char *device_name;
@@ -449,9 +454,6 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 static void
 urf_daemon_init (UrfDaemon *daemon)
 {
-	gboolean ret;
-	GError *error = NULL;
-
 	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
 	daemon->priv->polkit = urf_polkit_new ();
 

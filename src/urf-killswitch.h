@@ -70,6 +70,8 @@ typedef struct {
 GType			 urf_killswitch_get_type		(void);
 UrfKillswitch		*urf_killswitch_new			(void);
 
+gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch);
+
 gboolean		 urf_killswitch_has_killswitches	(UrfKillswitch	*killswitch);
 GList			*urf_killswitch_get_killswitches	(UrfKillswitch	*killswitch);
 UrfIndKillswitch	*urf_killswitch_get_killswitch		(UrfKillswitch  *killswitch,
