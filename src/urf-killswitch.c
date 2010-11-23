@@ -29,6 +29,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <glib.h>
 
@@ -519,6 +522,8 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
+	struct passwd *user;
+	const char *username = "urfkill";
 
 	priv->type_map = construct_type_map ();
 	priv->killswitches = NULL;
@@ -533,6 +538,23 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		egg_debug ("Can't set RFKILL control device to non-blocking");
 		close(fd);
+		return;
+	}
+
+	/* Change uid/gid to "urfkill" and drop privilege */
+	if (!(user = getpwnam (username))) {
+		egg_warning ("Can't get urfkill's uid and gid");
+		close (fd);
+		return;
+	}
+	if (initgroups (username, user->pw_gid) != 0) {
+		egg_warning ("initgroups failed");
+		close (fd);
+		return;
+	}
+	if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
+		egg_warning ("Can't drop privilege");
+		close (fd);
 		return;
 	}
 
