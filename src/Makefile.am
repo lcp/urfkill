@@ -38,8 +38,6 @@ urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 libexec_PROGRAMS = urfkilld
 
 urfkilld_SOURCES =						\
-	egg-debug.c						\
-	egg-debug.h						\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
 	urf-polkit.h						\

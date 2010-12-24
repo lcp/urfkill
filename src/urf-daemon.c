@@ -31,8 +31,6 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "egg-debug.h"
-
 #include "urf-polkit.h"
 #include "urf-daemon.h"
 #include "urf-killswitch.h"
@@ -130,14 +128,14 @@ urf_daemon_startup (UrfDaemon *daemon)
 	/* start up the killswitch */
 	ret = urf_killswitch_startup (priv->killswitch);
 	if (!ret) {
-		egg_warning ("failed to setup killswitch");
+		g_warning ("failed to setup killswitch");
 		goto out;
 	}
 
 	/* register on bus */
 	ret = urf_daemon_register_rfkill_daemon (daemon);
 	if (!ret) {
-		egg_warning ("failed to register");
+		g_warning ("failed to register");
 		goto out;
 	}
 

@@ -31,8 +31,6 @@
 
 #include <polkit/polkit.h>
 
-#include "egg-debug.h"
-
 #include "urf-polkit.h"
 #include "urf-daemon.h"
 
@@ -146,7 +144,7 @@ urf_polkit_get_uid (UrfPolkit *polkit, PolkitSubject *subject, uid_t *uid)
 	const gchar *name;
 
 	if (!POLKIT_IS_SYSTEM_BUS_NAME (subject)) {
-		egg_debug ("not system bus name");
+		g_debug ("not system bus name");
 		return FALSE;
 	}
 
@@ -169,7 +167,7 @@ urf_polkit_get_pid (UrfPolkit *polkit, PolkitSubject *subject, pid_t *pid)
 
 	/* bus name? */
 	if (!POLKIT_IS_SYSTEM_BUS_NAME (subject)) {
-		egg_debug ("not system bus name");
+		g_debug ("not system bus name");
 		goto out;
 	}
 
@@ -179,7 +177,7 @@ urf_polkit_get_pid (UrfPolkit *polkit, PolkitSubject *subject, pid_t *pid)
 						 "/org/freedesktop/DBus/Bus",
 						 "org.freedesktop.DBus", &error);
 	if (proxy == NULL) {
-		egg_warning ("DBUS error: %s", error->message);
+		g_warning ("DBUS error: %s", error->message);
 		g_error_free (error);
 		goto out;
 	}
@@ -191,7 +189,7 @@ urf_polkit_get_pid (UrfPolkit *polkit, PolkitSubject *subject, pid_t *pid)
 				 G_TYPE_UINT, pid,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		egg_warning ("failed to get pid: %s", error->message);
+		g_warning ("failed to get pid: %s", error->message);
 		g_error_free (error);
 		goto out;
         }
