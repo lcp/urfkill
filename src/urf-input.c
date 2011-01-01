@@ -113,7 +113,7 @@ input_event_cb (GIOChannel *source, GIOCondition condition, UrfInput *input)
 		while (status == G_IO_STATUS_NORMAL && read == sizeof(event)) {
 			if (event.value == KEY_PRESS) {
 				switch (event.code) {
-				case KEY_WLAN:		
+				case KEY_WLAN:
 				case KEY_BLUETOOTH:
 				case KEY_UWB:
 				case KEY_WIMAX:
@@ -165,7 +165,7 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 	channel = g_new0 (InputChannel, 1);
 
 	channel->fd = fd;
-	channel->channel = g_io_channel_unix_new (priv->fd);
+	channel->channel = g_io_channel_unix_new (channel->fd);
 	channel->watch_id = g_io_add_watch (channel->channel,
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) input_event_cb,
@@ -206,7 +206,6 @@ setup_input_channels (UrfInput *input)
 		parent_dev = udev_device_get_parent_with_subsystem_devtype (dev, "input", 0);
 		if (!parent_dev) {
 			udev_device_unref(dev);
-			udev_device_unref(parent_dev);
 			continue;
 		}
 
@@ -214,21 +213,18 @@ setup_input_channels (UrfInput *input)
 		product_id = hex_atoi (udev_device_get_sysattr_value (parent_dev, "id/product"));
 		if (!input_dev_id_match (vendor_id, product_id)) {
 			udev_device_unref(dev);
-			udev_device_unref(parent_dev);
 			continue;
 		}
 
 		dev_node = udev_device_get_devnode (dev);
 		if (!dev_node) {
 			udev_device_unref(dev);
-			udev_device_unref(parent_dev);
 			continue;
 		}
 
 		input_dev_open_channel (input, dev_node);
 
 		udev_device_unref(dev);
-		udev_device_unref(parent_dev);
 	}
 	udev_enumerate_unref(enumerate);
 	udev_unref(udev);
@@ -288,7 +284,7 @@ urf_input_class_init(UrfInputClass *klass)
 		g_signal_new ("rf-key-pressed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfInputClass, key_pressed),
+			      G_STRUCT_OFFSET (UrfInputClass, rf_key_pressed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
