@@ -47,6 +47,7 @@ typedef struct {
 
 InputDevId input_dev_table[] = {
 	{.vendor = 0x0001, .product = 0x0001}, /* AT Translated Set 2 Keyboard */
+	{.vendor = 0x17aa, .product = 0x5054}, /* ThinkPad Extra Buttons */
 	{.vendor = -1,     .product = -1}
 };
 
