@@ -26,6 +26,8 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -126,6 +128,8 @@ main (gint argc, gchar **argv)
 	gboolean timed_exit = FALSE;
 	gboolean immediate_exit = FALSE;
 	guint timer_id = 0;
+	struct passwd *user;
+	const char *username = "urfkill";
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -178,6 +182,20 @@ main (gint argc, gchar **argv)
 	ret = urf_daemon_startup (daemon);
 	if (!ret) {
 		g_warning ("Could not startup; bailing out");
+		goto out;
+	}
+
+	/* Change uid/gid to "urfkill" and drop privilege */
+	if (!(user = getpwnam (username))) {
+		g_warning ("Can't get urfkill's uid and gid");
+		goto out;
+	}
+	if (initgroups (username, user->pw_gid) != 0) {
+		g_warning ("initgroups failed");
+		goto out;
+	}
+	if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
+		g_warning ("Can't drop privilege");
 		goto out;
 	}
 

@@ -29,9 +29,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-#include <pwd.h>
-#include <grp.h>
 
 #include <glib.h>
 
@@ -521,30 +518,11 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
-	struct passwd *user;
-	const char *username = "urfkill";
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		if (errno == EACCES)
 			g_warning ("Could not open RFKILL control device, please verify your installation");
-		return FALSE;
-	}
-
-	/* Change uid/gid to "urfkill" and drop privilege */
-	if (!(user = getpwnam (username))) {
-		g_warning ("Can't get urfkill's uid and gid");
-		close (fd);
-		return FALSE;
-	}
-	if (initgroups (username, user->pw_gid) != 0) {
-		g_warning ("initgroups failed");
-		close (fd);
-		return FALSE;
-	}
-	if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
-		g_warning ("Can't drop privilege");
-		close (fd);
 		return FALSE;
 	}
 
