@@ -117,7 +117,9 @@ input_event_cb (GIOChannel *source, GIOCondition condition, UrfInput *input)
 				case KEY_BLUETOOTH:
 				case KEY_UWB:
 				case KEY_WIMAX:
+#ifdef KEY_RFKILL
 				case KEY_RFKILL:
+#endif
 					g_signal_emit (G_OBJECT (input),
 						       signals[RF_KEY_PRESSED],
 						       0,
