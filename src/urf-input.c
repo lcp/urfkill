@@ -167,12 +167,12 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 	channel->fd = fd;
 	channel->channel = g_io_channel_unix_new (channel->fd);
 	g_io_channel_set_encoding (channel->channel, NULL, NULL);
+	priv->channel_list = g_list_append (priv->channel_list, (gpointer)channel);
+
 	channel->watch_id = g_io_add_watch (channel->channel,
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) input_event_cb,
 				input);
-
-	priv->channel_list = g_list_append (priv->channel_list, (gpointer)channel);
 
 	return TRUE;
 }
