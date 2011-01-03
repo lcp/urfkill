@@ -161,11 +161,12 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 		close(fd);
 		return FALSE;
 	}
-	/* Setup monitoring */
+	/* Setup a channel for the device node */
 	channel = g_new0 (InputChannel, 1);
 
 	channel->fd = fd;
 	channel->channel = g_io_channel_unix_new (channel->fd);
+	g_io_channel_set_encoding (channel->channel, NULL, NULL);
 	channel->watch_id = g_io_add_watch (channel->channel,
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) input_event_cb,
