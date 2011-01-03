@@ -330,7 +330,7 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 	killswitch = priv->killswitch;
 
 	ind = urf_killswitch_get_killswitch (killswitch, index);
-	
+
 	if (ind == NULL) {
 		type = -1;
 		state = -1;
@@ -344,7 +344,7 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 		hard = ind->hard;
 		device_name = get_rfkill_name_by_index (index);
 	}
-	
+
 	dbus_g_method_return (context, type, state, soft, hard, device_name);
 
 	return TRUE;
