@@ -151,18 +151,13 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 	int fd;
 	InputChannel *channel;
 
-	fd = open(dev_node, O_RDONLY);
+	fd = open(dev_node, O_RDONLY | O_NONBLOCK);
 	if (fd < 0) {
 		if (errno == EACCES)
 			g_warning ("Could not open %s", dev_node);
 		return FALSE;
 	}
 
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		g_debug ("Can't set %s to non-blocking", dev_node);
-		close(fd);
-		return FALSE;
-	}
 	/* Setup a channel for the device node */
 	channel = g_new0 (InputChannel, 1);
 

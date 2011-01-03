@@ -344,7 +344,7 @@ urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
 	GList *item;
-	
+
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
 	for (item = priv->killswitches; item; item = g_list_next (item)) {
@@ -524,16 +524,10 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 	struct passwd *user;
 	const char *username = "urfkill";
 
-	fd = open("/dev/rfkill", O_RDWR);
+	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		if (errno == EACCES)
 			g_warning ("Could not open RFKILL control device, please verify your installation");
-		return FALSE;
-	}
-
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		g_debug ("Can't set RFKILL control device to non-blocking");
-		close(fd);
 		return FALSE;
 	}
 
