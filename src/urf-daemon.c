@@ -34,6 +34,7 @@
 #include "urf-polkit.h"
 #include "urf-daemon.h"
 #include "urf-killswitch.h"
+#include "urf-input.h"
 #include "urf-utils.h"
 
 #include "urf-daemon-glue.h"
@@ -62,6 +63,7 @@ struct UrfDaemonPrivate
 	DBusGProxy	*proxy;
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
+	UrfInput	*input;
 };
 
 static void urf_daemon_dispose (GObject *object);
@@ -116,6 +118,13 @@ out:
 	return ret;
 }
 
+static void
+urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
+{
+	UrfDaemon *daemon = URF_DAEMON (data);
+	/* TODO enable/disable the specific killswitches according to the key code */
+}
+
 /**
  * urf_daemon_startup:
  **/
@@ -139,6 +148,12 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
+	/* start up input device monitor */
+	ret = urf_input_startup (priv->input);
+	if (!ret) {
+		g_warning ("failed to setup input device monitor");
+		goto out;
+	}
 out:
 	return ret;
 }
@@ -424,13 +439,16 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
-
 	g_signal_connect (daemon->priv->killswitch, "rfkill-added",
 			  G_CALLBACK (urf_daemon_killswitch_added_cb), daemon);
 	g_signal_connect (daemon->priv->killswitch, "rfkill-removed",
 			  G_CALLBACK (urf_daemon_killswitch_removed_cb), daemon);
 	g_signal_connect (daemon->priv->killswitch, "rfkill-changed",
 			  G_CALLBACK (urf_daemon_killswitch_changed_cb), daemon);
+
+	daemon->priv->input = urf_input_new ();
+	g_signal_connect (daemon->priv->input, "rf_key_pressed",
+			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
 }
 
 /**

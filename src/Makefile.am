@@ -40,6 +40,8 @@ libexec_PROGRAMS = urfkilld
 urfkilld_SOURCES =						\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
+	urf-input.h						\
+	urf-input.c						\
 	urf-polkit.h						\
 	urf-polkit.c						\
 	urf-utils.h						\
@@ -56,6 +58,7 @@ urfkilld_CPPFLAGS =						\
 
 urfkilld_LDADD =						\
 	-lm							\
+	$(LIBUDEV_LIBS)						\
 	$(GIO_LIBS)						\
 	$(POLKIT_LIBS)						\
 	$(DBUS_GLIB_LIBS)
