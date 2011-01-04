@@ -175,8 +175,8 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 	return TRUE;
 }
 
-static void
-setup_input_channels (UrfInput *input)
+gboolean
+urf_input_startup (UrfInput *input)
 {
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
@@ -188,7 +188,7 @@ setup_input_channels (UrfInput *input)
 	udev = udev_new ();
 	if (!udev) {
 		g_warning ("Cannot create udev object");
-		return;
+		return FALSE;
 	}
 
 	enumerate = udev_enumerate_new (udev);
@@ -221,12 +221,19 @@ setup_input_channels (UrfInput *input)
 			continue;
 		}
 
-		input_dev_open_channel (input, dev_node);
+		if (!input_dev_open_channel (input, dev_node)) {
+			udev_device_unref(dev);
+			udev_enumerate_unref(enumerate);
+			udev_unref(udev);
+			return FALSE;
+		}
 
 		udev_device_unref(dev);
 	}
 	udev_enumerate_unref(enumerate);
 	udev_unref(udev);
+
+	return TRUE;
 }
 
 /**
@@ -237,7 +244,6 @@ urf_input_init (UrfInput *input)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	priv->channel_list = NULL;
-	setup_input_channels (input);
 }
 
 /**
