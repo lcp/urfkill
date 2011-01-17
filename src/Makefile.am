@@ -53,7 +53,7 @@ urfkilld_SOURCES =						\
 
 urfkilld_CPPFLAGS =						\
 	-I$(top_srcdir)/src					\
-	-DG_LOG_DOMAIN=\"urf-daemon\"				\
+	-DG_LOG_DOMAIN=\"URfkill\"				\
 	$(AM_CPPFLAGS)
 
 urfkilld_LDADD =						\
