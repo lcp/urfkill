@@ -68,33 +68,41 @@ typedef struct {
 
 struct UrfInputPrivate {
 	GList *channel_list;
+	GHashTable *device_table;
 };
 
 G_DEFINE_TYPE(UrfInput, urf_input, G_TYPE_OBJECT)
 
-static int
-hex_atoi (const char *str)
+static gboolean
+input_dev_id_match (UrfInput *input, const char *vendor, const char *product)
 {
-	int ret;
+	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
+	gboolean ret = FALSE;
+	char *key;
 
-	if (!str)
-		return 0;
+	key = g_strdup_printf ("%s:%s", vendor, product);
+	if (g_hash_table_lookup (priv->device_table, key))
+		ret = TRUE;
 
-	sscanf (str, "%x", &ret);
-
+	g_free (key);
 	return ret;
 }
 
-static int
-input_dev_id_match (int vendor, int product)
+static GHashTable *
+construct_device_table ()
 {
+	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
+	char *key;
 	int i;
+
 	for (i = 0; input_dev_table[i].vendor > -1; i++) {
-		if (vendor == input_dev_table[i].vendor &&
-		    product == input_dev_table[i].product)
-			return 1;
+		key = g_strdup_printf ("%04x:%04x",
+					input_dev_table[i].vendor,
+					input_dev_table[i].product);
+		g_hash_table_insert (device_table, key, "EXIST");
 	}
-	return 0;
+
+	return device_table;
 }
 
 static gboolean
@@ -198,7 +206,8 @@ urf_input_startup (UrfInput *input)
 
 	udev_list_entry_foreach (dev_list_entry, devices) {
 		const char *path, *dev_node;
-		int vendor_id, product_id;
+		const char *vendor, *product;
+		char *key;
 
 		path = udev_list_entry_get_name (dev_list_entry);
 		dev = udev_device_new_from_syspath (udev, path);
@@ -208,9 +217,9 @@ urf_input_startup (UrfInput *input)
 			continue;
 		}
 
-		vendor_id = hex_atoi (udev_device_get_sysattr_value (parent_dev,"id/vendor"));
-		product_id = hex_atoi (udev_device_get_sysattr_value (parent_dev, "id/product"));
-		if (!input_dev_id_match (vendor_id, product_id)) {
+		vendor = udev_device_get_sysattr_value (parent_dev,"id/vendor");
+		product = udev_device_get_sysattr_value (parent_dev, "id/product");
+		if (!input_dev_id_match (input, vendor, product)) {
 			udev_device_unref(dev);
 			continue;
 		}
@@ -244,6 +253,7 @@ urf_input_init (UrfInput *input)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	priv->channel_list = NULL;
+	priv->device_table = construct_device_table ();
 }
 
 /**
@@ -270,6 +280,8 @@ urf_input_finalize (GObject *object)
 	}
 
 	g_list_free (priv->channel_list);
+
+	g_hash_table_destroy (priv->device_table);
 
 	G_OBJECT_CLASS(urf_input_parent_class)->finalize(object);
 }
