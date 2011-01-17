@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2010 Gary Ching-Pang Lin <glin@novell.com>
+ * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@novell.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#include "urf-config.h"
 #include "urf-daemon.h"
 
 #define URFKILL_SERVICE_NAME "org.freedesktop.URfkill"
@@ -119,6 +120,7 @@ gint
 main (gint argc, gchar **argv)
 {
 	GError *error = NULL;
+	UrfConfig *config = NULL;
 	UrfDaemon *daemon = NULL;
 	GOptionContext *context;
 	DBusGProxy *bus_proxy;
@@ -130,6 +132,7 @@ main (gint argc, gchar **argv)
 	guint timer_id = 0;
 	struct passwd *user;
 	const char *username = NULL;
+	const char *conf_file = NULL;
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -141,6 +144,9 @@ main (gint argc, gchar **argv)
 		{ "user", 'u', 0, G_OPTION_ARG_STRING, &username,
 		  /* TRANSLATORS: exit straight away, used for automatic profiling */
 		  _("Use a specific user instead of root"), NULL },
+		{ "config", 'c', 0, G_OPTION_ARG_STRING, &config,
+		  /* TRANSLATORS: exit straight away, used for automatic profiling */
+		  _("Use a specific config file"), NULL },
 		{ NULL }
 	};
 
@@ -150,6 +156,12 @@ main (gint argc, gchar **argv)
 	g_option_context_add_main_entries (context, options, NULL);
 	g_option_context_parse (context, &argc, &argv, NULL);
 	g_option_context_free (context);
+
+	if (conf_file == NULL)
+		conf_file = "/etc/urfkill.conf";
+
+	config = urf_config_new ();
+	urf_config_load_from_file (config, conf_file);
 
 	/* get bus connection */
 	bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -188,7 +200,10 @@ main (gint argc, gchar **argv)
 		goto out;
 	}
 
-	if (username != NULL) {
+	if (!username)
+		username = urf_config_get_user (config);
+
+	if (username != NULL && g_strcmp0 (username, "root") != 0) {
 		/* Change uid/gid to a specific user and drop privilege */
 		if (!(user = getpwnam (username))) {
 			g_warning ("Can't get urfkill's uid and gid");
@@ -222,6 +237,8 @@ main (gint argc, gchar **argv)
 out:
 	if (daemon != NULL)
 		g_object_unref (daemon);
+	if (config != NULL)
+		g_object_unref (config);
 	if (loop != NULL)
 		g_main_loop_unref (loop);
 	return retval;
