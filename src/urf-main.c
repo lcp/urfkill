@@ -129,7 +129,7 @@ main (gint argc, gchar **argv)
 	gboolean immediate_exit = FALSE;
 	guint timer_id = 0;
 	struct passwd *user;
-	const char *username = "urfkill";
+	const char *username = NULL;
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -138,7 +138,10 @@ main (gint argc, gchar **argv)
 		{ "immediate-exit", '\0', 0, G_OPTION_ARG_NONE, &immediate_exit,
 		  /* TRANSLATORS: exit straight away, used for automatic profiling */
 		  _("Exit after the engine has loaded"), NULL },
-		{ NULL}
+		{ "user", 'u', 0, G_OPTION_ARG_STRING, &username,
+		  /* TRANSLATORS: exit straight away, used for automatic profiling */
+		  _("Use a specific user instead of root"), NULL },
+		{ NULL }
 	};
 
 	g_type_init ();
@@ -185,18 +188,20 @@ main (gint argc, gchar **argv)
 		goto out;
 	}
 
-	/* Change uid/gid to "urfkill" and drop privilege */
-	if (!(user = getpwnam (username))) {
-		g_warning ("Can't get urfkill's uid and gid");
-		goto out;
-	}
-	if (initgroups (username, user->pw_gid) != 0) {
-		g_warning ("initgroups failed");
-		goto out;
-	}
-	if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
-		g_warning ("Can't drop privilege");
-		goto out;
+	if (username != NULL) {
+		/* Change uid/gid to a specific user and drop privilege */
+		if (!(user = getpwnam (username))) {
+			g_warning ("Can't get urfkill's uid and gid");
+			goto out;
+		}
+		if (initgroups (username, user->pw_gid) != 0) {
+			g_warning ("initgroups failed");
+			goto out;
+		}
+		if (setgid (user->pw_gid) != 0 || setuid (user->pw_uid) != 0) {
+			g_warning ("Can't drop privilege");
+			goto out;
+		}
 	}
 
 	/* only timeout and close the mainloop if we have specified it on the command line */
