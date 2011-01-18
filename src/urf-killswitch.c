@@ -239,7 +239,7 @@ KillswitchState
 urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 {
 	UrfKillswitchPrivate *priv;
-	int state = KILLSWITCH_STATE_UNBLOCKED;
+	int state = KILLSWITCH_STATE_NO_ADAPTER;
 	GList *l;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
