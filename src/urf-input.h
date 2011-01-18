@@ -52,7 +52,8 @@ typedef struct {
 
 GType		 urf_input_get_type 	(void);
 UrfInput	*urf_input_new		(void);
-gboolean	 urf_input_startup	(UrfInput *input);
+gboolean	 urf_input_startup	(UrfInput	*input,
+					 const char	*input_devices[]);
 
 G_END_DECLS
 

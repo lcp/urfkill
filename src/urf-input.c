@@ -40,12 +40,6 @@
 
 #include "urf-input.h"
 
-char *input_dev_table[] = { /* vendor_id:product_id */
-	"0001:0001", /* AT Translated Set 2 Keyboard */
-	"17aa:5054", /* ThinkPad Extra Buttons */
-	NULL
-};
-
 enum {
 	RF_KEY_PRESSED,
 	LAST_SIGNAL
@@ -84,13 +78,19 @@ input_dev_id_match (UrfInput *input, const char *vendor, const char *product)
 }
 
 static GHashTable *
-construct_device_table ()
+construct_device_table (const char *input_devices[])
 {
 	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
 	int i;
 
-	for (i = 0; input_dev_table[i] != NULL; i++)
-		g_hash_table_insert (device_table, input_dev_table[i], "EXIST");
+	/* AT Translated Set 2 Keyboard */
+	g_hash_table_insert (device_table, "0001:0001", "EXIST");
+
+	if (input_devices == NULL)
+		return device_table;
+
+	for (i = 0; input_devices[i] != NULL; i++)
+		g_hash_table_insert (device_table, (gpointer)input_devices[i], "EXIST");
 
 	return device_table;
 }
@@ -174,8 +174,9 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 }
 
 gboolean
-urf_input_startup (UrfInput *input)
+urf_input_startup (UrfInput *input, const char *input_devices[])
 {
+	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices;
@@ -188,6 +189,8 @@ urf_input_startup (UrfInput *input)
 		g_warning ("Cannot create udev object");
 		return FALSE;
 	}
+
+	priv->device_table = construct_device_table (input_devices);
 
 	enumerate = udev_enumerate_new (udev);
 	udev_enumerate_add_match_subsystem (enumerate, "input");
@@ -243,7 +246,7 @@ urf_input_init (UrfInput *input)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	priv->channel_list = NULL;
-	priv->device_table = construct_device_table ();
+	priv->device_table = NULL;
 }
 
 /**

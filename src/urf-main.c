@@ -194,7 +194,7 @@ main (gint argc, gchar **argv)
 	/* start the daemon */
 	daemon = urf_daemon_new ();
 	loop = g_main_loop_new (NULL, FALSE);
-	ret = urf_daemon_startup (daemon);
+	ret = urf_daemon_startup (daemon, config);
 	if (!ret) {
 		g_warning ("Could not startup; bailing out");
 		goto out;
