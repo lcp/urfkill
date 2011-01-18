@@ -40,15 +40,10 @@
 
 #include "urf-input.h"
 
-typedef struct {
-	int vendor;
-	int product;
-} InputDevId;
-
-InputDevId input_dev_table[] = {
-	{.vendor = 0x0001, .product = 0x0001}, /* AT Translated Set 2 Keyboard */
-	{.vendor = 0x17aa, .product = 0x5054}, /* ThinkPad Extra Buttons */
-	{.vendor = -1,     .product = -1}
+char *input_dev_table[] = { /* vendor_id:product_id */
+	"0001:0001", /* AT Translated Set 2 Keyboard */
+	"17aa:5054", /* ThinkPad Extra Buttons */
+	NULL
 };
 
 enum {
@@ -80,7 +75,7 @@ input_dev_id_match (UrfInput *input, const char *vendor, const char *product)
 	gboolean ret = FALSE;
 	char *key;
 
-	key = g_strdup_printf ("%s:%s", vendor, product);
+	key = g_strconcat (vendor, ":", product, NULL);
 	if (g_hash_table_lookup (priv->device_table, key))
 		ret = TRUE;
 
@@ -92,15 +87,10 @@ static GHashTable *
 construct_device_table ()
 {
 	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
-	char *key;
 	int i;
 
-	for (i = 0; input_dev_table[i].vendor > -1; i++) {
-		key = g_strdup_printf ("%04x:%04x",
-					input_dev_table[i].vendor,
-					input_dev_table[i].product);
-		g_hash_table_insert (device_table, key, "EXIST");
-	}
+	for (i = 0; input_dev_table[i] != NULL; i++)
+		g_hash_table_insert (device_table, input_dev_table[i], "EXIST");
 
 	return device_table;
 }
