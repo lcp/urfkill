@@ -29,6 +29,7 @@
                                      URF_TYPE_CONFIG, UrfConfigPrivate))
 struct UrfConfigPrivate {
 	char *user;
+	char **input_devices;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -42,6 +43,7 @@ urf_config_load_from_file (UrfConfig  *config,
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	GKeyFile *key_file = g_key_file_new ();
+	gsize *length;
 	gboolean ret = FALSE;
 
 	ret = g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, NULL);
@@ -53,6 +55,8 @@ urf_config_load_from_file (UrfConfig  *config,
 
 	/* Parse the key file and store to private variables*/
 	priv->user = g_key_file_get_value (key_file, "general", "user", NULL);
+
+	priv->input_devices = g_key_file_get_keys (key_file, "devices", length, NULL);
 
 	g_key_file_free (key_file);
 }
@@ -68,6 +72,16 @@ urf_config_get_user (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_device_table:
+ **/
+const char **
+urf_config_get_input_devices (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	return (const char **)priv->input_devices;
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -75,6 +89,7 @@ urf_config_init (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	priv->user = NULL;
+	priv->input_devices = NULL;
 }
 
 /**
@@ -86,6 +101,7 @@ urf_config_finalize (GObject *object)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
 
 	g_free (priv->user);
+	g_strfreev (priv->input_devices);
 }
 
 /**
