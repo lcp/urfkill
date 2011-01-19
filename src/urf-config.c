@@ -50,6 +50,7 @@ urf_config_load_from_file (UrfConfig  *config,
 
 	if (!ret) {
 		g_warning ("Failed to load config file: %s", filename);
+		g_key_file_free (key_file);
 		return;
 	}
 
