@@ -56,7 +56,7 @@ urf_config_load_from_file (UrfConfig  *config,
 	/* Parse the key file and store to private variables*/
 	priv->user = g_key_file_get_value (key_file, "general", "user", NULL);
 
-	priv->input_devices = g_key_file_get_keys (key_file, "devices", length, NULL);
+	priv->input_devices = g_key_file_get_keys (key_file, "input devices", length, NULL);
 
 	g_key_file_free (key_file);
 }
