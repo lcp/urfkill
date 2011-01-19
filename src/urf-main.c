@@ -206,7 +206,7 @@ main (gint argc, gchar **argv)
 	if (username != NULL && g_strcmp0 (username, "root") != 0) {
 		/* Change uid/gid to a specific user and drop privilege */
 		if (!(user = getpwnam (username))) {
-			g_warning ("Can't get urfkill's uid and gid");
+			g_warning ("Can't get %s's uid and gid", username);
 			goto out;
 		}
 		if (initgroups (username, user->pw_gid) != 0) {
