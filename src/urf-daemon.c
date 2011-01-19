@@ -76,6 +76,7 @@ struct UrfDaemonPrivate
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
 	gint		 state[NUM_STATES];
+	gboolean	 key_control;
 };
 
 static void urf_daemon_dispose (GObject *object);
@@ -138,6 +139,9 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 	UrfKillswitch *killswitch = priv->killswitch;
 	gint index, type, state;
 
+	if (!priv->key_control)
+		return;
+
 	switch (code) {
 		case KEY_WLAN:
 			type = urf_killswitch_rf_type (killswitch, "WLAN");
@@ -186,6 +190,8 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 	const char **input_devices = urf_config_get_input_devices (config);
 	gboolean ret;
 	gint type;
+
+	priv->key_control = urf_config_get_key_control (config);
 
 	/* start up the killswitch */
 	ret = urf_killswitch_startup (priv->killswitch);
@@ -514,6 +520,8 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf_key_pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
+
+	daemon->priv->key_control = TRUE;
 }
 
 /**
