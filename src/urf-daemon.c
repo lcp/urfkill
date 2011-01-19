@@ -59,15 +59,6 @@ enum
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-enum
-{
-	STATE_WLAN = 0,
-	STATE_BLUETOOTH,
-	STATE_UWB,
-	STATE_WIMAX,
-	NUM_STATES,
-};
-
 struct UrfDaemonPrivate
 {
 	DBusGConnection	*connection;
@@ -75,7 +66,6 @@ struct UrfDaemonPrivate
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
-	gint		 state[NUM_STATES];
 	gboolean	 key_control;
 };
 
@@ -137,7 +127,7 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 	UrfDaemon *daemon = URF_DAEMON (data);
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	UrfKillswitch *killswitch = priv->killswitch;
-	gint index, type, state;
+	gint type, state;
 
 	if (!priv->key_control)
 		return;
@@ -145,39 +135,39 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 	switch (code) {
 		case KEY_WLAN:
 			type = urf_killswitch_rf_type (killswitch, "WLAN");
-			index = STATE_WLAN;
 			break;
 		case KEY_BLUETOOTH:
 			type = urf_killswitch_rf_type (killswitch, "BLUETOOTH");
-			index = STATE_BLUETOOTH;
 			break;
 		case KEY_UWB:
 			type = urf_killswitch_rf_type (killswitch, "UWB");
-			index = STATE_UWB;
 			break;
 		case KEY_WIMAX:
 			type = urf_killswitch_rf_type (killswitch, "WIMAX");
-			index = STATE_WIMAX;
 			break;
 		default:
 			return;
 	}
 
-	switch (priv->state[index]) {
+	state = urf_killswitch_get_state (killswitch, type);
+
+	switch (state) {
 		case KILLSWITCH_STATE_UNBLOCKED:
 			state = KILLSWITCH_STATE_SOFT_BLOCKED;
 			break;
-		case KILLSWITCH_STATE_HARD_BLOCKED:
 		case KILLSWITCH_STATE_SOFT_BLOCKED:
-		case KILLSWITCH_STATE_NO_ADAPTER:
 			state = KILLSWITCH_STATE_UNBLOCKED;
 			break;
+		/* FIXME sometimes killswitches are controlled by hardware/BIOS
+		 * and urfkilld will be confused. Find a method to identify the
+		 * hardward-controlled keys and leave them alone. */
+		case KILLSWITCH_STATE_HARD_BLOCKED:
+		case KILLSWITCH_STATE_NO_ADAPTER:
 		default:
 			return;
 	}
 
 	urf_killswitch_set_state (killswitch, type, state);
-	priv->state[index] = urf_killswitch_get_state (killswitch, type);
 }
 
 /**
@@ -199,18 +189,6 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 		g_warning ("failed to setup killswitch");
 		goto out;
 	}
-
-	type = urf_killswitch_rf_type (priv->killswitch, "WLAN");
-	priv->state[STATE_WLAN] = urf_killswitch_get_state (priv->killswitch, type);
-
-	type = urf_killswitch_rf_type (priv->killswitch, "BLUETOOTH");
-	priv->state[STATE_BLUETOOTH] = urf_killswitch_get_state (priv->killswitch, type);
-
-	type = urf_killswitch_rf_type (priv->killswitch, "UWB");
-	priv->state[STATE_UWB] = urf_killswitch_get_state (priv->killswitch, type);
-
-	type = urf_killswitch_rf_type (priv->killswitch, "WIMAX");
-	priv->state[STATE_WIMAX] = urf_killswitch_get_state (priv->killswitch, type);
 
 	/* register on bus */
 	ret = urf_daemon_register_rfkill_daemon (daemon);
