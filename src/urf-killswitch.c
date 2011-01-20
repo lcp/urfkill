@@ -264,7 +264,8 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 			break;
 		}
 
-		if (ind->state == KILLSWITCH_STATE_SOFT_BLOCKED) {
+		if (ind->state == KILLSWITCH_STATE_SOFT_BLOCKED ||
+		    state == KILLSWITCH_STATE_SOFT_BLOCKED) {
 			state = KILLSWITCH_STATE_SOFT_BLOCKED;
 			continue;
 		}
