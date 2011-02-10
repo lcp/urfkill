@@ -88,6 +88,8 @@ KillswitchState		 urf_killswitch_get_state_idx		(UrfKillswitch	*killswitch,
 								 guint 		 index);
 gint			 urf_killswitch_rf_type			(UrfKillswitch	*killswitch,
 								 const char	*type_name);
+gboolean		 urf_killswitch_set_state_all		(UrfKillswitch	*killswitch,
+								 KillswitchState state);
 
 G_END_DECLS
 
