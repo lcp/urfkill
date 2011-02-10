@@ -153,6 +153,7 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 
 	switch (state) {
 		case KILLSWITCH_STATE_UNBLOCKED:
+		case KILLSWITCH_STATE_HARD_BLOCKED:
 			state = KILLSWITCH_STATE_SOFT_BLOCKED;
 			break;
 		case KILLSWITCH_STATE_SOFT_BLOCKED:
@@ -161,7 +162,6 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 		/* FIXME sometimes killswitches are controlled by hardware/BIOS
 		 * and urfkilld will be confused. Find a method to identify the
 		 * hardward-controlled keys and leave them alone. */
-		case KILLSWITCH_STATE_HARD_BLOCKED:
 		case KILLSWITCH_STATE_NO_ADAPTER:
 		default:
 			return;
