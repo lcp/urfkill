@@ -140,6 +140,7 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 	else
 		g_assert_not_reached ();
 
+	g_debug ("Set %s to %s", type_to_string (type), state_to_string (state));
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -188,6 +189,7 @@ urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
 	else
 		g_assert_not_reached ();
 
+	g_debug ("Set device %u to %s", index, state_to_string (state));
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
