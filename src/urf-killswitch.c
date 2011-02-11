@@ -349,7 +349,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	if (changed != FALSE) {
 		g_debug ("updating killswitch status %d to %s",
 			 index,
-			 state_to_string (urf_killswitch_get_state (killswitch, type)));
+			 state_to_string (event_to_state (soft, hard)));
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
 	}
 }
