@@ -167,7 +167,7 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 			return;
 	}
 
-	urf_killswitch_set_state_all (killswitch, state);
+	urf_killswitch_set_state (killswitch, type, state);
 }
 
 /**
