@@ -116,41 +116,6 @@ type_to_string (unsigned int type)
 }
 
 /**
- * update_killswitch:
- **/
-static void
-update_killswitch (UrfKillswitch *killswitch,
-		   guint index, guint soft, guint hard)
-{
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	GList *l;
-	guint type;
-	gboolean changed = FALSE;
-
-	for (l = priv->killswitches; l != NULL; l = l->next) {
-		UrfIndKillswitch *ind = l->data;
-
-		if (ind->index == index) {
-			if (ind->soft != soft || ind->hard != hard) {
-				ind->state = event_to_state (soft, hard);
-				type = ind->type;
-				ind->soft = soft;
-				ind->hard = hard;
-				changed = TRUE;
-			}
-			break;
-		}
-	}
-
-	if (changed != FALSE) {
-		g_debug ("updating killswitch status %d to %s",
-			 index,
-			 state_to_string (urf_killswitch_get_state (killswitch, type)));
-		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
-	}
-}
-
-/**
  * urf_killswitch_set_state:
  **/
 gboolean
@@ -352,6 +317,41 @@ urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
 	}
 
 	return NULL;
+}
+
+/**
+ * update_killswitch:
+ **/
+static void
+update_killswitch (UrfKillswitch *killswitch,
+		   guint index, guint soft, guint hard)
+{
+	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	GList *l;
+	guint type;
+	gboolean changed = FALSE;
+
+	for (l = priv->killswitches; l != NULL; l = l->next) {
+		UrfIndKillswitch *ind = l->data;
+
+		if (ind->index == index) {
+			if (ind->soft != soft || ind->hard != hard) {
+				ind->state = event_to_state (soft, hard);
+				type = ind->type;
+				ind->soft = soft;
+				ind->hard = hard;
+				changed = TRUE;
+			}
+			break;
+		}
+	}
+
+	if (changed != FALSE) {
+		g_debug ("updating killswitch status %d to %s",
+			 index,
+			 state_to_string (urf_killswitch_get_state (killswitch, type)));
+		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
+	}
 }
 
 /**
