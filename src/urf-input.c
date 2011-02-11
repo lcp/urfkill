@@ -63,34 +63,39 @@ struct UrfInputPrivate {
 G_DEFINE_TYPE(UrfInput, urf_input, G_TYPE_OBJECT)
 
 static gboolean
-input_dev_id_match (UrfInput *input, const char *vendor, const char *product)
+input_dev_name_match (UrfInput *input, const char *dev_name)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	gboolean ret = FALSE;
-	char *key;
 
-	key = g_strconcat (vendor, ":", product, NULL);
-	if (g_hash_table_lookup (priv->device_table, key))
+	if (g_hash_table_lookup (priv->device_table, dev_name))
 		ret = TRUE;
 
-	g_free (key);
 	return ret;
 }
 
 static GHashTable *
-construct_device_table (const char *input_devices[])
+construct_device_table ()
 {
 	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
 	int i;
-
-	/* AT Translated Set 2 Keyboard */
-	g_hash_table_insert (device_table, "0001:0001", "EXIST");
-
-	if (input_devices == NULL)
-		return device_table;
+	const char *input_devices[] = {
+		"AT Translated Set 2 Keyboard",
+		"Asus Laptop extra buttons",
+		"cmpc_keys",
+		"Dell WMI hotkeys",
+		"Asus EeePC extra buttons",
+		"Eee PC WMI hotkeys",
+		"Sony Vaio Keys",
+		"ThinkPad Extra Buttons",
+		"Topstar Laptop extra buttons",
+		"Toshiba input device",
+		"Wistron laptop buttons",
+		NULL
+	};
 
 	for (i = 0; input_devices[i] != NULL; i++)
-		g_hash_table_insert (device_table, (gpointer)input_devices[i], "EXIST");
+		g_hash_table_insert (device_table, (gpointer)g_strdup (input_devices[i]), "EXIST");
 
 	return device_table;
 }
@@ -174,7 +179,7 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 }
 
 gboolean
-urf_input_startup (UrfInput *input, const char *input_devices[])
+urf_input_startup (UrfInput *input)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	struct udev *udev;
@@ -190,7 +195,7 @@ urf_input_startup (UrfInput *input, const char *input_devices[])
 		return FALSE;
 	}
 
-	priv->device_table = construct_device_table (input_devices);
+	priv->device_table = construct_device_table ();
 
 	enumerate = udev_enumerate_new (udev);
 	udev_enumerate_add_match_subsystem (enumerate, "input");
@@ -199,7 +204,7 @@ urf_input_startup (UrfInput *input, const char *input_devices[])
 
 	udev_list_entry_foreach (dev_list_entry, devices) {
 		const char *path, *dev_node;
-		const char *vendor, *product;
+		const char *dev_name;
 		char *key;
 
 		path = udev_list_entry_get_name (dev_list_entry);
@@ -210,9 +215,8 @@ urf_input_startup (UrfInput *input, const char *input_devices[])
 			continue;
 		}
 
-		vendor = udev_device_get_sysattr_value (parent_dev,"id/vendor");
-		product = udev_device_get_sysattr_value (parent_dev, "id/product");
-		if (!input_dev_id_match (input, vendor, product)) {
+		dev_name = udev_device_get_sysattr_value (parent_dev, "name");
+		if (!input_dev_name_match (input, dev_name)) {
 			udev_device_unref(dev);
 			continue;
 		}

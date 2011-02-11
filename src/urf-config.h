@@ -54,7 +54,6 @@ UrfConfig	*urf_config_new			(void);
 void		 urf_config_load_from_file	(UrfConfig	*config,
 						 const char	*filename);
 const char	*urf_config_get_user		(UrfConfig	*config);
-const char	**urf_config_get_input_devices	(UrfConfig	*config);
 gboolean	 urf_config_get_key_control	(UrfConfig	*config);
 
 G_END_DECLS

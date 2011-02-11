@@ -177,7 +177,6 @@ gboolean
 urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	const char **input_devices = urf_config_get_input_devices (config);
 	gboolean ret;
 	gint type;
 
@@ -198,7 +197,7 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 	}
 
 	/* start up input device monitor */
-	ret = urf_input_startup (priv->input, input_devices);
+	ret = urf_input_startup (priv->input);
 	if (!ret) {
 		g_warning ("failed to setup input device monitor");
 		goto out;

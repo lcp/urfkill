@@ -29,7 +29,6 @@
                                      URF_TYPE_CONFIG, UrfConfigPrivate))
 struct UrfConfigPrivate {
 	char *user;
-	char **input_devices;
 	gboolean key_control;
 };
 
@@ -65,8 +64,6 @@ urf_config_load_from_file (UrfConfig  *config,
 	else
 		g_warning ("key_control is missing or invalid in %s", filename);
 
-	priv->input_devices = g_key_file_get_keys (key_file, "input devices", length, NULL);
-
 	g_key_file_free (key_file);
 }
 
@@ -78,16 +75,6 @@ urf_config_get_user (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	return (const char *)priv->user;
-}
-
-/**
- * urf_config_get_device_table:
- **/
-const char **
-urf_config_get_input_devices (UrfConfig *config)
-{
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return (const char **)priv->input_devices;
 }
 
 /**
@@ -108,7 +95,6 @@ urf_config_init (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	priv->user = NULL;
-	priv->input_devices = NULL;
 	priv->key_control = TRUE;
 }
 
@@ -121,7 +107,6 @@ urf_config_finalize (GObject *object)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
 
 	g_free (priv->user);
-	g_strfreev (priv->input_devices);
 }
 
 /**
