@@ -134,7 +134,6 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 {
 	gboolean ret;
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
-	const char **input_devices = urf_config_get_input_devices (config);
 
 	/* start up the killswitch */
 	ret = urf_killswitch_startup (priv->killswitch);
@@ -151,7 +150,7 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 	}
 
 	/* start up input device monitor */
-	ret = urf_input_startup (priv->input, input_devices);
+	ret = urf_input_startup (priv->input);
 	if (!ret) {
 		g_warning ("failed to setup input device monitor");
 		goto out;
