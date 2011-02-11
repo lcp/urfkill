@@ -308,40 +308,6 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
 }
 
 /**
- * urf_killswitch_set_state_all:
- **/
-gboolean
-urf_killswitch_set_state_all (UrfKillswitch *killswitch,
-			      KillswitchState state)
-{
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	struct rfkill_event event;
-	ssize_t len;
-
-	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
-
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE_ALL;
-	event.type = RFKILL_TYPE_ALL;
-	if (state == KILLSWITCH_STATE_SOFT_BLOCKED)
-		event.soft = 1;
-	else if (state == KILLSWITCH_STATE_UNBLOCKED)
-		event.soft = 0;
-	else
-		g_assert_not_reached ();
-
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-
-
-/**
  * urf_killswitch_has_killswitches:
  **/
 gboolean
