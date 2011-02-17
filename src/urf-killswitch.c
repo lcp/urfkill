@@ -330,7 +330,7 @@ update_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
-	guint type;
+	guint type, old_hard;
 	gboolean changed = FALSE;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
@@ -338,6 +338,7 @@ update_killswitch (UrfKillswitch *killswitch,
 
 		if (ind->index == index) {
 			if (ind->soft != soft || ind->hard != hard) {
+				old_hard = ind->hard;
 				ind->state = event_to_state (soft, hard);
 				type = ind->type;
 				ind->soft = soft;
@@ -352,6 +353,12 @@ update_killswitch (UrfKillswitch *killswitch,
 		g_debug ("updating killswitch status %d to soft %d hard %d",
 			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
+
+		/* Sync soft and hard blocks */
+		if (hard == 1 && soft == 0)
+			urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+		else if (hard != old_hard && hard == 0)
+			urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
 	}
 }
 
@@ -401,6 +408,10 @@ add_killswitch (UrfKillswitch *killswitch,
 	priv->killswitches = g_list_append (priv->killswitches, ind);
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
+	if (hard == 0)
+		urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+	else
+		urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
 }
 
 /**
