@@ -349,9 +349,8 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 
 	if (changed != FALSE) {
-		g_debug ("updating killswitch status %d to %s",
-			 index,
-			 state_to_string (event_to_state (soft, hard)));
+		g_debug ("updating killswitch status %d to soft %d hard %d",
+			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
 	}
 }
@@ -392,7 +391,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	UrfIndKillswitch *ind;
 	int state = event_to_state (soft, hard);
 
-	g_debug ("adding killswitch idx %d state %s", index, state_to_string (state));
+	g_debug ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 	ind = g_new0 (UrfIndKillswitch, 1);
 	ind->index = index;
 	ind->type  = type;
