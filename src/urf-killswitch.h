@@ -38,6 +38,7 @@ typedef struct {
 	KillswitchState state;
 	guint soft;
 	guint hard;
+	char *name;
 } UrfIndKillswitch;
 
 #define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())
