@@ -391,7 +391,6 @@ remove_killswitch (UrfKillswitch *killswitch,
 
 			g_free (ind->name);
 			g_free (ind);
-			g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 			break;
 		}
 	}
@@ -407,6 +406,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 			}
 		}
 	}
+	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 }
 
 /**
