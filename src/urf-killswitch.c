@@ -219,7 +219,8 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
 	if (priv->killswitches == NULL)
 		return KILLSWITCH_STATE_NO_ADAPTER;
 
-	state = priv->type_pivot[type]->state;
+	if (priv->type_pivot[type])
+		state = priv->type_pivot[type]->state;
 
 	g_debug ("killswitches %s state %s",
 		 type_to_string (type), state_to_string (state));
@@ -391,12 +392,13 @@ remove_killswitch (UrfKillswitch *killswitch,
 			priv->killswitches = g_list_remove (priv->killswitches, ind);
 			g_debug ("removing killswitch idx %d %s", index, ind->name);
 
-			if (priv->type_pivot[type] == ind)
+			if (priv->type_pivot[type] == ind) {
+				priv->type_pivot[type] = NULL;
 				pivot_changed = TRUE;
+			}
 
 			g_free (ind->name);
 			g_free (ind);
-			g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 			break;
 		}
 	}
@@ -412,6 +414,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 			}
 		}
 	}
+	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
 }
 
 /**
