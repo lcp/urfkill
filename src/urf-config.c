@@ -30,6 +30,7 @@
 struct UrfConfigPrivate {
 	char *user;
 	gboolean key_control;
+	gboolean master_key;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -64,6 +65,12 @@ urf_config_load_from_file (UrfConfig  *config,
 	else
 		g_warning ("key_control is missing or invalid in %s", filename);
 
+	ret = g_key_file_get_boolean (key_file, "general", "master_key", &error);
+	if (!error)
+		priv->master_key = ret;
+	else
+		g_warning ("master_key is missing or invalid in %s", filename);
+
 	g_key_file_free (key_file);
 }
 
@@ -88,6 +95,16 @@ urf_config_get_key_control (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_master_key:
+ **/
+gboolean
+urf_config_get_master_key (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	return priv->master_key;
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -96,6 +113,7 @@ urf_config_init (UrfConfig *config)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	priv->user = NULL;
 	priv->key_control = TRUE;
+	priv->master_key = TRUE;
 }
 
 /**
