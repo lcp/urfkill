@@ -446,10 +446,8 @@ add_killswitch (UrfKillswitch *killswitch,
 	}
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
-	if (hard == 0)
-		urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
-	else
-		urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+	if (priv->type_pivot[type] != ind)
+		urf_killswitch_set_state_idx (killswitch, index, priv->type_pivot[type]->state);
 }
 
 /**
