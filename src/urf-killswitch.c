@@ -580,6 +580,8 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 	/* Disable rfkill input */
 	ioctl(fd, RFKILL_IOCTL_NOINPUT);
 
+	priv->fd = fd;
+
 	while (1) {
 		KillswitchState state;
 		ssize_t len;
@@ -606,7 +608,6 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 	}
 
 	/* Setup monitoring */
-	priv->fd = fd;
 	priv->channel = g_io_channel_unix_new (priv->fd);
 	g_io_channel_set_encoding (priv->channel, NULL, NULL);
 	priv->watch_id = g_io_add_watch (priv->channel,
@@ -627,6 +628,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 
 	priv->type_map = construct_type_map ();
 	priv->killswitches = NULL;
+	priv->fd = -1;
 
 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
 		priv->type_pivot[i] = NULL;
