@@ -55,6 +55,7 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct UrfKillswitchPrivate {
 	int fd;
+	gboolean key_control;
 	GIOChannel *channel;
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
@@ -365,11 +366,13 @@ update_killswitch (UrfKillswitch *killswitch,
 			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
 
-		/* Sync soft and hard blocks */
-		if (hard == 1 && soft == 0)
-			urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
-		else if (hard != old_hard && hard == 0)
-			urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+		if (priv->key_control) {
+			/* Sync soft and hard blocks */
+			if (hard == 1 && soft == 0)
+				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+			else if (hard != old_hard && hard == 0)
+				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+		}
 	}
 }
 
@@ -446,7 +449,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	}
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
-	if (priv->type_pivot[type] != ind)
+	if (priv->key_control && priv->type_pivot[type] != ind)
 		urf_killswitch_set_state_idx (killswitch, index, priv->type_pivot[type]->state);
 }
 
@@ -562,11 +565,14 @@ construct_type_map ()
  * urf_killswitch_startup
  **/
 gboolean
-urf_killswitch_startup (UrfKillswitch *killswitch)
+urf_killswitch_startup (UrfKillswitch *killswitch,
+			const gboolean key_control)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
+
+	priv->key_control = key_control;
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
