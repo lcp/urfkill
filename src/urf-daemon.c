@@ -67,6 +67,7 @@ struct UrfDaemonPrivate
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
 	gboolean	 key_control;
+	gboolean	 master_key;
 };
 
 static void urf_daemon_dispose (GObject *object);
@@ -167,6 +168,9 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 			return;
 	}
 
+	if (priv->master_key)
+		type = urf_killswitch_rf_type (killswitch, "ALL");
+
 	urf_killswitch_set_state (killswitch, type, state);
 }
 
@@ -181,6 +185,7 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 	gint type;
 
 	priv->key_control = urf_config_get_key_control (config);
+	priv->master_key = urf_config_get_master_key (config);
 
 	/* start up the killswitch */
 	ret = urf_killswitch_startup (priv->killswitch);
@@ -490,6 +495,7 @@ urf_daemon_init (UrfDaemon *daemon)
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
 
 	daemon->priv->key_control = TRUE;
+	daemon->priv->master_key = TRUE;
 }
 
 /**
