@@ -55,6 +55,7 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct UrfKillswitchPrivate {
 	int fd;
+	gboolean key_control;
 	GIOChannel *channel;
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
@@ -142,6 +143,7 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
 	else
 		g_assert_not_reached ();
 
+	g_debug ("Set %s to %s", type_to_string (type), state_to_string (state));
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -190,6 +192,7 @@ urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
 	else
 		g_assert_not_reached ();
 
+	g_debug ("Set device %u to %s", index, state_to_string (state));
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -339,7 +342,7 @@ update_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
-	guint type;
+	guint type, old_hard;
 	gboolean changed = FALSE;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
@@ -347,6 +350,7 @@ update_killswitch (UrfKillswitch *killswitch,
 
 		if (ind->index == index) {
 			if (ind->soft != soft || ind->hard != hard) {
+				old_hard = ind->hard;
 				ind->state = event_to_state (soft, hard);
 				type = ind->type;
 				ind->soft = soft;
@@ -358,10 +362,17 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 
 	if (changed != FALSE) {
-		g_debug ("updating killswitch status %d to %s",
-			 index,
-			 state_to_string (event_to_state (soft, hard)));
+		g_debug ("updating killswitch status %d to soft %d hard %d",
+			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
+
+		if (priv->key_control) {
+			/* Sync soft and hard blocks */
+			if (hard == 1 && soft == 0)
+				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
+			else if (hard != old_hard && hard == 0)
+				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+		}
 	}
 }
 
@@ -421,7 +432,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	UrfIndKillswitch *ind;
 	int state = event_to_state (soft, hard);
 
-	g_debug ("adding killswitch idx %d state %s", index, state_to_string (state));
+	g_debug ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 	ind = g_new0 (UrfIndKillswitch, 1);
 	ind->index = index;
 	ind->type  = type;
@@ -438,6 +449,8 @@ add_killswitch (UrfKillswitch *killswitch,
 	}
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
+	if (priv->key_control && priv->type_pivot[type] != ind)
+		urf_killswitch_set_state_idx (killswitch, index, priv->type_pivot[type]->state);
 }
 
 /**
@@ -552,11 +565,14 @@ construct_type_map ()
  * urf_killswitch_startup
  **/
 gboolean
-urf_killswitch_startup (UrfKillswitch *killswitch)
+urf_killswitch_startup (UrfKillswitch *killswitch,
+			const gboolean key_control)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
+
+	priv->key_control = key_control;
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {

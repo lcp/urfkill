@@ -30,6 +30,7 @@
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#include <linux/input.h>
 
 #include "urf-polkit.h"
 #include "urf-daemon.h"
@@ -65,6 +66,8 @@ struct UrfDaemonPrivate
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
+	gboolean	 key_control;
+	gboolean	 master_key;
 };
 
 static void urf_daemon_dispose (GObject *object);
@@ -123,7 +126,52 @@ static void
 urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 {
 	UrfDaemon *daemon = URF_DAEMON (data);
-	/* TODO enable/disable the specific killswitches according to the key code */
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfKillswitch *killswitch = priv->killswitch;
+	gint type, state;
+
+	if (!priv->key_control)
+		return;
+
+	switch (code) {
+		case KEY_WLAN:
+			type = urf_killswitch_rf_type (killswitch, "WLAN");
+			break;
+		case KEY_BLUETOOTH:
+			type = urf_killswitch_rf_type (killswitch, "BLUETOOTH");
+			break;
+		case KEY_UWB:
+			type = urf_killswitch_rf_type (killswitch, "UWB");
+			break;
+		case KEY_WIMAX:
+			type = urf_killswitch_rf_type (killswitch, "WIMAX");
+			break;
+		default:
+			return;
+	}
+
+	state = urf_killswitch_get_state (killswitch, type);
+
+	switch (state) {
+		case KILLSWITCH_STATE_UNBLOCKED:
+		case KILLSWITCH_STATE_HARD_BLOCKED:
+			state = KILLSWITCH_STATE_SOFT_BLOCKED;
+			break;
+		case KILLSWITCH_STATE_SOFT_BLOCKED:
+			state = KILLSWITCH_STATE_UNBLOCKED;
+			break;
+		/* FIXME sometimes killswitches are controlled by hardware/BIOS
+		 * and urfkilld will be confused. Find a method to identify the
+		 * hardward-controlled keys and leave them alone. */
+		case KILLSWITCH_STATE_NO_ADAPTER:
+		default:
+			return;
+	}
+
+	if (priv->master_key)
+		type = urf_killswitch_rf_type (killswitch, "ALL");
+
+	urf_killswitch_set_state (killswitch, type, state);
 }
 
 /**
@@ -132,11 +180,15 @@ urf_daemon_input_event_cb (UrfInput *input, guint code, gpointer data)
 gboolean
 urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 {
-	gboolean ret;
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	gboolean ret;
+	gint type;
+
+	priv->key_control = urf_config_get_key_control (config);
+	priv->master_key = urf_config_get_master_key (config);
 
 	/* start up the killswitch */
-	ret = urf_killswitch_startup (priv->killswitch);
+	ret = urf_killswitch_startup (priv->killswitch, priv->key_control);
 	if (!ret) {
 		g_warning ("failed to setup killswitch");
 		goto out;
@@ -441,6 +493,9 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf_key_pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
+
+	daemon->priv->key_control = TRUE;
+	daemon->priv->master_key = TRUE;
 }
 
 /**
