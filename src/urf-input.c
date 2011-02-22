@@ -80,7 +80,7 @@ construct_device_table ()
 	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
 	int i;
 	const char *input_devices[] = {
-		"AT Translated Set 2 Keyboard",
+		"AT Translated Set 2 keyboard",
 		"Asus Laptop extra buttons",
 		"cmpc_keys",
 		"Dell WMI hotkeys",
