@@ -413,7 +413,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 			if (ind->type == type &&
 			    (priv->type_pivot[type] == NULL || match_platform_vendor (ind->name))) {
 				priv->type_pivot[type] = ind;
-				g_debug ("assign killswitch idx %d %s as a pivot", index, ind->name);
+				g_debug ("assign killswitch idx %d %s as a pivot", ind->index, ind->name);
 			}
 		}
 	}
