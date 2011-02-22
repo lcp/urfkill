@@ -188,6 +188,8 @@ urf_input_startup (UrfInput *input)
 	struct udev_list_entry *dev_list_entry;
 	struct udev_device *dev;
 	struct udev_device *parent_dev;
+	char *dev_node = NULL;
+	gboolean ret;
 
 	udev = udev_new ();
 	if (!udev) {
@@ -203,7 +205,7 @@ urf_input_startup (UrfInput *input)
 	devices = udev_enumerate_get_list_entry (enumerate);
 
 	udev_list_entry_foreach (dev_list_entry, devices) {
-		const char *path, *dev_node;
+		const char *path;
 		const char *dev_name;
 		char *key;
 
@@ -221,17 +223,17 @@ urf_input_startup (UrfInput *input)
 			continue;
 		}
 
-		dev_node = udev_device_get_devnode (dev);
+		g_free (dev_node);
+		dev_node = g_strdup (udev_device_get_devnode (dev));
 		if (!dev_node) {
 			udev_device_unref(dev);
 			continue;
 		}
 
-		if (!input_dev_open_channel (input, dev_node)) {
+		/* Use the device from the platform driver if there is one. */
+		if (g_strcmp0 (dev_name, "AT Translated Set 2 keyboard") != 0) {
 			udev_device_unref(dev);
-			udev_enumerate_unref(enumerate);
-			udev_unref(udev);
-			return FALSE;
+			break;
 		}
 
 		udev_device_unref(dev);
@@ -239,7 +241,10 @@ urf_input_startup (UrfInput *input)
 	udev_enumerate_unref(enumerate);
 	udev_unref(udev);
 
-	return TRUE;
+	ret = input_dev_open_channel (input, dev_node);
+	g_free (dev_node);
+
+	return ret;
 }
 
 /**
