@@ -30,6 +30,7 @@ EXTRA_DIST =						\
 	$(service_in_files)				\
 	$(dbusconf_in_files)				\
 	urfkill-glib.pc.in				\
+	urfkill.conf					\
 	$(NULL)
 
 clean-local :

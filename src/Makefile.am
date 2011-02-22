@@ -38,6 +38,7 @@ urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 libexec_PROGRAMS = urfkilld
 
 urfkilld_SOURCES =						\
+	rfkill.h						\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
 	urf-input.h						\
@@ -68,7 +69,7 @@ urfkilld_LDADD =						\
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST =							\
-	up-marshal.list	
+	urf-marshal.list
 
 clean-local :
 	rm -f *~
