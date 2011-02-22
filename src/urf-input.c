@@ -49,14 +49,11 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 #define URF_INPUT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                 URF_TYPE_INPUT, UrfInputPrivate))
-typedef struct {
+
+struct UrfInputPrivate {
 	int fd;
 	guint watch_id;
 	GIOChannel *channel;
-} InputChannel;
-
-struct UrfInputPrivate {
-	GList *channel_list;
 	GHashTable *device_table;
 };
 
@@ -153,7 +150,6 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	int fd;
-	InputChannel *channel;
 
 	fd = open(dev_node, O_RDONLY | O_NONBLOCK);
 	if (fd < 0) {
@@ -163,14 +159,11 @@ input_dev_open_channel (UrfInput *input, const char *dev_node)
 	}
 
 	/* Setup a channel for the device node */
-	channel = g_new0 (InputChannel, 1);
+	priv->fd = fd;
+	priv->channel = g_io_channel_unix_new (priv->fd);
+	g_io_channel_set_encoding (priv->channel, NULL, NULL);
 
-	channel->fd = fd;
-	channel->channel = g_io_channel_unix_new (channel->fd);
-	g_io_channel_set_encoding (channel->channel, NULL, NULL);
-	priv->channel_list = g_list_append (priv->channel_list, (gpointer)channel);
-
-	channel->watch_id = g_io_add_watch (channel->channel,
+	priv->watch_id = g_io_add_watch (priv->channel,
 				G_IO_IN | G_IO_HUP | G_IO_ERR,
 				(GIOFunc) input_event_cb,
 				input);
@@ -254,7 +247,6 @@ static void
 urf_input_init (UrfInput *input)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
-	priv->channel_list = NULL;
 	priv->device_table = NULL;
 }
 
@@ -265,23 +257,14 @@ static void
 urf_input_finalize (GObject *object)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (object);
-	GList *item = g_list_first (priv->channel_list);
 
-	while (item) {
-		InputChannel *channel = (InputChannel *)item->data;
-
-		if (channel->fd > 0) {
-			g_source_remove (channel->fd);
-			channel->fd = 0;
-			g_io_channel_shutdown (channel->channel, FALSE, NULL);
-			g_io_channel_unref (channel->channel);
-		}
-		close (channel->fd);
-		g_free (channel);
-		item = g_list_next (item);
+	if (priv->fd > 0) {
+		g_source_remove (priv->fd);
+		g_io_channel_shutdown (priv->channel, FALSE, NULL);
+		g_io_channel_unref (priv->channel);
+		close (priv->fd);
+		priv->fd = 0;
 	}
-
-	g_list_free (priv->channel_list);
 
 	g_hash_table_destroy (priv->device_table);
 
