@@ -325,7 +325,7 @@ match_platform_vendor (const char *name) {
 
 	int i;
 
-	for (i = 0; platform_vendors[i] == NULL; i++) {
+	for (i = 0; platform_vendors[i] != NULL; i++) {
 		if ( g_str_has_prefix (name, platform_vendors[i]))
 			return TRUE;
 	}
