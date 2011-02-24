@@ -188,7 +188,7 @@ urf_daemon_startup (UrfDaemon *daemon, UrfConfig *config)
 	priv->master_key = urf_config_get_master_key (config);
 
 	/* start up the killswitch */
-	ret = urf_killswitch_startup (priv->killswitch, priv->key_control);
+	ret = urf_killswitch_startup (priv->killswitch, config);
 	if (!ret) {
 		g_warning ("failed to setup killswitch");
 		goto out;
