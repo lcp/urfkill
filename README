@@ -1,0 +1,16 @@
+===========
+URfkill
+===========
+
+URfkill is a project to handle rfkill events in userspace and
+aimed to replace the rfkill input handler in kernel, i.e.
+rfkill-input, and provide a flexible policy for rfkill keys.
+
+Requirements:
+   glib-2.0         >= 2.6.0
+   gio-2.0          >= 2.16.1
+   dbus-1           >= 1.0
+   dbus-glib-1      >= 0.76
+   libudev          >= 157
+   polkit-gobject-1 >= 0.91
+
