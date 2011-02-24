@@ -55,7 +55,7 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct UrfKillswitchPrivate {
 	int fd;
-	gboolean key_control;
+	gboolean force_sync;
 	GIOChannel *channel;
 	guint watch_id;
 	GList *killswitches; /* a GList of UrfIndKillswitch */
@@ -366,7 +366,7 @@ update_killswitch (UrfKillswitch *killswitch,
 			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
 
-		if (priv->key_control) {
+		if (priv->force_sync) {
 			/* Sync soft and hard blocks */
 			if (hard == 1 && soft == 0)
 				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
@@ -449,7 +449,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	}
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
-	if (priv->key_control && priv->type_pivot[type] != ind)
+	if (priv->force_sync && priv->type_pivot[type] != ind)
 		urf_killswitch_set_state_idx (killswitch, index, priv->type_pivot[type]->state);
 }
 
@@ -566,13 +566,13 @@ construct_type_map ()
  **/
 gboolean
 urf_killswitch_startup (UrfKillswitch *killswitch,
-			const gboolean key_control)
+			UrfConfig     *config)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	struct rfkill_event event;
 	int fd;
 
-	priv->key_control = key_control;
+	priv->force_sync = urf_config_get_force_sync (config);
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {

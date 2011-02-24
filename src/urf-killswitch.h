@@ -23,6 +23,8 @@
 
 #include <glib-object.h>
 
+#include "urf-config.h"
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -72,7 +74,7 @@ GType			 urf_killswitch_get_type		(void);
 UrfKillswitch		*urf_killswitch_new			(void);
 
 gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch,
-								 const gboolean	 key_control);
+								 UrfConfig	*config);
 
 gboolean		 urf_killswitch_has_killswitches	(UrfKillswitch	*killswitch);
 GList			*urf_killswitch_get_killswitches	(UrfKillswitch	*killswitch);
