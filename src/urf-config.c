@@ -60,18 +60,21 @@ urf_config_load_from_file (UrfConfig  *config,
 	/* Parse the key file and store to private variables*/
 	priv->user = g_key_file_get_value (key_file, "general", "user", NULL);
 
+	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "key_control", &error);
 	if (!error)
 		priv->key_control = ret;
 	else
 		g_warning ("key_control is missing or invalid in %s", filename);
 
+	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "master_key", &error);
 	if (!error)
 		priv->master_key = ret;
 	else
 		g_warning ("master_key is missing or invalid in %s", filename);
 
+	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "force_sync", &error);
 	if (!error)
 		priv->force_sync = ret;
