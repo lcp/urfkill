@@ -31,6 +31,7 @@ struct UrfConfigPrivate {
 	char *user;
 	gboolean key_control;
 	gboolean master_key;
+	gboolean force_sync;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -71,6 +72,12 @@ urf_config_load_from_file (UrfConfig  *config,
 	else
 		g_warning ("master_key is missing or invalid in %s", filename);
 
+	ret = g_key_file_get_boolean (key_file, "general", "force_sync", &error);
+	if (!error)
+		priv->force_sync = ret;
+	else
+		g_warning ("force_sync is missing or invalid in %s", filename);
+
 	g_key_file_free (key_file);
 }
 
@@ -105,6 +112,16 @@ urf_config_get_master_key (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_master_key:
+ **/
+gboolean
+urf_config_get_force_sync (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	return priv->force_sync;
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -114,6 +131,7 @@ urf_config_init (UrfConfig *config)
 	priv->user = NULL;
 	priv->key_control = TRUE;
 	priv->master_key = TRUE;
+	priv->force_sync = FALSE;
 }
 
 /**
