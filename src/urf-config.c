@@ -133,7 +133,7 @@ urf_config_init (UrfConfig *config)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	priv->user = NULL;
 	priv->key_control = TRUE;
-	priv->master_key = TRUE;
+	priv->master_key = FALSE;
 	priv->force_sync = FALSE;
 }
 
