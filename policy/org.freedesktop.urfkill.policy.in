@@ -5,7 +5,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 
 <!--
-Policy definitions for URfkill
+Policy definitions for urfkill
 
 Copyright (c) 2010 Gary Ching-Pang Lin <glin@novell.com>
 
@@ -15,7 +15,7 @@ file are instantly applied.
 -->
 
 <policyconfig>
-  <vendor>The URfkill Project</vendor>
+  <vendor>The urfkill Project</vendor>
 
   <action id="org.freedesktop.urfkill.block">
     <_description>Block a specific killswitch type</_description>

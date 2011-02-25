@@ -1,8 +1,8 @@
 ===========
-URfkill
+urfkill
 ===========
 
-URfkill is a project to handle rfkill events in userspace and
+urfkill is a project to handle rfkill events in userspace and
 aimed to replace the rfkill input handler in kernel, i.e.
 rfkill-input, and provide a flexible policy for rfkill keys.
 
@@ -14,3 +14,7 @@ Requirements:
    libudev          >= 157
    polkit-gobject-1 >= 0.91
 
+Note:
+   The default configuration file of urfkill is /etc/urfkill.conf.
+   If you encounter problems about rfkill keys, please try different
+   configuration in urfkill.conf and see if this solve your problem.

@@ -43,7 +43,7 @@
  */
 #define URF_MICRO_VERSION				(@URF_MICRO_VERSION@)
 
-/* check whether a URfkill version equal to or greater than
+/* check whether a urfkill version equal to or greater than
  * major.minor.micro.
  */
 #define URF_CHECK_VERSION(major,minor,micro)    \
