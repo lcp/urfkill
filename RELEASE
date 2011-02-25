@@ -1,0 +1,38 @@
+urfkill Release Notes
+
+1. Write NEWS entries for urfkill.
+
+git shortlog urfkill-0.0.1.. | grep -i -v trivial | grep -v Merge > NEWS.new
+
+Version 0.1.1
+~~~~~~~~~~~~~
+Released: 2011-xx-xx
+
+Translations:
+New Features:
+Bugfixes:
+
+2. Commit changes to git:
+
+git commit -a -m "Released urfkill 0.1.0"
+git tag -s -f -m "Released urfkill 0.1.0" urfkill-0.1.0
+<wait>
+git push --tags
+git push
+
+3. Generate the tarball:
+
+make dist
+
+4. Upload tarball:
+
+TO BE SETUP
+
+5. Do post release version bump in configure.ac
+
+6. Commit changes:
+
+git commit -a -m "trivial: post release version bump"
+git push
+
+7. Send an email to devkit-devel@lists.freedesktop.org
