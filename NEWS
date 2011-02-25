@@ -1,3 +1,24 @@
+Version 0.1.0
+~~~~~~~~~~~~~
+Release date: 2011-02-25
+
+New Features:
+- Catch rfkill keys and update the states of killswitches (Gary Lin)
+- Add the conf file for system wide configuration (Gary Lin)
+- Drop root privilege if necessary (Gary Lin)
+
+Bugfixes:
+- Port from EggDebug to the GLib built-in logging framework (Gary Lin)
+- Modify urf_killswitch_init() for better error handling (Gary Lin)
+- urf-killswitch: Set the encoding of IO channel to raw (Gary Lin)
+- urf-killswitch: Assume NO ADAPTER before getting state (Gary Lin)
+- urf-killswitch: Sync hard block and soft block (Gary Lin)
+- urf-killswitch: Add pivot killswitches for every type (Gary Lin)
+- urf-killswitch: Emit remove signal until everything is done (Gary Lin)
+- urf-killswitch: Handle the file descriptor correctly (Gary Lin)
+- urf-killswitch: Sync the state with that of the pivot killswitch (Gary Lin)
+- urf-killswitch: Don't change anything if key_control is FALSE (Gary Lin)
+
 urfkill 0.0.1
 ~~~~~~~~~~~~~
 Release date: 2010-10-12
