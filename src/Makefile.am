@@ -11,8 +11,6 @@ INCLUDES = \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\"			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
 	-DG_UDEV_API_IS_SUBJECT_TO_CHANGE			\
-	-DUP_COMPILATION					\
-	-DUP_DISABLE_DEPRECATED					\
 	-I$(top_srcdir)						\
 	$(GIO_CFLAGS)						\
 	$(DBUS_GLIB_CFLAGS)					\

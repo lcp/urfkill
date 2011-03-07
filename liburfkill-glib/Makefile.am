@@ -3,7 +3,6 @@ INCLUDES = \
 	$(DBUS_GLIB_CFLAGS)					\
 	-I$(top_srcdir)						\
 	-I$(top_srcdir)/liburfkill-glib				\
-	-DUP_COMPILATION					\
 	-DG_LOG_DOMAIN=\"liburfkill-glib\"			\
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\"			\
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
