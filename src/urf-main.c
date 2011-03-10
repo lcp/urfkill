@@ -144,7 +144,7 @@ main (gint argc, gchar **argv)
 		{ "user", 'u', 0, G_OPTION_ARG_STRING, &username,
 		  /* TRANSLATORS: change to another user and drop the privilege */
 		  _("Use a specific user instead of root"), NULL },
-		{ "config", 'c', 0, G_OPTION_ARG_STRING, &config,
+		{ "config", 'c', 0, G_OPTION_ARG_STRING, &conf_file,
 		  /* TRANSLATORS: use another config file instead of the default one */
 		  _("Use a specific config file"), NULL },
 		{ NULL }
