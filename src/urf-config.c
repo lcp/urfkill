@@ -146,6 +146,7 @@ urf_config_finalize (GObject *object)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
 
 	g_free (priv->user);
+	G_OBJECT_CLASS(urf_config_parent_class)->finalize(object);
 }
 
 /**
