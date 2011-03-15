@@ -45,7 +45,6 @@ urf_config_load_from_file (UrfConfig  *config,
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	GKeyFile *key_file = g_key_file_new ();
-	gsize *length;
 	gboolean ret = FALSE;
 	GError *error = NULL;
 
