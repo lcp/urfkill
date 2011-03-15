@@ -78,11 +78,13 @@ construct_device_table ()
 	int i;
 	const char *input_devices[] = {
 		"AT Translated Set 2 keyboard",
+		"Acer WMI hotkeys",
+		"Asus EeePC extra buttons",
 		"Asus Laptop extra buttons",
 		"cmpc_keys",
 		"Dell WMI hotkeys",
-		"Asus EeePC extra buttons",
 		"Eee PC WMI hotkeys",
+		"MSI Laptop hotkeys",
 		"Sony Vaio Keys",
 		"ThinkPad Extra Buttons",
 		"Topstar Laptop extra buttons",
