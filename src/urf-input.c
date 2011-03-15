@@ -74,7 +74,10 @@ input_dev_name_match (UrfInput *input, const char *dev_name)
 static GHashTable *
 construct_device_table ()
 {
-	GHashTable *device_table = g_hash_table_new (g_str_hash, g_str_equal);
+	GHashTable *device_table = g_hash_table_new_full (g_str_hash,
+							  g_str_equal,
+							  g_free,
+							  NULL);
 	int i;
 	const char *input_devices[] = {
 		"AT Translated Set 2 keyboard",
