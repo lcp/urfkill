@@ -6,8 +6,8 @@
 char *
 get_rfkill_name_by_index (guint index)
 {
-	char *filename;
-	char *content;
+	char *filename = NULL;
+	char *content = NULL;
 	gsize length;
 	gboolean ret;
 	GError *error = NULL;
@@ -19,6 +19,7 @@ get_rfkill_name_by_index (guint index)
 
 	if (!ret) {
 		g_warning ("Get rfkill name: %s", error->message);
+		g_error_free (error);
 		return NULL;
 	}
 
