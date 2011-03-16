@@ -60,7 +60,8 @@ struct UrfInputPrivate {
 G_DEFINE_TYPE(UrfInput, urf_input, G_TYPE_OBJECT)
 
 static gboolean
-input_dev_name_match (UrfInput *input, const char *dev_name)
+input_dev_name_match (UrfInput   *input,
+		      const char *dev_name)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	gboolean ret = FALSE;
@@ -103,7 +104,9 @@ construct_device_table ()
 }
 
 static gboolean
-input_event_cb (GIOChannel *source, GIOCondition condition, UrfInput *input)
+input_event_cb (GIOChannel   *source,
+		GIOCondition  condition,
+		UrfInput     *input)
 {
 	if (condition & G_IO_IN) {
 		GIOStatus status;
@@ -151,7 +154,8 @@ input_event_cb (GIOChannel *source, GIOCondition condition, UrfInput *input)
 }
 
 static gboolean
-input_dev_open_channel (UrfInput *input, const char *dev_node)
+input_dev_open_channel (UrfInput   *input,
+			const char *dev_node)
 {
 	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
 	int fd;

@@ -49,7 +49,8 @@ static gpointer urf_polkit_object = NULL;
  * urf_polkit_get_subject:
  **/
 PolkitSubject *
-urf_polkit_get_subject (UrfPolkit *polkit, DBusGMethodInvocation *context)
+urf_polkit_get_subject (UrfPolkit             *polkit,
+			DBusGMethodInvocation *context)
 {
 	GError *error;
 	const gchar *sender;
@@ -71,7 +72,10 @@ urf_polkit_get_subject (UrfPolkit *polkit, DBusGMethodInvocation *context)
  * urf_polkit_check_auth:
  **/
 gboolean
-urf_polkit_check_auth (UrfPolkit *polkit, PolkitSubject *subject, const gchar *action_id, DBusGMethodInvocation *context)
+urf_polkit_check_auth (UrfPolkit             *polkit,
+		       PolkitSubject         *subject,
+		       const gchar           *action_id,
+		       DBusGMethodInvocation *context)
 {
 	gboolean ret = FALSE;
 	GError *error;
@@ -109,7 +113,10 @@ out:
  * urf_polkit_is_allowed:
  **/
 gboolean
-urf_polkit_is_allowed (UrfPolkit *polkit, PolkitSubject *subject, const gchar *action_id, GError **error)
+urf_polkit_is_allowed (UrfPolkit     *polkit,
+		       PolkitSubject *subject,
+		       const gchar   *action_id,
+		       GError       **error)
 {
 	gboolean ret = FALSE;
 	GError *error_local = NULL;
@@ -138,7 +145,9 @@ out:
  * urf_polkit_get_uid:
  **/
 gboolean
-urf_polkit_get_uid (UrfPolkit *polkit, PolkitSubject *subject, uid_t *uid)
+urf_polkit_get_uid (UrfPolkit     *polkit,
+		    PolkitSubject *subject,
+		    uid_t         *uid)
 {
 	DBusConnection *connection;
 	const gchar *name;
@@ -158,7 +167,9 @@ urf_polkit_get_uid (UrfPolkit *polkit, PolkitSubject *subject, uid_t *uid)
  * urf_polkit_get_pid:
  **/
 gboolean
-urf_polkit_get_pid (UrfPolkit *polkit, PolkitSubject *subject, pid_t *pid)
+urf_polkit_get_pid (UrfPolkit     *polkit,
+		    PolkitSubject *subject,
+		    pid_t         *pid)
 {
 	gboolean ret = FALSE;
 	GError *error = NULL;

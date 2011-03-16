@@ -46,7 +46,8 @@ static GMainLoop *loop = NULL;
  * urf_main_acquire_name_on_proxy:
  **/
 static gboolean
-urf_main_acquire_name_on_proxy (DBusGProxy *bus_proxy, const gchar *name)
+urf_main_acquire_name_on_proxy (DBusGProxy  *bus_proxy,
+				const gchar *name)
 {
 	GError *error = NULL;
 	guint result;

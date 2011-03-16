@@ -68,7 +68,8 @@ struct UrfKillswitchPrivate {
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 
 static KillswitchState
-event_to_state (guint soft, guint hard)
+event_to_state (guint soft,
+		guint hard)
 {
 	if (hard)
 		return KILLSWITCH_STATE_HARD_BLOCKED;
@@ -124,8 +125,8 @@ type_to_string (unsigned int type)
  * urf_killswitch_set_state:
  **/
 gboolean
-urf_killswitch_set_state (UrfKillswitch *killswitch,
-			  guint type,
+urf_killswitch_set_state (UrfKillswitch  *killswitch,
+			  guint           type,
 			  KillswitchState state)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
@@ -159,8 +160,8 @@ urf_killswitch_set_state (UrfKillswitch *killswitch,
  * urf_killswitch_set_state_idx:
  **/
 gboolean
-urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
-			      guint index,
+urf_killswitch_set_state_idx (UrfKillswitch  *killswitch,
+			      guint           index,
 			      KillswitchState state)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
@@ -208,7 +209,8 @@ urf_killswitch_set_state_idx (UrfKillswitch *killswitch,
  * urf_killswitch_get_state:
  **/
 KillswitchState
-urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
+urf_killswitch_get_state (UrfKillswitch *killswitch,
+			  guint          type)
 {
 	UrfKillswitchPrivate *priv;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
@@ -235,7 +237,8 @@ urf_killswitch_get_state (UrfKillswitch *killswitch, guint type)
  * urf_killswitch_get_state_idx:
  **/
 KillswitchState
-urf_killswitch_get_state_idx (UrfKillswitch *killswitch, guint index)
+urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
+			      guint          index)
 {
 	UrfKillswitchPrivate *priv;
 	GList *l;
@@ -289,7 +292,8 @@ urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
  * urf_killswitch_get_killswitch:
  **/
 UrfIndKillswitch *
-urf_killswitch_get_killswitch (UrfKillswitch *killswitch, const guint index)
+urf_killswitch_get_killswitch (UrfKillswitch *killswitch,
+			       const guint    index)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	UrfIndKillswitch *ind;
@@ -340,7 +344,9 @@ match_platform_vendor (const char *name) {
  **/
 static void
 update_killswitch (UrfKillswitch *killswitch,
-		   guint index, guint soft, guint hard)
+		   guint          index,
+		   guint          soft,
+		   guint          hard)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
@@ -383,7 +389,7 @@ update_killswitch (UrfKillswitch *killswitch,
  **/
 static void
 remove_killswitch (UrfKillswitch *killswitch,
-		   guint index)
+		   guint          index)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	GList *l;
@@ -427,7 +433,10 @@ remove_killswitch (UrfKillswitch *killswitch,
  **/
 static void
 add_killswitch (UrfKillswitch *killswitch,
-		guint index, guint type, guint soft, guint hard)
+		guint          index,
+		guint          type,
+		guint          soft,
+		guint          hard)
 
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
@@ -459,7 +468,8 @@ add_killswitch (UrfKillswitch *killswitch,
  * urf_killswitch_rf_type:
  **/
 gint
-urf_killswitch_rf_type (UrfKillswitch *killswitch, const char *type_name)
+urf_killswitch_rf_type (UrfKillswitch *killswitch,
+			const char    *type_name)
 {
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	gint *type;
@@ -505,8 +515,8 @@ print_event (struct rfkill_event *event)
  * event_cb:
  **/
 static gboolean
-event_cb (GIOChannel *source,
-	  GIOCondition condition,
+event_cb (GIOChannel    *source,
+	  GIOCondition   condition,
 	  UrfKillswitch *killswitch)
 {
 	if (condition & G_IO_IN) {
