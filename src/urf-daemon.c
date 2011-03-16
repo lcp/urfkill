@@ -452,6 +452,14 @@ urf_daemon_enable_key_control (UrfDaemon             *daemon,
 			       DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	PolkitSubject *subject = NULL;
+
+	subject = urf_polkit_get_subject (priv->polkit, context);
+	if (subject == NULL)
+		return FALSE;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.enablekeycontrol", context))
+		return FALSE;
 
 	priv->key_control = enable;
 
