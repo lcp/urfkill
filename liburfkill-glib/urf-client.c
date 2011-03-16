@@ -65,7 +65,8 @@ static gpointer urf_client_object = NULL;
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
 static UrfKillswitch *
-urf_client_find_killswitch (UrfClient *client, const guint index)
+urf_client_find_killswitch (UrfClient   *client,
+			    const guint  index)
 {
 	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
 	UrfKillswitch *killswitch = NULL;
@@ -100,7 +101,10 @@ urf_client_get_killswitches (UrfClient *client)
  * urf_client_get_killswitch:
  **/
 UrfKillswitch *
-urf_client_get_killswitch (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
+urf_client_get_killswitch (UrfClient    *client,
+			   const guint   index,
+			   GCancellable *cancellable,
+			   GError      **error)
 {
 	UrfClientPrivate *priv;
 	UrfKillswitch *killswitch = NULL;
@@ -167,7 +171,10 @@ out:
  * urf_client_block
  **/
 gboolean
-urf_client_set_block (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
+urf_client_set_block (UrfClient    *client,
+		      const char   *type,
+		      GCancellable *cancellable,
+		      GError      **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -202,7 +209,10 @@ out:
  * urf_client_block_idx
  **/
 gboolean
-urf_client_set_block_idx (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
+urf_client_set_block_idx (UrfClient    *client,
+			  const guint   index,
+			  GCancellable *cancellable,
+			  GError      **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -237,7 +247,10 @@ out:
  * urf_client_unblock
  **/
 gboolean
-urf_client_set_unblock (UrfClient *client, const char *type, GCancellable *cancellable, GError **error)
+urf_client_set_unblock (UrfClient    *client,
+			const char   *type,
+			GCancellable *cancellable,
+			GError      **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -272,7 +285,10 @@ out:
  * urf_client_unblock
  **/
 gboolean
-urf_client_set_unblock_idx (UrfClient *client, const guint index, GCancellable *cancellable, GError **error)
+urf_client_set_unblock_idx (UrfClient    *client,
+			    const guint   index,
+			    GCancellable *cancellable,
+			    GError      **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;

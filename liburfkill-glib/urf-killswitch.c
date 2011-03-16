@@ -66,7 +66,10 @@ G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
  * urf_killswitch_get_property:
  **/
 static void
-urf_killswitch_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+urf_killswitch_get_property (GObject    *object,
+			     guint       prop_id,
+			     GValue     *value,
+			     GParamSpec *pspec)
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
@@ -100,7 +103,10 @@ urf_killswitch_get_property (GObject *object, guint prop_id, GValue *value, GPar
  * urf_killswitch_set_property:
  **/
 static void
-urf_killswitch_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+urf_killswitch_set_property (GObject      *object,
+			     guint         prop_id,
+			     const GValue *value,
+			     GParamSpec   *pspec)
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
 	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
