@@ -468,6 +468,8 @@ urf_daemon_enable_key_control (UrfDaemon             *daemon,
 
 	priv->key_control = enable;
 	ret = TRUE;
+
+	g_debug ("Key Control is %s", enable?"enabled":"disabled");
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
