@@ -84,7 +84,7 @@ gboolean	 urf_daemon_unblock_idx		(UrfDaemon		*daemon,
 gboolean	 urf_daemon_get_all		(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_get_killswitch	(UrfDaemon		*daemon,
-						 guint			 index,
+						 const guint		 index,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_key_control		(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
