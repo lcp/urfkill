@@ -44,6 +44,7 @@
     <method name="EnableKeyControl">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="b" name="enable" direction="in" />
+      <arg type="b" name="ret" direction="out" />
     </method>
 
     <signal name="RfkillAdded">
