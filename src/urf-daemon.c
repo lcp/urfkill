@@ -416,6 +416,32 @@ urf_daemon_get_killswitch (UrfDaemon *daemon, const guint index, DBusGMethodInvo
 }
 
 /**
+ * urf_daemon_key_control:
+ **/
+gboolean
+urf_daemon_key_control (UrfDaemon *daemon, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+
+	dbus_g_method_return (context, priv->key_control);
+
+	return TRUE;
+}
+
+/**
+ * urf_daemon_enable_key_control:
+ **/
+gboolean
+urf_daemon_enable_key_control (UrfDaemon *daemon, const gboolean enable, DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+
+	priv->key_control = enable;
+
+	return TRUE;
+}
+
+/**
  * urf_daemon_killswitch_added_cb:
  **/
 static void

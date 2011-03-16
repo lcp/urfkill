@@ -86,6 +86,11 @@ gboolean	 urf_daemon_get_all		(UrfDaemon		*daemon,
 gboolean	 urf_daemon_get_killswitch	(UrfDaemon		*daemon,
 						 guint			 index,
 						 DBusGMethodInvocation  *context);
+gboolean	 urf_daemon_key_control		(UrfDaemon		*daemon,
+						 DBusGMethodInvocation  *context);
+gboolean	 urf_daemon_enable_key_control	(UrfDaemon		*daemon,
+						 const gboolean		 enable,
+						 DBusGMethodInvocation  *context);
 
 G_END_DECLS
 
