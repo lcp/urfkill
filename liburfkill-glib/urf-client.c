@@ -320,6 +320,78 @@ out:
 }
 
 /**
+ * urf_client_key_control
+ **/
+gboolean
+urf_client_key_control (UrfClient *client,
+			GError   **error)
+{
+	gboolean ret, status;
+	GError *error_local = NULL;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "KeyControl", &error_local,
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* DBus might time out, which is okay */
+		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
+			g_debug ("DBUS timed out, but recovering");
+			goto out;
+		}
+
+		/* an actual error */
+		g_warning ("Couldn't sent KEYCONTROL: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		status = FALSE;
+	}
+out:
+	if (error_local != NULL)
+		g_error_free (error_local);
+	return status;
+}
+
+/**
+ * urf_client_enable_key_control
+ **/
+gboolean
+urf_client_enable_key_control (UrfClient      *client,
+			       const gboolean  enable,
+			       GError        **error)
+{
+	gboolean ret, status;
+	GError *error_local = NULL;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "EnableKeyControl", &error_local,
+				 G_TYPE_BOOLEAN, enable,
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* DBus might time out, which is okay */
+		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
+			g_debug ("DBUS timed out, but recovering");
+			goto out;
+		}
+
+		/* an actual error */
+		g_warning ("Couldn't sent ENABLEKEYCONTROL: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		status = FALSE;
+	}
+out:
+	if (error_local != NULL)
+		g_error_free (error_local);
+	return status;
+}
+
+/**
  * urf_client_set_wlan_block
  **/
 gboolean

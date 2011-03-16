@@ -83,6 +83,11 @@ gboolean	 urf_client_set_unblock_idx		(UrfClient	*client,
 							 const guint	 index,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 urf_client_key_control			(UrfClient	*client,
+							 GError		**error);
+gboolean	 urf_client_enable_key_control		(UrfClient	*client,
+							 const gboolean	 enable,
+							 GError		**error);
 
 /* specific */
 gboolean	 urf_client_set_wlan_block		(UrfClient	*client);
