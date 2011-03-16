@@ -225,14 +225,14 @@ urf_daemon_block (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	PolkitSubject *subject = NULL;
 	int type;
-	gboolean ret;
+	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		goto out;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return FALSE;
+		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
 	if (subject == NULL)
@@ -242,12 +242,13 @@ urf_daemon_block (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_SOFT_BLOCKED);
-
-	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-	return TRUE;
+
+	dbus_g_method_return (context, ret);
+
+	return ret;
 }
 
 /**
@@ -260,10 +261,10 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	PolkitSubject *subject = NULL;
-	gboolean ret;
+	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
 	if (subject == NULL)
@@ -273,12 +274,13 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
-
-	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-	return TRUE;
+
+	dbus_g_method_return (context, ret);
+
+	return ret;
 }
 
 /**
@@ -292,14 +294,14 @@ urf_daemon_unblock (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	PolkitSubject *subject = NULL;
 	int type;
-	gboolean ret;
+	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		goto out;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
 	if (type < 0)
-		return FALSE;
+		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
 	if (subject == NULL)
@@ -309,12 +311,13 @@ urf_daemon_unblock (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_killswitch_set_state (priv->killswitch, type, KILLSWITCH_STATE_UNBLOCKED);
-
-	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-	return TRUE;
+
+	dbus_g_method_return (context, ret);
+
+	return ret;
 }
 
 /**
@@ -327,10 +330,10 @@ urf_daemon_unblock_idx (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
 	PolkitSubject *subject = NULL;
-	gboolean ret;
+	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_killswitches (priv->killswitch))
-		return FALSE;
+		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
 	if (subject == NULL)
@@ -340,12 +343,13 @@ urf_daemon_unblock_idx (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_killswitch_set_state_idx (priv->killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
-
-	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-	return TRUE;
+
+	dbus_g_method_return (context, ret);
+
+	return ret;
 }
 
 /**
