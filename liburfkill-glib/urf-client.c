@@ -383,14 +383,14 @@ urf_client_set_wwan_unblock (UrfClient *client)
  * urf_rfkill_added_cb:
  **/
 static void
-urf_rfkill_added_cb (DBusGProxy *proxy,
-		     const guint index,
-		     const guint type,
-		     const gint state,
-		     const guint soft,
-		     const guint hard,
+urf_rfkill_added_cb (DBusGProxy  *proxy,
+		     const guint  index,
+		     const guint  type,
+		     const gint   state,
+		     const guint  soft,
+		     const guint  hard,
 		     const gchar *name,
-		     UrfClient *client)
+		     UrfClient   *client)
 {
 	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
 	UrfKillswitch *killswitch;
@@ -419,7 +419,9 @@ urf_rfkill_added_cb (DBusGProxy *proxy,
  * urf_rfkill_removed_cb:
  **/
 static void
-urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
+urf_rfkill_removed_cb (DBusGProxy *proxy,
+		       guint       index,
+		       UrfClient  *client)
 {
 	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
 	UrfKillswitch *killswitch;
@@ -438,14 +440,14 @@ urf_rfkill_removed_cb (DBusGProxy *proxy, guint index, UrfClient *client)
  * urf_rfkill_changed_cb:
  **/
 static void
-urf_rfkill_changed_cb (DBusGProxy *proxy,
-		       const guint index,
-		       const guint type,
-		       const gint state,
-		       const guint soft,
-		       const guint hard,
+urf_rfkill_changed_cb (DBusGProxy  *proxy,
+		       const guint  index,
+		       const guint  type,
+		       const gint   state,
+		       const guint  soft,
+		       const guint  hard,
 		       const gchar *name,
-		       UrfClient *client)
+		       UrfClient   *client)
 {
 	UrfKillswitch *killswitch;
 
@@ -470,7 +472,8 @@ urf_rfkill_changed_cb (DBusGProxy *proxy,
  * urf_client_get_killswitches_private:
  **/
 static void
-urf_client_get_killswitches_private (UrfClient *client, GError **error)
+urf_client_get_killswitches_private (UrfClient *client,
+				     GError   **error)
 {
 	GError *error_local = NULL;
 	GType g_type_gvalue_array;
