@@ -37,6 +37,14 @@
       <arg type="u" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </method>
+    <method name="KeyControl">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="b" name="ret" direction="out" />
+    </method>
+    <method name="EnableKeyControl">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="b" name="enable" direction="in" />
+    </method>
 
     <signal name="RfkillAdded">
       <arg type="u" name="index" direction="out" />
