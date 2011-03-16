@@ -57,7 +57,6 @@ main ()
 	GPtrArray *killswitches;
 	guint i;
 	UrfKillswitch *item;
-	
 
 	g_type_init();
 
@@ -69,6 +68,29 @@ main ()
 
 	status = urf_client_set_wlan_unblock (client);
 	printf ("Status of unblock: %d\n", status);
+
+	status = urf_client_key_control (client, NULL);
+	printf ("Key control is %s\n", status?"on":"off");
+
+	sleep (2);
+
+	status = urf_client_enable_key_control (client, FALSE, NULL);
+	if (!status)
+		printf ("failed to disable key control\n");
+	else {
+		status = urf_client_key_control (client, NULL);
+		printf ("Key control is %s\n", status?"on":"off");
+	}
+
+	sleep (2);
+
+	status = urf_client_enable_key_control (client, TRUE, NULL);
+	if (!status)
+		printf ("failed to enable key control\n");
+	else {
+		status = urf_client_key_control (client, NULL);
+		printf ("Key control is %s\n", status?"on":"off");
+	}
 
 	killswitches = urf_client_get_killswitches (client);
 
