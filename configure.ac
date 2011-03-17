@@ -194,6 +194,7 @@ liburfkill-glib/Makefile
 liburfkill-glib/urf-version.h
 policy/Makefile
 po/Makefile.in
+tests/Makefile
 ])
 AC_OUTPUT
 

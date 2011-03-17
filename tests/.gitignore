@@ -1,0 +1,8 @@
+test-urfkill-client
+.deps
+.libs
+*.o
+*.la
+*.lo
+*.gir
+*.typelib
