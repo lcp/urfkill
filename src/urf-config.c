@@ -23,7 +23,17 @@
 #endif
 
 #include <glib.h>
+#include <libudev.h>
 #include "urf-config.h"
+
+typedef struct {
+	char *sys_vendor;
+	char *bios_date;
+	char *bios_vendor;
+	char *bios_version;
+	char *product_name;
+	char *product_version;
+} DmiInfo;
 
 #define URF_CONFIG_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                      URF_TYPE_CONFIG, UrfConfigPrivate))
@@ -32,6 +42,7 @@ struct UrfConfigPrivate {
 	gboolean key_control;
 	gboolean master_key;
 	gboolean force_sync;
+	DmiInfo hardware_info;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -124,6 +135,72 @@ urf_config_get_force_sync (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_dmi_info:
+ **/
+static void
+urf_config_get_dmi_info (DmiInfo *info)
+{
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices;
+	struct udev_list_entry *dev_list_entry;
+	struct udev_device *dev;
+
+	udev = udev_new ();
+	if (!udev) {
+		g_warning ("Cannot create udev");
+		return;
+	}
+
+	enumerate = udev_enumerate_new (udev);
+	udev_enumerate_add_match_subsystem (enumerate, "dmi");
+	udev_enumerate_scan_devices (enumerate);
+	devices = udev_enumerate_get_list_entry (enumerate);
+
+	udev_list_entry_foreach (dev_list_entry, devices) {
+		const char *path;
+		const char *attribute;
+		path = udev_list_entry_get_name (dev_list_entry);
+		dev = udev_device_new_from_syspath (udev, path);
+
+		attribute = udev_device_get_sysattr_value (dev, "sys_vendor");
+		if (attribute)
+			info->sys_vendor = g_strdup (attribute);
+
+		attribute = udev_device_get_sysattr_value (dev, "bios_date");
+		if (attribute)
+			info->bios_date = g_strdup (attribute);
+
+		attribute = udev_device_get_sysattr_value (dev, "bios_vendor");
+		if (attribute)
+			info->bios_vendor = g_strdup (attribute);
+
+		attribute = udev_device_get_sysattr_value (dev, "bios_version");
+		if (attribute)
+			info->bios_version = g_strdup (attribute);
+
+		attribute = udev_device_get_sysattr_value (dev, "product_name");
+		if (attribute)
+			info->product_name = g_strdup (attribute);
+
+		attribute = udev_device_get_sysattr_value (dev, "product_version");
+		if (attribute)
+			info->product_version = g_strdup (attribute);
+
+		udev_device_unref (dev);
+	}
+
+	g_debug ("System Vendor: %s", info->sys_vendor);
+	g_debug ("BIOS Date: %s, Vendor: %s, Version: %s",
+		 info->bios_date, info->bios_vendor, info->bios_version);
+	g_debug ("Product Name: %s, Version: %s",
+		 info->product_name, info->product_version);
+
+	udev_enumerate_unref (enumerate);
+	udev_unref (udev);
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -134,6 +211,13 @@ urf_config_init (UrfConfig *config)
 	priv->key_control = TRUE;
 	priv->master_key = FALSE;
 	priv->force_sync = FALSE;
+	priv->hardware_info.sys_vendor = NULL;
+	priv->hardware_info.bios_date = NULL;
+	priv->hardware_info.bios_vendor = NULL;
+	priv->hardware_info.bios_version = NULL;
+	priv->hardware_info.product_name = NULL;
+	priv->hardware_info.product_version = NULL;
+	urf_config_get_dmi_info (&(priv->hardware_info));
 }
 
 /**
@@ -145,6 +229,13 @@ urf_config_finalize (GObject *object)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
 
 	g_free (priv->user);
+	g_free (priv->hardware_info.sys_vendor);
+	g_free (priv->hardware_info.bios_date);
+	g_free (priv->hardware_info.bios_vendor);
+	g_free (priv->hardware_info.bios_version);
+	g_free (priv->hardware_info.product_name);
+	g_free (priv->hardware_info.product_version);
+
 	G_OBJECT_CLASS(urf_config_parent_class)->finalize(object);
 }
 
