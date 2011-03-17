@@ -171,11 +171,10 @@ input_dev_open_channel (UrfInput   *input,
 	priv->fd = fd;
 	priv->channel = g_io_channel_unix_new (priv->fd);
 	g_io_channel_set_encoding (priv->channel, NULL, NULL);
-
 	priv->watch_id = g_io_add_watch (priv->channel,
-				G_IO_IN | G_IO_HUP | G_IO_ERR,
-				(GIOFunc) input_event_cb,
-				input);
+					 G_IO_IN | G_IO_HUP | G_IO_ERR,
+					 (GIOFunc) input_event_cb,
+					 input);
 
 	return TRUE;
 }
