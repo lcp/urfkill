@@ -148,6 +148,18 @@ PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1 >= 0.76])
 AC_SUBST(DBUS_GLIB_CFLAGS)
 AC_SUBST(DBUS_GLIB_LIBS)
 
+# XML library
+AC_CHECK_LIB(expat, XML_ParserCreate,
+             [ AC_CHECK_HEADERS(expat.h, have_expat=true, have_expat=false) ],
+             have_expat=false)
+
+if ! $have_expat ; then
+  AC_MSG_ERROR([expat library not found, check config.log for failed attempts])
+fi
+
+XML_LIBS=-lexpat
+XML_CFLAGS=
+
 # polkit >= 0.97 uses polkit_authority_get_sync() rather than
 # polkit_authority_get
 PKG_CHECK_MODULES(POLKIT, \
