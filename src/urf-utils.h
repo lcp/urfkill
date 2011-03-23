@@ -23,6 +23,17 @@
 
 #include <glib.h>
 
+typedef struct {
+	char *sys_vendor;
+	char *bios_date;
+	char *bios_vendor;
+	char *bios_version;
+	char *product_name;
+	char *product_version;
+} DmiInfo;
+
 char	*get_rfkill_name_by_index	(guint index);
+DmiInfo	*get_dmi_info			(void);
+
 
 #endif /* __URF_UTILS_H__ */
