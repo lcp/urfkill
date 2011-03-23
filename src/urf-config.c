@@ -42,7 +42,6 @@ struct UrfConfigPrivate {
 	gboolean key_control;
 	gboolean master_key;
 	gboolean force_sync;
-	DmiInfo hardware_info;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -211,13 +210,6 @@ urf_config_init (UrfConfig *config)
 	priv->key_control = TRUE;
 	priv->master_key = FALSE;
 	priv->force_sync = FALSE;
-	priv->hardware_info.sys_vendor = NULL;
-	priv->hardware_info.bios_date = NULL;
-	priv->hardware_info.bios_vendor = NULL;
-	priv->hardware_info.bios_version = NULL;
-	priv->hardware_info.product_name = NULL;
-	priv->hardware_info.product_version = NULL;
-	urf_config_get_dmi_info (&(priv->hardware_info));
 }
 
 /**
@@ -229,12 +221,6 @@ urf_config_finalize (GObject *object)
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
 
 	g_free (priv->user);
-	g_free (priv->hardware_info.sys_vendor);
-	g_free (priv->hardware_info.bios_date);
-	g_free (priv->hardware_info.bios_vendor);
-	g_free (priv->hardware_info.bios_version);
-	g_free (priv->hardware_info.product_name);
-	g_free (priv->hardware_info.product_version);
 
 	G_OBJECT_CLASS(urf_config_parent_class)->finalize(object);
 }
