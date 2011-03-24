@@ -26,13 +26,17 @@
 #include "urf-utils.h"
 #include "urf-config.h"
 
+typedef struct {
+	gboolean key_control;
+	gboolean master_key;
+	gboolean force_sync;
+} Options;
+
 #define URF_CONFIG_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                      URF_TYPE_CONFIG, UrfConfigPrivate))
 struct UrfConfigPrivate {
 	char *user;
-	gboolean key_control;
-	gboolean master_key;
-	gboolean force_sync;
+	Options options;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -63,21 +67,21 @@ urf_config_load_from_file (UrfConfig  *config,
 	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "key_control", &error);
 	if (!error)
-		priv->key_control = ret;
+		priv->options.key_control = ret;
 	else
 		g_warning ("key_control is missing or invalid in %s", filename);
 
 	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "master_key", &error);
 	if (!error)
-		priv->master_key = ret;
+		priv->options.master_key = ret;
 	else
 		g_warning ("master_key is missing or invalid in %s", filename);
 
 	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "force_sync", &error);
 	if (!error)
-		priv->force_sync = ret;
+		priv->options.force_sync = ret;
 	else
 		g_warning ("force_sync is missing or invalid in %s", filename);
 
@@ -101,7 +105,7 @@ gboolean
 urf_config_get_key_control (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->key_control;
+	return priv->options.key_control;
 }
 
 /**
@@ -111,7 +115,7 @@ gboolean
 urf_config_get_master_key (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->master_key;
+	return priv->options.master_key;
 }
 
 /**
@@ -121,7 +125,7 @@ gboolean
 urf_config_get_force_sync (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->force_sync;
+	return priv->options.force_sync;
 }
 
 /**
@@ -132,9 +136,9 @@ urf_config_init (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	priv->user = NULL;
-	priv->key_control = TRUE;
-	priv->master_key = FALSE;
-	priv->force_sync = FALSE;
+	priv->options.key_control = TRUE;
+	priv->options.master_key = FALSE;
+	priv->options.force_sync = FALSE;
 }
 
 /**
