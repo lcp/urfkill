@@ -159,9 +159,10 @@ main (gint argc, gchar **argv)
 	g_option_context_free (context);
 
 	if (conf_file == NULL)
-		conf_file = PACKAGE_SYSCONF_DIR"/urfkill.conf";
+		conf_file = URFKILL_CONFIG_DIR"urfkill.conf";
 
 	config = urf_config_new ();
+	urf_config_load_profile (config);
 	urf_config_load_from_file (config, conf_file);
 
 	/* get bus connection */
