@@ -159,6 +159,8 @@ fi
 
 XML_LIBS=-lexpat
 XML_CFLAGS=
+AC_SUBST(XML_CFLAGS)
+AC_SUBST(XML_LIBS)
 
 # polkit >= 0.97 uses polkit_authority_get_sync() rather than
 # polkit_authority_get
@@ -206,6 +208,7 @@ liburfkill-glib/Makefile
 liburfkill-glib/urf-version.h
 policy/Makefile
 po/Makefile.in
+profile/Makefile
 tests/Makefile
 ])
 AC_OUTPUT
