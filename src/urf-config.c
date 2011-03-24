@@ -472,9 +472,6 @@ urf_config_load_profile (UrfConfig *config)
 		priv->options.master_key = options->master_key;
 		priv->options.force_sync = options->force_sync;
 
-	 options->key_control,
-	 options->master_key,
-	 options->force_sync;
 		/* TODO Generate an auto-configured profile */
 	}
 
