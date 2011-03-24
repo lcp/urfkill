@@ -1,0 +1,31 @@
+<!-- Document Type for urfkill Device Profile Files -->
+
+<!-- <profile> is the top-level element of a device profile file. -->
+<!ELEMENT profile (device*) >
+<!ATTLIST profile 
+    version (0.1) #REQUIRED
+>
+
+<!ELEMENT device (match)*  >
+
+<!ELEMENT match (match|option)* >
+<!ATTLIST match 
+    key              CDATA #REQUIRED
+    string           CDATA #IMPLIED
+    string_outof     CDATA #IMPLIED
+    contains         CDATA #IMPLIED
+    contains_ncase   CDATA #IMPLIED
+    contains_not     CDATA #IMPLIED
+    contains_outof   CDATA #IMPLIED
+    prefix           CDATA #IMPLIED
+    prefix_ncase     CDATA #IMPLIED
+    prefix_outof     CDATA #IMPLIED
+    suffix           CDATA #IMPLIED
+    suffix_ncase     CDATA #IMPLIED
+>
+
+<!ELEMENT option (#PCDATA) >
+<!ATTLIST option 
+    key    CDATA #REQUIRED
+    type   (string|strlist|int|bool|double) #REQUIRED
+>
