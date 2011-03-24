@@ -28,6 +28,9 @@
 #include "urf-utils.h"
 #include "urf-config.h"
 
+#define URFKILL_PROFILE_DIR URFKILL_CONFIG_DIR"profile/"
+#define URFKILL_CONFIGURED_PROFILE URFKILL_CONFIG_DIR"hardware.conf"
+
 enum
 {
 	OPT_NONE,
@@ -461,7 +464,7 @@ urf_config_load_profile (UrfConfig *config)
 
 	options = g_new0 (Options, 1);
 	vendor = g_ascii_strdown (hardware_info->sys_vendor, -1);
-	profile = g_strdup_printf (URFKILL_CONFIG_DIR"profile/%s-profile.xml", vendor);
+	profile = g_strdup_printf (URFKILL_PROFILE_DIR"%s-profile.xml", vendor);
 	g_free (vendor);
 
 	if (profile_xml_parse (config, hardware_info, options, profile)) {
