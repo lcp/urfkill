@@ -440,6 +440,48 @@ profile_xml_parse (UrfConfig  *config,
 }
 
 /**
+ * urf_config_load_profile:
+ **/
+void
+urf_config_load_profile (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = config->priv;
+	DmiInfo *hardware_info;
+	Options *options;
+	char *profile;
+	char *vendor;
+
+	/* TODO read previously configured profile */
+
+	hardware_info = get_dmi_info ();
+	if (hardware_info == NULL || hardware_info->sys_vendor == NULL) {
+		g_debug ("Failed to get DMI information");
+		return;
+	}
+
+	options = g_new0 (Options, 1);
+	vendor = g_ascii_strdown (hardware_info->sys_vendor, -1);
+	profile = g_strdup_printf (URFKILL_CONFIG_DIR"profile/%s-profile.xml", vendor);
+	g_free (vendor);
+
+	if (profile_xml_parse (config, hardware_info, options, profile)) {
+		priv->options.key_control = options->key_control;
+		priv->options.master_key = options->master_key;
+		priv->options.force_sync = options->force_sync;
+
+	 options->key_control,
+	 options->master_key,
+	 options->force_sync);
+		/* TODO Generate an auto-configured profile */
+	}
+
+	dmi_info_free (hardware_info);
+	g_free (options);
+	g_free (profile);
+}
+
+
+/**
  * urf_config_load_from_file:
  **/
 void

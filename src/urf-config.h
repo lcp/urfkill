@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#define URFKILL_CONFIG_DIR PACKAGE_SYSCONF_DIR"/urfkill/"
+
 G_BEGIN_DECLS
 
 #define URF_TYPE_CONFIG (urf_config_get_type())
@@ -51,6 +53,7 @@ typedef struct {
 
 GType		 urf_config_get_type 		(void);
 UrfConfig	*urf_config_new			(void);
+void		 urf_config_load_profile	(UrfConfig	*config);
 void		 urf_config_load_from_file	(UrfConfig	*config,
 						 const char	*filename);
 const char	*urf_config_get_user		(UrfConfig	*config);
