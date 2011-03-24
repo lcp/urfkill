@@ -34,6 +34,7 @@ typedef struct {
 
 char	*get_rfkill_name_by_index	(guint index);
 DmiInfo	*get_dmi_info			(void);
+void	 dmi_info_free			(DmiInfo *info);
 
 
 #endif /* __URF_UTILS_H__ */

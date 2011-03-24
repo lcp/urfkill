@@ -89,3 +89,15 @@ get_dmi_info ()
 
 	return info;
 }
+
+void
+dmi_info_free (DmiInfo *info)
+{
+	g_free (info->sys_vendor);
+	g_free (info->bios_date);
+	g_free (info->bios_vendor);
+	g_free (info->bios_version);
+	g_free (info->product_name);
+	g_free (info->product_version);
+	g_free (info);
+}
