@@ -442,6 +442,94 @@ profile_xml_parse (UrfConfig  *config,
 	return TRUE;
 }
 
+static gboolean
+load_configured_settings (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = config->priv;
+	GKeyFile *profile = g_key_file_new ();
+	gboolean ret = FALSE;
+	GError *error;
+
+	ret = g_key_file_load_from_file (profile,
+					 URFKILL_CONFIGURED_PROFILE,
+					 G_KEY_FILE_NONE,
+					 NULL);
+	if (!ret) {
+		g_debug ("No configured profile found");
+		g_key_file_free (profile);
+		return FALSE;
+	}
+
+	error = NULL;
+	ret = g_key_file_get_boolean (profile, "Profile", "key_control", &error);
+	if (!error)
+		priv->options.key_control = ret;
+
+	error = NULL;
+	ret = g_key_file_get_boolean (profile, "Profile", "master_key", &error);
+	if (!error)
+		priv->options.master_key = ret;
+
+	error = NULL;
+	ret = g_key_file_get_boolean (profile, "Profile", "force_sync", &error);
+	if (!error)
+		priv->options.force_sync = ret;
+
+	g_key_file_free (profile);
+
+	return TRUE;
+}
+
+static void
+save_configured_profile (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = config->priv;
+	GKeyFile *profile;
+	gboolean ret, value;
+	const char *header = "# DO NOT EDIT! This file is created by urfkilld automatically.\n";
+	char *content = NULL;
+
+	/* Remove the existed profile */
+	if (g_file_test (URFKILL_CONFIGURED_PROFILE, G_FILE_TEST_IS_REGULAR))
+		g_unlink (URFKILL_CONFIGURED_PROFILE);
+
+	profile = g_key_file_new ();
+	ret = g_key_file_load_from_data (profile,
+					 header,
+					 strlen (header),
+					 G_KEY_FILE_KEEP_COMMENTS,
+					 NULL);
+	if (!ret) {
+		g_key_file_free (profile);
+		return;
+	}
+
+	value = priv->options.key_control;
+	g_key_file_set_value (profile, "Profile", "key_control",
+			      value?"true":"false");
+
+	value = priv->options.master_key;
+	g_key_file_set_value (profile, "Profile", "master_key",
+			      value?"true":"false");
+
+	value = priv->options.force_sync;
+	g_key_file_set_value (profile, "Profile", "force_sync",
+			      value?"true":"false");
+
+	content = g_key_file_to_data (profile, NULL, NULL);
+	g_key_file_free (profile);
+
+	/* Write back the configured profile */
+	if (content) {
+		ret = g_file_set_contents (URFKILL_CONFIGURED_PROFILE,
+					   content, -1, NULL);
+		if (!ret)
+			g_debug ("Failed to save configured profile: %s",
+				 URFKILL_CONFIGURED_PROFILE);
+		g_free (content);
+	}
+}
+
 /**
  * urf_config_load_profile:
  **/
@@ -454,7 +542,8 @@ urf_config_load_profile (UrfConfig *config)
 	char *profile;
 	char *vendor;
 
-	/* TODO read previously configured profile */
+	if (load_configured_settings (config))
+		return;
 
 	hardware_info = get_dmi_info ();
 	if (hardware_info == NULL || hardware_info->sys_vendor == NULL) {
@@ -472,14 +561,13 @@ urf_config_load_profile (UrfConfig *config)
 		priv->options.master_key = options->master_key;
 		priv->options.force_sync = options->force_sync;
 
-		/* TODO Generate an auto-configured profile */
+		save_configured_profile (config);
 	}
 
 	dmi_info_free (hardware_info);
 	g_free (options);
 	g_free (profile);
 }
-
 
 /**
  * urf_config_load_from_file:
