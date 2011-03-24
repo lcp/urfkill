@@ -446,7 +446,7 @@ void
 urf_config_load_from_file (UrfConfig  *config,
 			   const char *filename)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	UrfConfigPrivate *priv = config->priv;
 	GKeyFile *key_file = g_key_file_new ();
 	gboolean ret = FALSE;
 	GError *error = NULL;
@@ -492,8 +492,7 @@ urf_config_load_from_file (UrfConfig  *config,
 const char *
 urf_config_get_user (UrfConfig *config)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return (const char *)priv->user;
+	return (const char *)config->priv->user;
 }
 
 /**
@@ -502,8 +501,7 @@ urf_config_get_user (UrfConfig *config)
 gboolean
 urf_config_get_key_control (UrfConfig *config)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->options.key_control;
+	return config->priv->options.key_control;
 }
 
 /**
@@ -512,8 +510,7 @@ urf_config_get_key_control (UrfConfig *config)
 gboolean
 urf_config_get_master_key (UrfConfig *config)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->options.master_key;
+	return config->priv->options.master_key;
 }
 
 /**
@@ -522,8 +519,7 @@ urf_config_get_master_key (UrfConfig *config)
 gboolean
 urf_config_get_force_sync (UrfConfig *config)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
-	return priv->options.force_sync;
+	return config->priv->options.force_sync;
 }
 
 /**
@@ -537,6 +533,7 @@ urf_config_init (UrfConfig *config)
 	priv->options.key_control = TRUE;
 	priv->options.master_key = FALSE;
 	priv->options.force_sync = FALSE;
+	config->priv = priv;
 }
 
 /**
@@ -545,7 +542,7 @@ urf_config_init (UrfConfig *config)
 static void
 urf_config_finalize (GObject *object)
 {
-	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (object);
+	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
 
 	g_free (priv->user);
 
