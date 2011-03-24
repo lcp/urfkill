@@ -23,7 +23,8 @@ $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = urfkill-glib.pc
 
-sysconf_DATA = urfkill.conf
+urfkillconfdir = $(sysconfdir)/urfkill
+urfkillconf_DATA = urfkill.conf
 
 EXTRA_DIST =						\
 	$(dbusif_DATA)					\
