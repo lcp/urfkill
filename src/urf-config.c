@@ -508,22 +508,16 @@ urf_config_load_from_file (UrfConfig  *config,
 	ret = g_key_file_get_boolean (key_file, "general", "key_control", &error);
 	if (!error)
 		priv->options.key_control = ret;
-	else
-		g_warning ("key_control is missing or invalid in %s", filename);
 
 	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "master_key", &error);
 	if (!error)
 		priv->options.master_key = ret;
-	else
-		g_warning ("master_key is missing or invalid in %s", filename);
 
 	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "force_sync", &error);
 	if (!error)
 		priv->options.force_sync = ret;
-	else
-		g_warning ("force_sync is missing or invalid in %s", filename);
 
 	g_key_file_free (key_file);
 }
