@@ -389,12 +389,10 @@ parse_xml_end_element (void       *data,
 }
 
 static gboolean
-profile_xml_parse (UrfConfig  *config,
-		   DmiInfo    *hardware_info,
+profile_xml_parse (DmiInfo    *hardware_info,
 		   Options    *options,
 		   const char *filename)
 {
-	UrfConfigPrivate *priv = config->priv;
 	ParseInfo *info;
 	XML_Parser parser;
 	char *content;
@@ -412,9 +410,9 @@ profile_xml_parse (UrfConfig  *config,
 	info->xml_bound = 1;
 	info->opt = OPT_NONE;
 	info->opt_type = OPT_TYPE_NONE;
-	info->options.key_control = priv->options.key_control;
-	info->options.master_key = priv->options.master_key;
-	info->options.force_sync = priv->options.force_sync;
+	info->options.key_control = options->key_control;
+	info->options.master_key = options->master_key;
+	info->options.force_sync = options->force_sync;
 
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, (void *)info);
@@ -530,6 +528,13 @@ save_configured_profile (UrfConfig *config)
 	}
 }
 
+static gint
+string_sorter (gconstpointer str1,
+	       gconstpointer str2)
+{
+	return g_strcmp0 ((const char*)str1, (const char*)str2);
+}
+
 /**
  * urf_config_load_profile:
  **/
@@ -539,8 +544,11 @@ urf_config_load_profile (UrfConfig *config)
 	UrfConfigPrivate *priv = config->priv;
 	DmiInfo *hardware_info;
 	Options *options;
-	char *profile;
-	char *vendor;
+	GList *profile_list = NULL;
+	GList *lptr;
+	GDir *profile_dir = NULL;
+	const char *file;
+	char *profile, *full;
 
 	if (load_configured_settings (config))
 		return;
@@ -552,21 +560,41 @@ urf_config_load_profile (UrfConfig *config)
 	}
 
 	options = g_new0 (Options, 1);
-	vendor = g_ascii_strdown (hardware_info->sys_vendor, -1);
-	profile = g_strdup_printf (URFKILL_PROFILE_DIR"%s-profile.xml", vendor);
-	g_free (vendor);
+	options->key_control = priv->options.key_control;
+	options->master_key = priv->options.master_key;
+	options->force_sync = priv->options.force_sync;
 
-	if (profile_xml_parse (config, hardware_info, options, profile)) {
-		priv->options.key_control = options->key_control;
-		priv->options.master_key = options->master_key;
-		priv->options.force_sync = options->force_sync;
+	profile_dir = g_dir_open (URFKILL_PROFILE_DIR, 0, NULL);
+	while (file = g_dir_read_name (profile_dir)) {
+		if (file[0] == '.' || !g_str_has_suffix (file, ".xml"))
+			continue;
 
-		save_configured_profile (config);
+		full = g_build_filename( URFKILL_PROFILE_DIR, file, NULL );
+		if (g_file_test (full, G_FILE_TEST_IS_REGULAR))
+			profile_list = g_list_append (profile_list, g_strdup (file));
+		g_free (full);
 	}
+	g_dir_close (profile_dir);
+
+	profile_list = g_list_sort (profile_list, string_sorter);
+
+	for (lptr = profile_list; lptr; lptr = lptr->next) {
+		profile = g_build_filename (URFKILL_PROFILE_DIR,
+					    (const char*)lptr->data,
+					    NULL);
+		profile_xml_parse (hardware_info, options, profile);
+		g_free (profile);
+	}
+	g_list_free_full (profile_list, g_free);
+
+	priv->options.key_control = options->key_control;
+	priv->options.master_key = options->master_key;
+	priv->options.force_sync = options->force_sync;
+
+	save_configured_profile (config);
 
 	dmi_info_free (hardware_info);
 	g_free (options);
-	g_free (profile);
 }
 
 /**
