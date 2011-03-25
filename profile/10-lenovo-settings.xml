@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<profile version="0.1">
+
+  <device>
+    <match key="sys_vendor" contains_ncase="lenovo">
+      <match key="product_version" string="ThinkPad X200">
+        <option key="key_control" type="bool">true</option>
+        <option key="master_key" type="bool">false</option>
+        <option key="force_sync" type="bool">true</option>
+      </match>
+    </match>
+  </device>
+
+</profile>

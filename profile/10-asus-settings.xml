@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<profile version="0.1">
+
+  <device>
+    <match key="sys_vendor" contains_ncase="asus">
+      <match key="product_name" string="1005HA">
+        <option key="key_control" type="bool">true</option>
+        <option key="master_key" type="bool">true</option>
+        <option key="force_sync" type="bool">false</option>
+      </match>
+    </match>
+  </device>
+
+</profile>
