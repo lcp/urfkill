@@ -25,6 +25,7 @@
 #include <glib.h>
 #include <string.h>
 #include <expat.h>
+#include <sys/stat.h>
 #include "urf-utils.h"
 #include "urf-config.h"
 
@@ -525,6 +526,8 @@ save_configured_profile (UrfConfig *config)
 			g_debug ("Failed to save configured profile: %s",
 				 URFKILL_CONFIGURED_PROFILE);
 		g_free (content);
+		g_chmod (URFKILL_CONFIGURED_PROFILE,
+			 S_IRUSR | S_IRGRP | S_IROTH);
 	}
 }
 
