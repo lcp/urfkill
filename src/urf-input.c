@@ -63,7 +63,7 @@ static gboolean
 input_dev_name_match (UrfInput   *input,
 		      const char *dev_name)
 {
-	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
+	UrfInputPrivate *priv = input->priv;
 	gboolean ret = FALSE;
 
 	if (g_hash_table_lookup (priv->device_table, dev_name))
@@ -157,7 +157,7 @@ static gboolean
 input_dev_open_channel (UrfInput   *input,
 			const char *dev_node)
 {
-	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
+	UrfInputPrivate *priv = input->priv;
 	int fd;
 
 	fd = open(dev_node, O_RDONLY | O_NONBLOCK);
@@ -182,7 +182,7 @@ input_dev_open_channel (UrfInput   *input,
 gboolean
 urf_input_startup (UrfInput *input)
 {
-	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
+	UrfInputPrivate *priv = input->priv;
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices;
@@ -254,8 +254,8 @@ urf_input_startup (UrfInput *input)
 static void
 urf_input_init (UrfInput *input)
 {
-	UrfInputPrivate *priv = URF_INPUT_GET_PRIVATE (input);
-	priv->device_table = NULL;
+	input->priv = URF_INPUT_GET_PRIVATE (input);
+	input->priv->device_table = NULL;
 }
 
 /**
