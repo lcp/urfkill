@@ -1,6 +1,6 @@
 profiledir = $(sysconfdir)/urfkill/profile
 
-dist_profile_DATA = 10-lenovo-settings.xml
+dist_profile_DATA = 10-asus-settings.xml 10-lenovo-settings.xml
 
 check:
 	for f in $(profile_DATA); do \
