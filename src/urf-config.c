@@ -459,6 +459,11 @@ load_configured_settings (UrfConfig *config)
 		return FALSE;
 	}
 
+	if (!g_key_file_has_group (profile, "Profile")) {
+		g_debug ("No valid group in the configured profile");
+		return FALSE;
+	}
+
 	error = NULL;
 	ret = g_key_file_get_boolean (profile, "Profile", "key_control", &error);
 	if (!error)
