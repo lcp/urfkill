@@ -36,7 +36,6 @@ urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 libexec_PROGRAMS = urfkilld
 
 urfkilld_SOURCES =						\
-	rfkill.h						\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
 	urf-input.h						\

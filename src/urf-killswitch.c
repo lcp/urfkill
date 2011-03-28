@@ -34,7 +34,7 @@
 
 #include <glib.h>
 
-#include "rfkill.h"
+#include <linux/rfkill.h>
 
 #ifndef RFKILL_EVENT_SIZE_V1
 #define RFKILL_EVENT_SIZE_V1    8
