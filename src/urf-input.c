@@ -54,19 +54,17 @@ struct UrfInputPrivate {
 	int fd;
 	guint watch_id;
 	GIOChannel *channel;
-	GHashTable *device_table;
 };
 
 G_DEFINE_TYPE(UrfInput, urf_input, G_TYPE_OBJECT)
 
 static gboolean
-input_dev_name_match (UrfInput   *input,
+input_dev_name_match (GHashTable *device_table,
 		      const char *dev_name)
 {
-	UrfInputPrivate *priv = input->priv;
 	gboolean ret = FALSE;
 
-	if (g_hash_table_lookup (priv->device_table, dev_name))
+	if (g_hash_table_lookup (device_table, dev_name))
 		ret = TRUE;
 
 	return ret;
@@ -190,6 +188,7 @@ urf_input_startup (UrfInput *input)
 	struct udev_device *dev;
 	struct udev_device *parent_dev;
 	char *dev_node = NULL;
+	GHashTable *device_table = NULL;
 	gboolean ret;
 
 	udev = udev_new ();
@@ -198,7 +197,7 @@ urf_input_startup (UrfInput *input)
 		return FALSE;
 	}
 
-	priv->device_table = construct_device_table ();
+	device_table = construct_device_table ();
 
 	enumerate = udev_enumerate_new (udev);
 	udev_enumerate_add_match_subsystem (enumerate, "input");
@@ -219,7 +218,7 @@ urf_input_startup (UrfInput *input)
 		}
 
 		dev_name = udev_device_get_sysattr_value (parent_dev, "name");
-		if (!input_dev_name_match (input, dev_name)) {
+		if (!input_dev_name_match (device_table, dev_name)) {
 			udev_device_unref(dev);
 			continue;
 		}
@@ -245,6 +244,8 @@ urf_input_startup (UrfInput *input)
 	ret = input_dev_open_channel (input, dev_node);
 	g_free (dev_node);
 
+	g_hash_table_destroy (device_table);
+
 	return ret;
 }
 
@@ -255,7 +256,8 @@ static void
 urf_input_init (UrfInput *input)
 {
 	input->priv = URF_INPUT_GET_PRIVATE (input);
-	input->priv->device_table = NULL;
+	input->priv->fd = -1;
+	input->priv->channel = NULL;
 }
 
 /**
@@ -273,8 +275,6 @@ urf_input_finalize (GObject *object)
 		close (priv->fd);
 		priv->fd = 0;
 	}
-
-	g_hash_table_destroy (priv->device_table);
 
 	G_OBJECT_CLASS(urf_input_parent_class)->finalize(object);
 }
