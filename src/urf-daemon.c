@@ -94,7 +94,7 @@ urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
 {
 	GError *error = NULL;
 	gboolean ret = FALSE;
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 
 	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
 	if (priv->connection == NULL) {
@@ -128,7 +128,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 			   gpointer  data)
 {
 	UrfDaemon *daemon = URF_DAEMON (data);
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	UrfKillswitch *killswitch = priv->killswitch;
 	gint type, state;
 
@@ -183,7 +183,7 @@ gboolean
 urf_daemon_startup (UrfDaemon *daemon,
 		    UrfConfig *config)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	gboolean ret;
 	gint type;
 
@@ -222,7 +222,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 		  const char            *type_name,
 		  DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	int type;
 	gboolean ret = FALSE;
@@ -259,7 +259,7 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 		      const guint            index,
 		      DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
 
@@ -291,7 +291,7 @@ urf_daemon_unblock (UrfDaemon             *daemon,
 		    const char            *type_name,
 		    DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	int type;
 	gboolean ret = FALSE;
@@ -328,7 +328,7 @@ urf_daemon_unblock_idx (UrfDaemon             *daemon,
 			const guint            index,
 			DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
 
@@ -359,7 +359,7 @@ gboolean
 urf_daemon_get_all (UrfDaemon             *daemon,
 		    DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	GPtrArray *array;
 	GList *killswitches = NULL, *item = NULL;
 	GValue *value;
@@ -401,7 +401,7 @@ urf_daemon_get_killswitch (UrfDaemon             *daemon,
 			   const guint            index,
 			   DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	UrfKillswitch *killswitch;
 	UrfIndKillswitch *ind;
 	char *device_name;
@@ -440,7 +440,7 @@ gboolean
 urf_daemon_key_control (UrfDaemon             *daemon,
 			DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 
 	dbus_g_method_return (context, priv->key_control);
 
@@ -455,7 +455,7 @@ urf_daemon_enable_key_control (UrfDaemon             *daemon,
 			       const gboolean         enable,
 			       DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
 
@@ -584,7 +584,7 @@ urf_daemon_get_property (GObject    *object,
 			 GParamSpec *pspec)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
@@ -690,7 +690,7 @@ static void
 urf_daemon_dispose (GObject *object)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = URF_DAEMON_GET_PRIVATE (daemon);
+	UrfDaemonPrivate *priv = daemon->priv;
 
 	if (priv->proxy) {
 		g_object_unref (priv->proxy);
