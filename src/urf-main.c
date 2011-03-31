@@ -194,9 +194,9 @@ main (gint argc, gchar **argv)
 	g_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
 
 	/* start the daemon */
-	daemon = urf_daemon_new ();
+	daemon = urf_daemon_new (config);
 	loop = g_main_loop_new (NULL, FALSE);
-	ret = urf_daemon_startup (daemon, config);
+	ret = urf_daemon_startup (daemon);
 	if (!ret) {
 		g_warning ("Could not startup; bailing out");
 		goto out;

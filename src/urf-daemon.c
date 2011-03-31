@@ -61,6 +61,7 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 struct UrfDaemonPrivate
 {
+	UrfConfig	*config;
 	DBusGConnection	*connection;
 	DBusGProxy	*proxy;
 	UrfPolkit	*polkit;
@@ -177,18 +178,14 @@ urf_daemon_input_event_cb (UrfInput *input,
  * urf_daemon_startup:
  **/
 gboolean
-urf_daemon_startup (UrfDaemon *daemon,
-		    UrfConfig *config)
+urf_daemon_startup (UrfDaemon *daemon)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	gboolean ret;
 	gint type;
 
-	priv->key_control = urf_config_get_key_control (config);
-	priv->master_key = urf_config_get_master_key (config);
-
 	/* start up the killswitch */
-	ret = urf_killswitch_startup (priv->killswitch, config);
+	ret = urf_killswitch_startup (priv->killswitch, priv->config);
 	if (!ret) {
 		g_warning ("failed to setup killswitch");
 		goto out;
@@ -554,9 +551,6 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf_key_pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
-
-	daemon->priv->key_control = TRUE;
-	daemon->priv->master_key = TRUE;
 }
 
 /**
@@ -689,6 +683,11 @@ urf_daemon_dispose (GObject *object)
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
 
+	if (priv->config) {
+		g_object_unref (priv->config);
+		priv->config = NULL;
+	}
+
 	if (priv->proxy) {
 		g_object_unref (priv->proxy);
 		priv->proxy = NULL;
@@ -716,9 +715,12 @@ urf_daemon_dispose (GObject *object)
  * urf_daemon_new:
  **/
 UrfDaemon *
-urf_daemon_new (void)
+urf_daemon_new (UrfConfig *config)
 {
 	UrfDaemon *daemon;
 	daemon = URF_DAEMON (g_object_new (URF_TYPE_DAEMON, NULL));
+	daemon->priv->config = g_object_ref (config);
+	daemon->priv->key_control = urf_config_get_key_control (config);
+	daemon->priv->master_key = urf_config_get_master_key (config);
 	return daemon;
 }

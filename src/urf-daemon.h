@@ -64,11 +64,10 @@ GType urf_daemon_error_get_type (void);
 
 GQuark		 urf_daemon_error_quark		(void);
 GType		 urf_daemon_get_type		(void);
-UrfDaemon	*urf_daemon_new			(void);
+UrfDaemon	*urf_daemon_new			(UrfConfig		*config);
 //void		 urf_daemon_test		(gpointer  user_data);
 
-gboolean	 urf_daemon_startup		(UrfDaemon		*daemon,
-						 UrfConfig		*config);
+gboolean	 urf_daemon_startup		(UrfDaemon		*daemon);
 gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
 						 const char		*type_name,
 						 DBusGMethodInvocation  *context);
