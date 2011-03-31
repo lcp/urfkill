@@ -162,9 +162,6 @@ urf_daemon_input_event_cb (UrfInput *input,
 		case KILLSWITCH_STATE_SOFT_BLOCKED:
 			state = KILLSWITCH_STATE_UNBLOCKED;
 			break;
-		/* FIXME sometimes killswitches are controlled by hardware/BIOS
-		 * and urfkilld will be confused. Find a method to identify the
-		 * hardward-controlled keys and leave them alone. */
 		case KILLSWITCH_STATE_NO_ADAPTER:
 		default:
 			return;
