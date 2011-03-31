@@ -68,7 +68,7 @@ static UrfKillswitch *
 urf_client_find_killswitch (UrfClient   *client,
 			    const guint  index)
 {
-	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfClientPrivate *priv = client->priv;
 	UrfKillswitch *killswitch = NULL;
 	guint i;
 
@@ -90,11 +90,9 @@ urf_client_find_killswitch (UrfClient   *client,
 GPtrArray *
 urf_client_get_killswitches (UrfClient *client)
 {
-	UrfClientPrivate *priv;
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
-	priv = URF_CLIENT_GET_PRIVATE (client);
-	return g_ptr_array_ref (priv->killswitches);
+	return g_ptr_array_ref (client->priv->killswitches);
 }
 
 /**
@@ -117,7 +115,7 @@ urf_client_get_killswitch (UrfClient    *client,
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
-	priv = URF_CLIENT_GET_PRIVATE (client);
+	priv = client->priv;
 
 	killswitch = urf_client_find_killswitch (client, index);
 	if (killswitch != NULL)
@@ -464,7 +462,7 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 		     const gchar *name,
 		     UrfClient   *client)
 {
-	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfClientPrivate *priv = client->priv;
 	UrfKillswitch *killswitch;
 
 	killswitch = urf_client_find_killswitch (client, index);
@@ -495,7 +493,7 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
 		       guint       index,
 		       UrfClient  *client)
 {
-	UrfClientPrivate *priv = URF_CLIENT_GET_PRIVATE (client);
+	UrfClientPrivate *priv = client->priv;
 	UrfKillswitch *killswitch;
 
 	killswitch = urf_client_find_killswitch (client, index);
