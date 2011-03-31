@@ -72,7 +72,7 @@ urf_killswitch_get_property (GObject    *object,
 			     GParamSpec *pspec)
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfKillswitchPrivate *priv = killswitch->priv;
 
 	switch (prop_id) {
 	case PROP_KILLSWITCH_INDEX:
@@ -109,7 +109,7 @@ urf_killswitch_set_property (GObject      *object,
 			     GParamSpec   *pspec)
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfKillswitchPrivate *priv = killswitch->priv;
 
 	switch (prop_id) {
 	case PROP_KILLSWITCH_INDEX:
@@ -143,14 +143,11 @@ urf_killswitch_set_property (GObject      *object,
 guint
 urf_killswitch_get_rfkill_index (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	/* TODO */
 	/* Choose a better return value */
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), 0);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->index;
+	return killswitch->priv->index;
 }
 
 /**
@@ -159,12 +156,9 @@ urf_killswitch_get_rfkill_index (UrfKillswitch *killswitch)
 KillswitchType
 urf_killswitch_get_rfkill_type (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_TYPE_ALL);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->type;
+	return killswitch->priv->type;
 }
 
 /**
@@ -173,12 +167,9 @@ urf_killswitch_get_rfkill_type (UrfKillswitch *killswitch)
 KillswitchState
 urf_killswitch_get_rfkill_state (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_STATE_NO_ADAPTER);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->state;
+	return killswitch->priv->state;
 }
 
 /**
@@ -187,12 +178,9 @@ urf_killswitch_get_rfkill_state (UrfKillswitch *killswitch)
 guint
 urf_killswitch_get_rfkill_soft (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), 1);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->soft;
+	return killswitch->priv->soft;
 }
 
 /**
@@ -201,12 +189,9 @@ urf_killswitch_get_rfkill_soft (UrfKillswitch *killswitch)
 guint
 urf_killswitch_get_rfkill_hard (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), 1);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->hard;
+	return killswitch->priv->hard;
 }
 
 /**
@@ -215,12 +200,9 @@ urf_killswitch_get_rfkill_hard (UrfKillswitch *killswitch)
 gchar *
 urf_killswitch_get_rfkill_name (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	return priv->name;
+	return killswitch->priv->name;
 }
 
 static void
@@ -291,21 +273,18 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 static void
 urf_killswitch_init (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-
-	priv->name = NULL;
+	killswitch->priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	killswitch->priv->name = NULL;
 }
 
 static void
 urf_killswitch_finalize (GObject *object)
 {
-	UrfKillswitch *killswitch;
 	UrfKillswitchPrivate *priv;
 
 	g_return_if_fail (URF_IS_KILLSWITCH (object));
 
-	killswitch = URF_KILLSWITCH (object);
-	priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	priv = URF_KILLSWITCH (object)->priv;
 
 	g_free (priv->name);
 
