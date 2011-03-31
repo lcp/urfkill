@@ -40,6 +40,7 @@
 #include "urf-daemon.h"
 
 #define URFKILL_SERVICE_NAME "org.freedesktop.URfkill"
+#define URFKILL_CONFIG_FILE URFKILL_CONFIG_DIR"urfkill.conf"
 static GMainLoop *loop = NULL;
 
 /**
@@ -159,7 +160,7 @@ main (gint argc, gchar **argv)
 	g_option_context_free (context);
 
 	if (conf_file == NULL)
-		conf_file = URFKILL_CONFIG_DIR"urfkill.conf";
+		conf_file = URFKILL_CONFIG_FILE;
 
 	config = urf_config_new ();
 	urf_config_load_profile (config);
