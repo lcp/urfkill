@@ -51,9 +51,9 @@ static int signals[LAST_SIGNAL] = { 0 };
                                 URF_TYPE_INPUT, UrfInputPrivate))
 
 struct UrfInputPrivate {
-	int fd;
-	guint watch_id;
-	GIOChannel *channel;
+	int		 fd;
+	guint		 watch_id;
+	GIOChannel	*channel;
 };
 
 G_DEFINE_TYPE(UrfInput, urf_input, G_TYPE_OBJECT)

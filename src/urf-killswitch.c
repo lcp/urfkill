@@ -56,13 +56,13 @@ static int signals[LAST_SIGNAL] = { 0 };
                                 URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
 struct UrfKillswitchPrivate {
-	int fd;
-	gboolean force_sync;
-	GIOChannel *channel;
-	guint watch_id;
-	GList *killswitches; /* a GList of UrfIndKillswitch */
-	GHashTable *type_map;
-	UrfIndKillswitch *type_pivot[NUM_RFKILL_TYPES];
+	int			 fd;
+	gboolean		 force_sync;
+	GIOChannel		*channel;
+	guint			 watch_id;
+	GList			*killswitches; /* a GList of UrfIndKillswitch */
+	GHashTable		*type_map;
+	UrfIndKillswitch	*type_pivot[NUM_RFKILL_TYPES];
 };
 
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)

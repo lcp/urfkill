@@ -72,19 +72,19 @@ typedef struct {
 } Options;
 
 typedef struct {
-	int xml_depth;
-	int xml_bound;
-	int opt;
-	int opt_type;
-	Options options;
-	DmiInfo *hardware_info;
+	int	 xml_depth;
+	int	 xml_bound;
+	int	 opt;
+	int	 opt_type;
+	Options	 options;
+	DmiInfo	*hardware_info;
 } ParseInfo;
 
 #define URF_CONFIG_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                      URF_TYPE_CONFIG, UrfConfigPrivate))
 struct UrfConfigPrivate {
-	char *user;
-	Options options;
+	char 	*user;
+	Options	 options;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)

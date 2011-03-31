@@ -38,8 +38,8 @@
 
 struct UrfPolkitPrivate
 {
-	DBusGConnection		*connection;
-	PolkitAuthority         *authority;
+	DBusGConnection	*connection;
+	PolkitAuthority	*authority;
 };
 
 G_DEFINE_TYPE (UrfPolkit, urf_polkit, G_TYPE_OBJECT)
