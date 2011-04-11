@@ -205,6 +205,35 @@ urf_killswitch_set_state_idx (UrfKillswitch  *killswitch,
 	return TRUE;
 }
 
+static KillswitchState
+aggregate_pivot_state (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	int state = KILLSWITCH_STATE_NO_ADAPTER;
+	int i;
+
+	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
+		if (!priv->type_pivot[i])
+			continue;
+
+		switch (priv->type_pivot[i]->state) {
+			case KILLSWITCH_STATE_UNBLOCKED:
+				if (state == KILLSWITCH_STATE_NO_ADAPTER)
+					state = KILLSWITCH_STATE_UNBLOCKED;
+				break;
+			case KILLSWITCH_STATE_SOFT_BLOCKED:
+				state = KILLSWITCH_STATE_SOFT_BLOCKED;
+				break;
+			case KILLSWITCH_STATE_HARD_BLOCKED:
+				return KILLSWITCH_STATE_HARD_BLOCKED;
+			default:
+				break;
+		}
+	}
+
+	return state;
+}
+
 /**
  * urf_killswitch_get_state:
  **/
@@ -223,6 +252,9 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 
 	if (priv->killswitches == NULL)
 		return KILLSWITCH_STATE_NO_ADAPTER;
+
+	if (type == RFKILL_TYPE_ALL)
+		return aggregate_pivot_state (killswitch);
 
 	if (priv->type_pivot[type])
 		state = priv->type_pivot[type]->state;
