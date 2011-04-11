@@ -149,6 +149,11 @@ urf_daemon_input_event_cb (UrfInput *input,
 		case KEY_WIMAX:
 			type = urf_killswitch_rf_type (killswitch, "WIMAX");
 			break;
+#ifdef KEY_RFKILL
+		case KEY_RFKILL:
+			type = urf_killswitch_rf_type (killswitch, "ALL");
+			break;
+#endif
 		default:
 			return;
 	}
