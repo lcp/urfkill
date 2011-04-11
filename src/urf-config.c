@@ -89,6 +89,8 @@ struct UrfConfigPrivate {
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
 
+static gpointer urf_config_object = NULL;
+
 static int
 get_option (const char *option)
 {
@@ -727,7 +729,11 @@ urf_config_class_init(UrfConfigClass *klass)
 UrfConfig *
 urf_config_new (void)
 {
-	UrfConfig *config;
-	config = URF_CONFIG(g_object_new (URF_TYPE_CONFIG, NULL));
-	return config;
+	if (urf_config_object != NULL) {
+		g_object_ref (urf_config_object);
+	} else {
+		urf_config_object = g_object_new (URF_TYPE_CONFIG, NULL);
+		g_object_add_weak_pointer (urf_config_object, &urf_config_object);
+	}
+	return URF_CONFIG(urf_config_object);
 }
