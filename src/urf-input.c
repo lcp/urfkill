@@ -62,12 +62,10 @@ static gboolean
 input_dev_name_match (GHashTable *device_table,
 		      const char *dev_name)
 {
-	gboolean ret = FALSE;
-
 	if (g_hash_table_lookup (device_table, dev_name))
-		ret = TRUE;
+		return TRUE;
 
-	return ret;
+	return FALSE;
 }
 
 static GHashTable *
