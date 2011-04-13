@@ -564,7 +564,7 @@ urf_config_load_profile (UrfConfig *config)
 		return;
 
 	hardware_info = get_dmi_info ();
-	if (hardware_info == NULL || hardware_info->sys_vendor == NULL) {
+	if (hardware_info == NULL) {
 		g_debug ("Failed to get DMI information");
 		return;
 	}
