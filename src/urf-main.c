@@ -163,7 +163,6 @@ main (gint argc, gchar **argv)
 		conf_file = URFKILL_CONFIG_FILE;
 
 	config = urf_config_new ();
-	urf_config_load_profile (config);
 	urf_config_load_from_file (config, conf_file);
 
 	/* get bus connection */

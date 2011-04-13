@@ -53,7 +53,6 @@ typedef struct {
 
 GType		 urf_config_get_type 		(void);
 UrfConfig	*urf_config_new			(void);
-void		 urf_config_load_profile	(UrfConfig	*config);
 void		 urf_config_load_from_file	(UrfConfig	*config,
 						 const char	*filename);
 const char	*urf_config_get_user		(UrfConfig	*config);

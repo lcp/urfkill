@@ -548,7 +548,7 @@ string_sorter (gconstpointer str1,
 /**
  * urf_config_load_profile:
  **/
-void
+static void
 urf_config_load_profile (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = config->priv;
@@ -618,6 +618,8 @@ urf_config_load_from_file (UrfConfig  *config,
 	GKeyFile *key_file = g_key_file_new ();
 	gboolean ret = FALSE;
 	GError *error = NULL;
+
+	urf_config_load_profile (config);
 
 	ret = g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, NULL);
 
