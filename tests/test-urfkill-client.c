@@ -69,7 +69,7 @@ main ()
 	status = urf_client_set_wlan_unblock (client);
 	printf ("Status of unblock: %d\n", status);
 
-	status = urf_client_key_control (client, NULL);
+	status = urf_client_key_control_enabled (client, NULL);
 	printf ("Key control is %s\n", status?"on":"off");
 
 	sleep (2);
@@ -78,7 +78,7 @@ main ()
 	if (!status)
 		printf ("failed to disable key control\n");
 	else {
-		status = urf_client_key_control (client, NULL);
+		status = urf_client_key_control_enabled (client, NULL);
 		printf ("Key control is %s\n", status?"on":"off");
 	}
 
@@ -88,7 +88,7 @@ main ()
 	if (!status)
 		printf ("failed to enable key control\n");
 	else {
-		status = urf_client_key_control (client, NULL);
+		status = urf_client_key_control_enabled (client, NULL);
 		printf ("Key control is %s\n", status?"on":"off");
 	}
 

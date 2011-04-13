@@ -37,7 +37,7 @@
       <arg type="u" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </method>
-    <method name="KeyControl">
+    <method name="KeyControlEnabled">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="b" name="ret" direction="out" />
     </method>

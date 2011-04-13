@@ -436,8 +436,8 @@ urf_daemon_get_killswitch (UrfDaemon             *daemon,
  * urf_daemon_key_control:
  **/
 gboolean
-urf_daemon_key_control (UrfDaemon             *daemon,
-			DBusGMethodInvocation *context)
+urf_daemon_key_control_enabled (UrfDaemon             *daemon,
+				DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 

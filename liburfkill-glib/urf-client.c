@@ -318,11 +318,11 @@ out:
 }
 
 /**
- * urf_client_key_control
+ * urf_client_key_control_enabled
  **/
 gboolean
-urf_client_key_control (UrfClient *client,
-			GError   **error)
+urf_client_key_control_enabled (UrfClient *client,
+				GError   **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -330,7 +330,7 @@ urf_client_key_control (UrfClient *client,
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "KeyControl", &error_local,
+	ret = dbus_g_proxy_call (client->priv->proxy, "KeyControlEnabled", &error_local,
 				 G_TYPE_INVALID,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
@@ -342,7 +342,7 @@ urf_client_key_control (UrfClient *client,
 		}
 
 		/* an actual error */
-		g_warning ("Couldn't sent KEYCONTROL: %s", error_local->message);
+		g_warning ("Couldn't sent KEYCONTROLENABLED: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
