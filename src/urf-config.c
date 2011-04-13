@@ -449,7 +449,7 @@ load_configured_settings (UrfConfig *config)
 	UrfConfigPrivate *priv = config->priv;
 	GKeyFile *profile = g_key_file_new ();
 	gboolean ret = FALSE;
-	GError *error;
+	GError *error = NULL;
 
 	ret = g_key_file_load_from_file (profile,
 					 URFKILL_CONFIGURED_PROFILE,
@@ -466,20 +466,26 @@ load_configured_settings (UrfConfig *config)
 		return FALSE;
 	}
 
-	error = NULL;
 	ret = g_key_file_get_boolean (profile, "Profile", "key_control", &error);
 	if (!error)
 		priv->options.key_control = ret;
-
+	else
+		g_error_free (error);
 	error = NULL;
+
 	ret = g_key_file_get_boolean (profile, "Profile", "master_key", &error);
 	if (!error)
 		priv->options.master_key = ret;
-
+	else
+		g_error_free (error);
 	error = NULL;
+
 	ret = g_key_file_get_boolean (profile, "Profile", "force_sync", &error);
 	if (!error)
 		priv->options.force_sync = ret;
+	else
+		g_error_free (error);
+	error = NULL;
 
 	g_key_file_free (profile);
 
@@ -632,20 +638,26 @@ urf_config_load_from_file (UrfConfig  *config,
 	/* Parse the key file and store to private variables*/
 	priv->user = g_key_file_get_value (key_file, "general", "user", NULL);
 
-	error = NULL;
 	ret = g_key_file_get_boolean (key_file, "general", "key_control", &error);
 	if (!error)
 		priv->options.key_control = ret;
-
+	else
+		g_error_free (error);
 	error = NULL;
+
 	ret = g_key_file_get_boolean (key_file, "general", "master_key", &error);
 	if (!error)
 		priv->options.master_key = ret;
-
+	else
+		g_error_free (error);
 	error = NULL;
+
 	ret = g_key_file_get_boolean (key_file, "general", "force_sync", &error);
 	if (!error)
 		priv->options.force_sync = ret;
+	else
+		g_error_free (error);
+	error = NULL;
 
 	g_key_file_free (key_file);
 }
