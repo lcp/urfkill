@@ -187,7 +187,6 @@ urf_daemon_startup (UrfDaemon *daemon)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	gboolean ret;
-	gint type;
 
 	/* start up the killswitch */
 	ret = urf_killswitch_startup (priv->killswitch, priv->config);

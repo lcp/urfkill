@@ -23,6 +23,7 @@
 #endif
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <string.h>
 #include <expat.h>
 #include <sys/stat.h>

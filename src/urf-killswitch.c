@@ -243,7 +243,6 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
-	GList *l;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
@@ -627,7 +626,6 @@ urf_killswitch_startup (UrfKillswitch *killswitch,
 	priv->fd = fd;
 
 	while (1) {
-		KillswitchState state;
 		ssize_t len;
 
 		len = read(fd, &event, sizeof(event));
