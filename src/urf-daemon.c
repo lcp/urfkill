@@ -579,7 +579,6 @@ urf_daemon_get_property (GObject    *object,
 			 GParamSpec *pspec)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = daemon->priv;
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
