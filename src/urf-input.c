@@ -178,7 +178,6 @@ input_dev_open_channel (UrfInput   *input,
 gboolean
 urf_input_startup (UrfInput *input)
 {
-	UrfInputPrivate *priv = input->priv;
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices;
@@ -205,7 +204,6 @@ urf_input_startup (UrfInput *input)
 	udev_list_entry_foreach (dev_list_entry, devices) {
 		const char *path;
 		const char *dev_name;
-		char *key;
 
 		path = udev_list_entry_get_name (dev_list_entry);
 		dev = udev_device_new_from_syspath (udev, path);
