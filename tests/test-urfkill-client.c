@@ -61,12 +61,12 @@ main ()
 	g_type_init();
 
 	client = urf_client_new ();
-	status = urf_client_set_wlan_block (client);
+	status = urf_client_set_wlan_block (client, TRUE);
 	printf ("Status of block: %d\n", status);
 
 	sleep (2);
 
-	status = urf_client_set_wlan_unblock (client);
+	status = urf_client_set_wlan_block (client, FALSE);
 	printf ("Status of unblock: %d\n", status);
 
 	status = urf_client_key_control_enabled (client, NULL);
