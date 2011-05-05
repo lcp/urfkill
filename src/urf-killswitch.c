@@ -56,20 +56,20 @@ static int signals[LAST_SIGNAL] = { 0 };
                                 URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
 struct UrfKillswitchPrivate {
-	int			 fd;
-	gboolean		 force_sync;
-	GIOChannel		*channel;
-	guint			 watch_id;
-	GList			*killswitches; /* a GList of UrfIndKillswitch */
-	GHashTable		*type_map;
-	UrfIndKillswitch	*type_pivot[NUM_RFKILL_TYPES];
+	int		 fd;
+	gboolean	 force_sync;
+	GIOChannel	*channel;
+	guint		 watch_id;
+	GList		*killswitches; /* a GList of UrfDevice */
+	GHashTable	*type_map;
+	UrfDevice	*type_pivot[NUM_RFKILL_TYPES];
 };
 
 G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 
 static KillswitchState
-event_to_state (guint soft,
-		guint hard)
+event_to_state (gboolean soft,
+		gboolean hard)
 {
 	if (hard)
 		return KILLSWITCH_STATE_HARD_BLOCKED;
@@ -165,6 +165,7 @@ urf_killswitch_set_state_idx (UrfKillswitch  *killswitch,
 			      KillswitchState state)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
 	struct rfkill_event event;
 	ssize_t len;
 	GList *l;
@@ -173,8 +174,8 @@ urf_killswitch_set_state_idx (UrfKillswitch  *killswitch,
 	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
 
 	for (l = priv->killswitches; l; l = l->next) {
-		UrfIndKillswitch *ind = l->data;
-		if (ind->index == index) {
+		device = (UrfDevice *)l->data;
+		if (urf_device_get_index (device) == index) {
 			found = TRUE;
 			break;
 		}
@@ -209,20 +210,25 @@ static KillswitchState
 aggregate_pivot_state (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
-	int state = KILLSWITCH_STATE_NO_ADAPTER;
-	int i;
+	UrfDevice *device;
+	int type_state = KILLSWITCH_STATE_NO_ADAPTER;
+	int i, state;
+	gboolean soft, hard;
 
 	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
 		if (!priv->type_pivot[i])
 			continue;
 
-		switch (priv->type_pivot[i]->state) {
+		device = priv->type_pivot[i];
+		soft = urf_device_get_soft (device);
+		hard = urf_device_get_hard (device);
+		switch (event_to_state (soft, hard)) {
 			case KILLSWITCH_STATE_UNBLOCKED:
-				if (state == KILLSWITCH_STATE_NO_ADAPTER)
-					state = KILLSWITCH_STATE_UNBLOCKED;
+				if (type_state == KILLSWITCH_STATE_NO_ADAPTER)
+					type_state = KILLSWITCH_STATE_UNBLOCKED;
 				break;
 			case KILLSWITCH_STATE_SOFT_BLOCKED:
-				state = KILLSWITCH_STATE_SOFT_BLOCKED;
+				type_state = KILLSWITCH_STATE_SOFT_BLOCKED;
 				break;
 			case KILLSWITCH_STATE_HARD_BLOCKED:
 				return KILLSWITCH_STATE_HARD_BLOCKED;
@@ -231,7 +237,7 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 		}
 	}
 
-	return state;
+	return type_state;
 }
 
 /**
@@ -242,7 +248,9 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 			  guint          type)
 {
 	UrfKillswitchPrivate *priv;
+	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
+	gboolean soft, hard;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
@@ -255,8 +263,11 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 	if (type == RFKILL_TYPE_ALL)
 		return aggregate_pivot_state (killswitch);
 
-	if (priv->type_pivot[type])
-		state = priv->type_pivot[type]->state;
+	if (priv->type_pivot[type]) {
+		device = priv->type_pivot[type];
+		state = event_to_state (urf_device_get_soft (device),
+					urf_device_get_hard (device));
+	}
 
 	g_debug ("killswitches %s state %s",
 		 type_to_string (type), state_to_string (state));
@@ -272,7 +283,9 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
 			      guint          index)
 {
 	UrfKillswitchPrivate *priv;
+	UrfDevice *device;
 	GList *l;
+	gboolean soft, hard;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_STATE_NO_ADAPTER);
 
@@ -282,11 +295,14 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
 		return KILLSWITCH_STATE_NO_ADAPTER;
 
 	for (l = priv->killswitches ; l ; l = l->next) {
-		UrfIndKillswitch *ind = l->data;
-		if (ind->index == index) {
-			g_debug ("killswitch %d is %s",
-				 ind->index, state_to_string (ind->state));
-			return ind->state;
+		device = (UrfDevice *)l->data;
+		if (urf_device_get_index (device) == index) {
+			int state;
+			soft = urf_device_get_soft (device);
+			hard = urf_device_get_hard (device);
+			state = event_to_state (soft, hard);
+			g_debug ("killswitch %d is %s", index, state);
+			return state;
 		}
 	}
 
@@ -318,20 +334,20 @@ urf_killswitch_get_killswitches (UrfKillswitch *killswitch)
 /**
  * urf_killswitch_get_killswitch:
  **/
-UrfIndKillswitch *
-urf_killswitch_get_killswitch (UrfKillswitch *killswitch,
-			       const guint    index)
+UrfDevice *
+urf_killswitch_get_device (UrfKillswitch *killswitch,
+			   const guint    index)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfIndKillswitch *ind;
+	UrfDevice *device;
 	GList *item;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
 	for (item = priv->killswitches; item; item = g_list_next (item)) {
-		ind = (UrfIndKillswitch *)item->data;
-		if (ind->index == index)
-			return ind;
+		device = (UrfDevice *)item->data;
+		if (urf_device_get_index (device) == index)
+			return URF_DEVICE (g_object_ref (device));
 	}
 
 	return NULL;
@@ -372,24 +388,26 @@ match_platform_vendor (const char *name) {
 static void
 update_killswitch (UrfKillswitch *killswitch,
 		   guint          index,
-		   guint          soft,
-		   guint          hard)
+		   gboolean       soft,
+		   gboolean       hard)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
 	GList *l;
-	guint type, old_hard;
+	guint type;
+	gboolean old_soft, old_hard;
 	gboolean changed = FALSE;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
-		UrfIndKillswitch *ind = l->data;
-
-		if (ind->index == index) {
-			if (ind->soft != soft || ind->hard != hard) {
-				old_hard = ind->hard;
-				ind->state = event_to_state (soft, hard);
-				type = ind->type;
-				ind->soft = soft;
-				ind->hard = hard;
+		device = (UrfDevice *)l->data;
+		if (urf_device_get_index (device) == index) {
+			old_soft = urf_device_get_soft (device);
+			old_hard = urf_device_get_hard (device);
+			if (old_soft != soft || old_hard != hard) {
+				g_object_set (device,
+					      "soft", soft,
+					      "hard", hard,
+					      NULL);
 				changed = TRUE;
 			}
 			break;
@@ -419,24 +437,28 @@ remove_killswitch (UrfKillswitch *killswitch,
 		   guint          index)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
 	GList *l;
 	guint type;
+	const char *name;
 	gboolean pivot_changed = FALSE;
 
 	for (l = priv->killswitches; l != NULL; l = l->next) {
-		UrfIndKillswitch *ind = l->data;
-		if (ind->index == index) {
-			type = ind->type;
-			priv->killswitches = g_list_remove (priv->killswitches, ind);
-			g_debug ("removing killswitch idx %d %s", index, ind->name);
+		device = (UrfDevice *)l->data;
+		if (urf_device_get_index (device) == index) {
 
-			if (priv->type_pivot[type] == ind) {
+			type = urf_device_get_rf_type (device);
+			priv->killswitches = g_list_remove (priv->killswitches, device);
+
+			name = urf_device_get_name (device);
+			g_debug ("removing killswitch idx %d %s", index, name);
+
+			if (priv->type_pivot[type] == device) {
 				priv->type_pivot[type] = NULL;
 				pivot_changed = TRUE;
 			}
 
-			g_free (ind->name);
-			g_free (ind);
+			g_object_unref (device);
 			break;
 		}
 	}
@@ -444,11 +466,13 @@ remove_killswitch (UrfKillswitch *killswitch,
 	/* Find the next pivot */
 	if (pivot_changed) {
 		for (l = priv->killswitches; l != NULL; l = l->next) {
-			UrfIndKillswitch *ind = l->data;
-			if (ind->type == type &&
-			    (priv->type_pivot[type] == NULL || match_platform_vendor (ind->name))) {
-				priv->type_pivot[type] = ind;
-				g_debug ("assign killswitch idx %d %s as a pivot", ind->index, ind->name);
+			device = (UrfDevice *)l->data;
+			name = urf_device_get_name (device);
+			if (urf_device_get_rf_type (device) == type &&
+			    (priv->type_pivot[type] == NULL || match_platform_vendor (name))) {
+				priv->type_pivot[type] = device;
+				g_debug ("assign killswitch idx %d %s as a pivot",
+					 urf_device_get_index (device), name);
 			}
 		}
 	}
@@ -462,33 +486,31 @@ static void
 add_killswitch (UrfKillswitch *killswitch,
 		guint          index,
 		guint          type,
-		guint          soft,
-		guint          hard)
+		gboolean       soft,
+		gboolean       hard)
 
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfIndKillswitch *ind;
-	int state = event_to_state (soft, hard);
+	UrfDevice *device;
+	const char *name;
 
 	g_debug ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
-	ind = g_new0 (UrfIndKillswitch, 1);
-	ind->index = index;
-	ind->type  = type;
-	ind->state = state;
-	ind->soft  = soft;
-	ind->hard  = hard;
-	ind->name  = get_rfkill_name_by_index (index);
-	priv->killswitches = g_list_append (priv->killswitches, ind);
+
+	device = urf_device_new (index, type, soft, hard);
+	priv->killswitches = g_list_append (priv->killswitches, device);
 
 	/* Assume that only one platform vendor in a machine */
-	if (priv->type_pivot[type] == NULL || match_platform_vendor (ind->name)) {
-		priv->type_pivot[type] = ind;
-		g_debug ("assign killswitch idx %d %s as a pivot", index, ind->name);
+	name = urf_device_get_name (device);
+	if (priv->type_pivot[type] == NULL || match_platform_vendor (name)) {
+		priv->type_pivot[type] = device;
+		g_debug ("assign killswitch idx %d %s as a pivot", index, name);
 	}
 
 	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
-	if (priv->force_sync && priv->type_pivot[type] != ind)
-		urf_killswitch_set_state_idx (killswitch, index, priv->type_pivot[type]->state);
+	if (priv->force_sync && priv->type_pivot[type] != device) {
+		int state = event_to_state (soft, hard);
+		urf_killswitch_set_state_idx (killswitch, index, state);
+	}
 }
 
 /**
@@ -550,6 +572,7 @@ event_cb (GIOChannel    *source,
 		GIOStatus status;
 		struct rfkill_event event;
 		gsize read;
+		gboolean soft, hard;
 
 		status = g_io_channel_read_chars (source,
 						  (char *) &event,
@@ -560,12 +583,21 @@ event_cb (GIOChannel    *source,
 		while (status == G_IO_STATUS_NORMAL && read == sizeof(event)) {
 			print_event (&event);
 
+			if (event.soft > 0)
+				soft = TRUE;
+			else
+				soft = FALSE;
+			if (event.hard > 0)
+				hard = TRUE;
+			else
+				hard = FALSE;
+
 			if (event.op == RFKILL_OP_CHANGE) {
-				update_killswitch (killswitch, event.idx, event.soft, event.hard);
+				update_killswitch (killswitch, event.idx, soft, hard);
 			} else if (event.op == RFKILL_OP_DEL) {
 				remove_killswitch (killswitch, event.idx);
 			} else if (event.op == RFKILL_OP_ADD) {
-				add_killswitch (killswitch, event.idx, event.type, event.soft, event.hard);
+				add_killswitch (killswitch, event.idx, event.type, soft, hard);
 			}
 
 			status = g_io_channel_read_chars (source,

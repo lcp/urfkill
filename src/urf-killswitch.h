@@ -26,6 +26,7 @@
 #include <glib-object.h>
 
 #include "urf-config.h"
+#include "urf-device.h"
 
 G_BEGIN_DECLS
 
@@ -35,15 +36,6 @@ typedef enum {
 	KILLSWITCH_STATE_UNBLOCKED,
 	KILLSWITCH_STATE_HARD_BLOCKED
 } KillswitchState;
-
-typedef struct {
-	guint index;
-	guint type;
-	KillswitchState state;
-	guint soft;
-	guint hard;
-	char *name;
-} UrfIndKillswitch;
 
 #define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())
 #define URF_KILLSWITCH(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
@@ -80,7 +72,7 @@ gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch,
 
 gboolean		 urf_killswitch_has_killswitches	(UrfKillswitch	*killswitch);
 GList			*urf_killswitch_get_killswitches	(UrfKillswitch	*killswitch);
-UrfIndKillswitch	*urf_killswitch_get_killswitch		(UrfKillswitch  *killswitch,
+UrfDevice		*urf_killswitch_get_device		(UrfKillswitch  *killswitch,
 								 const guint	 index);
 gboolean		 urf_killswitch_set_state		(UrfKillswitch	*killswitch,
 								 guint		 type,
