@@ -119,7 +119,50 @@ urf_device_set_property (GObject      *object,
 	}
 }
 
+/**
+ * urf_device_get_index
+ **/
+guint
+urf_device_get_index (UrfDevice *device)
+{
+	return device->priv->index;
+}
 
+/**
+ * urf_device_get_rf_type
+ **/
+guint
+urf_device_get_rf_type (UrfDevice *device)
+{
+	return device->priv->type;
+}
+
+/**
+ * urf_device_get_name
+ **/
+const char *
+urf_device_get_name (UrfDevice *device)
+{
+	return device->priv->name;
+}
+
+/**
+ * urf_device_get_soft
+ **/
+gboolean
+urf_device_get_soft (UrfDevice *device)
+{
+	return device->priv->soft;
+}
+
+/**
+ * urf_device_get_hard
+ **/
+gboolean
+urf_device_get_hard (UrfDevice *device)
+{
+	return device->priv->hard;
+}
 
 /**
  * urf_device_finalize

@@ -49,10 +49,17 @@ typedef struct {
 } UrfDeviceClass;
 
 GType			 urf_device_get_type		(void);
+
 UrfDevice		*urf_device_new			(guint		 index,
 							 guint		 type,
 							 gboolean	 soft,
 							 gboolean	 hard);
+
+guint			 urf_device_get_index		(UrfDevice	*device);
+guint			 urf_device_get_rf_type		(UrfDevice	*device);
+const char 		*urf_device_get_name		(UrfDevice	*device);
+gboolean		 urf_device_get_soft		(UrfDevice	*device);
+gboolean		 urf_device_get_hard		(UrfDevice	*device);
 
 G_END_DECLS
 
