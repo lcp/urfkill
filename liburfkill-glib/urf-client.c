@@ -169,10 +169,11 @@ out:
  * urf_client_block
  **/
 gboolean
-urf_client_set_block (UrfClient    *client,
-		      const char   *type,
-		      GCancellable *cancellable,
-		      GError      **error)
+urf_client_set_block (UrfClient      *client,
+		      const char     *type,
+		      const gboolean  block,
+		      GCancellable   *cancellable,
+		      GError        **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -182,6 +183,7 @@ urf_client_set_block (UrfClient    *client,
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
 				 G_TYPE_STRING, type,
+				 G_TYPE_BOOLEAN, block,
 				 G_TYPE_INVALID,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
@@ -207,10 +209,11 @@ out:
  * urf_client_block_idx
  **/
 gboolean
-urf_client_set_block_idx (UrfClient    *client,
-			  const guint   index,
-			  GCancellable *cancellable,
-			  GError      **error)
+urf_client_set_block_idx (UrfClient      *client,
+			  const guint     index,
+			  const gboolean  block,
+			  GCancellable   *cancellable,
+			  GError        **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -220,6 +223,7 @@ urf_client_set_block_idx (UrfClient    *client,
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "BlockIdx", &error_local,
 				 G_TYPE_UINT, index,
+				 G_TYPE_BOOLEAN, block,
 				 G_TYPE_INVALID,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
@@ -232,82 +236,6 @@ urf_client_set_block_idx (UrfClient    *client,
 
 		/* an actual error */
 		g_warning ("Couldn't sent BLOCKIDX: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
-	}
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
-	return status;
-}
-
-/**
- * urf_client_unblock
- **/
-gboolean
-urf_client_set_unblock (UrfClient    *client,
-			const char   *type,
-			GCancellable *cancellable,
-			GError      **error)
-{
-	gboolean ret, status;
-	GError *error_local = NULL;
-
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	ret = dbus_g_proxy_call (client->priv->proxy, "Unblock", &error_local,
-				 G_TYPE_STRING, type,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
-		g_warning ("Couldn't sent UNBLOCK: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
-	}
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
-	return status;
-}
-
-/**
- * urf_client_unblock
- **/
-gboolean
-urf_client_set_unblock_idx (UrfClient    *client,
-			    const guint   index,
-			    GCancellable *cancellable,
-			    GError      **error)
-{
-	gboolean ret, status;
-	GError *error_local = NULL;
-
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	ret = dbus_g_proxy_call (client->priv->proxy, "UnblockIdx", &error_local,
-				 G_TYPE_UINT, index,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
-		g_warning ("Couldn't sent UNBLOCKIDX: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
@@ -393,60 +321,33 @@ out:
  * urf_client_set_wlan_block
  **/
 gboolean
-urf_client_set_wlan_block (UrfClient *client)
+urf_client_set_wlan_block (UrfClient     *client,
+			   const gboolean block)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "WLAN", NULL, NULL);
-}
-
-/**
- * urf_client_set_wlan_block
- **/
-gboolean
-urf_client_set_wlan_unblock (UrfClient *client)
-{
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_unblock (client, "WLAN", NULL, NULL);
+	return urf_client_set_block (client, "WLAN", block, NULL, NULL);
 }
 
 /**
  * urf_client_set_bluetooth_block
  **/
 gboolean
-urf_client_set_bluetooth_block (UrfClient *client)
+urf_client_set_bluetooth_block (UrfClient     *client,
+				const gboolean block)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "BLUETOOTH", NULL, NULL);
-}
-
-/**
- * urf_client_set_bluetooth_unblock
- **/
-gboolean
-urf_client_set_bluetooth_unblock (UrfClient *client)
-{
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_unblock (client, "BLUETOOTH", NULL, NULL);
+	return urf_client_set_block (client, "BLUETOOTH", block, NULL, NULL);
 }
 
 /**
  * urf_client_set_wwan_block
  **/
 gboolean
-urf_client_set_wwan_block (UrfClient *client)
+urf_client_set_wwan_block (UrfClient     *client,
+			   const gboolean block)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "WWAN", NULL, NULL);
-}
-
-/**
- * urf_client_set_wwan_unblock
- **/
-gboolean
-urf_client_set_wwan_unblock (UrfClient *client)
-{
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_unblock (client, "WWAN", NULL, NULL);
+	return urf_client_set_block (client, "WWAN", block, NULL, NULL);
 }
 
 /**

@@ -69,18 +69,12 @@ UrfKillswitch	*urf_client_get_killswitch		(UrfClient	*client,
 							 GError		**error);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 const char	*type,
+							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
 							 const guint	 index,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 urf_client_set_unblock			(UrfClient	*client,
-							 const char	*type,
-							 GCancellable	*cancellable,
-							 GError		**error);
-gboolean	 urf_client_set_unblock_idx		(UrfClient	*client,
-							 const guint	 index,
+							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 urf_client_key_control_enabled		(UrfClient	*client,
@@ -90,12 +84,12 @@ gboolean	 urf_client_enable_key_control		(UrfClient	*client,
 							 GError		**error);
 
 /* specific */
-gboolean	 urf_client_set_wlan_block		(UrfClient	*client);
-gboolean	 urf_client_set_wlan_unblock		(UrfClient	*client);
-gboolean	 urf_client_set_bluetooth_block		(UrfClient	*client);
-gboolean	 urf_client_set_bluetooth_unblock	(UrfClient	*client);
-gboolean	 urf_client_set_wwan_block		(UrfClient	*client);
-gboolean	 urf_client_set_wwan_unblock		(UrfClient	*client);
+gboolean	 urf_client_set_wlan_block		(UrfClient	*client,
+							 const gboolean  block);
+gboolean	 urf_client_set_bluetooth_block		(UrfClient	*client,
+							 const gboolean  block);
+gboolean	 urf_client_set_wwan_block		(UrfClient	*client,
+							 const gboolean  block);
 
 G_END_DECLS
 
