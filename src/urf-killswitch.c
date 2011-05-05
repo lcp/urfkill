@@ -301,7 +301,7 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
 			soft = urf_device_get_soft (device);
 			hard = urf_device_get_hard (device);
 			state = event_to_state (soft, hard);
-			g_debug ("killswitch %d is %s", index, state);
+			g_debug ("killswitch %d is %s", index, state_to_string (state));
 			return state;
 		}
 	}
