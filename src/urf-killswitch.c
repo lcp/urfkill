@@ -583,14 +583,8 @@ event_cb (GIOChannel    *source,
 		while (status == G_IO_STATUS_NORMAL && read == sizeof(event)) {
 			print_event (&event);
 
-			if (event.soft > 0)
-				soft = TRUE;
-			else
-				soft = FALSE;
-			if (event.hard > 0)
-				hard = TRUE;
-			else
-				hard = FALSE;
+			soft = (event.soft > 0)?TRUE:FALSE;
+			hard = (event.hard > 0)?TRUE:FALSE;
 
 			if (event.op == RFKILL_OP_CHANGE) {
 				update_killswitch (killswitch, event.idx, soft, hard);
