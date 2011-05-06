@@ -226,7 +226,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 	int type, state;
 	gboolean ret = FALSE;
 
-	if (!urf_killswitch_has_killswitches (priv->killswitch))
+	if (!urf_killswitch_has_devices (priv->killswitch))
 		goto out;
 
 	type = urf_killswitch_rf_type (priv->killswitch, type_name);
@@ -269,7 +269,7 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 	int state;
 	gboolean ret = FALSE;
 
-	if (!urf_killswitch_has_killswitches (priv->killswitch))
+	if (!urf_killswitch_has_devices (priv->killswitch))
 		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
@@ -294,6 +294,18 @@ out:
 	return ret;
 }
 
+static KillswitchState
+event_to_state (guint soft,
+		guint hard)
+{
+	if (hard)
+		return KILLSWITCH_STATE_HARD_BLOCKED;
+	else if (soft)
+		return KILLSWITCH_STATE_SOFT_BLOCKED;
+	else
+		return KILLSWITCH_STATE_UNBLOCKED;
+}
+
 /**
  * urf_daemon_get_all:
  **/
@@ -302,29 +314,36 @@ urf_daemon_get_all (UrfDaemon             *daemon,
 		    DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
+	UrfDevice *device;
 	GPtrArray *array;
-	GList *killswitches = NULL, *item = NULL;
+	GList *devices = NULL, *item = NULL;
 	GValue *value;
-	UrfIndKillswitch *ind;
+	guint soft, hard;
+	int state;
 
 	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
 
-	killswitches = urf_killswitch_get_killswitches (priv->killswitch);
+	devices = urf_killswitch_get_devices (priv->killswitch);
 
-	array = g_ptr_array_sized_new (g_list_length(killswitches));
-	for (item = killswitches; item; item = g_list_next (item)) {
-		ind = (UrfIndKillswitch *)item->data;
+	array = g_ptr_array_sized_new (g_list_length(devices));
+	for (item = devices; item; item = g_list_next (item)) {
+		device = (UrfDevice *)item->data;
+
+		soft = urf_device_get_soft (device);
+		hard = urf_device_get_hard (device);
+		state = event_to_state (soft, hard);
 
 		value = g_new0 (GValue, 1);
 		g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
 		g_value_take_boxed (value, dbus_g_type_specialized_construct (URF_DAEMON_STATES_STRUCT_TYPE));
 		dbus_g_type_struct_set (value,
-					0, ind->index,
-					1, ind->type,
-					2, ind->state,
-					3, ind->soft,
-					4, ind->hard,
-					5, ind->name, -1);
+					0, urf_device_get_index (device),
+					1, urf_device_get_rf_type (device),
+					2, state,
+					3, soft,
+					4, hard,
+					5, urf_device_get_name (device),
+					-1);
 		g_ptr_array_add (array, g_value_get_boxed (value));
 		g_free (value);
 	}
@@ -345,8 +364,8 @@ urf_daemon_get_killswitch (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	UrfKillswitch *killswitch;
-	UrfIndKillswitch *ind;
-	char *device_name;
+	UrfDevice *device;
+	const char *device_name;
 	int type, state;
 	guint soft, hard;
 
@@ -354,20 +373,20 @@ urf_daemon_get_killswitch (UrfDaemon             *daemon,
 
 	killswitch = priv->killswitch;
 
-	ind = urf_killswitch_get_killswitch (killswitch, index);
+	device = urf_killswitch_get_device (killswitch, index);
 
-	if (ind == NULL) {
+	if (device == NULL) {
 		type = -1;
 		state = -1;
 		soft = 1;
 		hard = 1;
 		device_name = NULL;
 	} else {
-		type = ind->type;
-		state = ind->state;
-		soft = ind->soft;
-		hard = ind->hard;
-		device_name = ind->name;
+		type = urf_device_get_rf_type (device);
+		soft = urf_device_get_soft (device);
+		hard = urf_device_get_hard (device);
+		device_name = urf_device_get_name (device);
+		state = event_to_state (soft, hard);
 	}
 
 	dbus_g_method_return (context, type, state, soft, hard, device_name);
@@ -429,18 +448,29 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 				guint          index,
 				UrfDaemon     *daemon)
 {
-	UrfIndKillswitch *ind;
+	UrfDevice *device;
+	guint soft, hard;
+	int state;
 
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
 
-	ind = urf_killswitch_get_killswitch (killswitch, index);
+	device = urf_killswitch_get_device (killswitch, index);
 
-	if (!ind)
+	if (!device)
 		return;
 
+	soft = urf_device_get_soft (device);
+	hard = urf_device_get_hard (device);
+	state = event_to_state (soft, hard);
+
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0,
-		       index, ind->type, ind->state, ind->soft, ind->hard, ind->name);
+		       index,
+		       urf_device_get_rf_type (device),
+		       state,
+		       soft,
+		       hard,
+		       urf_device_get_name (device));
 }
 
 /**
@@ -465,18 +495,29 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 				  guint          index,
 				  UrfDaemon     *daemon)
 {
-	UrfIndKillswitch *ind;
+	UrfDevice *device;
+	guint soft, hard;
+	int state;
 
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
 
-	ind = urf_killswitch_get_killswitch (killswitch, index);
+	device = urf_killswitch_get_device (killswitch, index);
 
-	if (!ind)
+	if (!device)
 		return;
 
+	soft = urf_device_get_soft (device);
+	hard = urf_device_get_hard (device);
+	state = event_to_state (soft, hard);
+
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0,
-		       index, ind->type, ind->state, ind->soft, ind->hard, ind->name);
+		       index,
+		       urf_device_get_rf_type (device),
+		       state,
+		       soft,
+		       hard,
+		       urf_device_get_name (device));
 }
 
 /**
