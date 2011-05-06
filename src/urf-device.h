@@ -69,6 +69,7 @@ guint			 urf_device_get_rf_type		(UrfDevice	*device);
 const char 		*urf_device_get_name		(UrfDevice	*device);
 gboolean		 urf_device_get_soft		(UrfDevice	*device);
 gboolean		 urf_device_get_hard		(UrfDevice	*device);
+const char		*urf_device_get_object_path	(UrfDevice	*device);
 
 G_END_DECLS
 

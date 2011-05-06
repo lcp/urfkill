@@ -143,6 +143,15 @@ urf_device_get_hard (UrfDevice *device)
 }
 
 /**
+ * urf_device_get_object_path
+ **/
+const char *
+urf_device_get_object_path (UrfDevice *device)
+{
+	return device->priv->object_path;
+}
+
+/**
  * urf_device_get_property:
  **/
 static void
