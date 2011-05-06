@@ -188,17 +188,17 @@ urf_daemon_startup (UrfDaemon *daemon)
 	UrfDaemonPrivate *priv = daemon->priv;
 	gboolean ret;
 
-	/* start up the killswitch */
-	ret = urf_killswitch_startup (priv->killswitch, priv->config);
-	if (!ret) {
-		g_warning ("failed to setup killswitch");
-		goto out;
-	}
-
 	/* register on bus */
 	ret = urf_daemon_register_rfkill_daemon (daemon);
 	if (!ret) {
 		g_warning ("failed to register");
+		goto out;
+	}
+
+	/* start up the killswitch */
+	ret = urf_killswitch_startup (priv->killswitch, priv->config);
+	if (!ret) {
+		g_warning ("failed to setup killswitch");
 		goto out;
 	}
 
@@ -390,6 +390,7 @@ urf_daemon_get_killswitch (UrfDaemon             *daemon,
 	}
 
 	dbus_g_method_return (context, type, state, soft, hard, device_name);
+	g_object_unref (device);
 
 	return TRUE;
 }
@@ -471,6 +472,7 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 		       soft,
 		       hard,
 		       urf_device_get_name (device));
+	g_object_unref (device);
 }
 
 /**
@@ -518,6 +520,7 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 		       soft,
 		       hard,
 		       urf_device_get_name (device));
+	g_object_unref (device);
 }
 
 /**
