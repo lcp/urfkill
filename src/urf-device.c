@@ -22,9 +22,13 @@
 #include <config.h>
 #endif
 
+#include <glib.h>
 #include <linux/rfkill.h>
+#include <dbus/dbus-glib.h>
 
 #include "urf-device.h"
+
+#include "urf-device-glue.h"
 #include "urf-utils.h"
 
 enum
@@ -42,14 +46,101 @@ enum
                                 URF_TYPE_DEVICE, UrfDevicePrivate))
 
 struct UrfDevicePrivate {
-	guint index;
-	guint type;
-	char *name;
-	gboolean soft;
-	gboolean hard;
+	guint            index;
+	guint            type;
+	char            *name;
+	gboolean         soft;
+	gboolean         hard;
+	char		*object_path;
+	DBusGProxy      *proxy;
+	DBusGConnection *connection;
 };
 
 G_DEFINE_TYPE(UrfDevice, urf_device, G_TYPE_OBJECT)
+
+
+/**
+ * urf_device_error_quark:
+ **/
+GQuark
+urf_device_error_quark (void)
+{
+	static GQuark ret = 0;
+
+	if (ret == 0) {
+		ret = g_quark_from_static_string ("urf_device_error");
+	}
+
+	return ret;
+}
+
+#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
+
+/**
+ * up_device_error_get_type:
+ **/
+GType
+urf_device_error_get_type (void)
+{
+static GType etype = 0;
+
+	if (etype == 0) {
+		static const GEnumValue values[] =
+			{
+				ENUM_ENTRY (URF_DEVICE_ERROR_GENERAL, "GeneralError"),
+				{ 0, 0, 0 }
+			};
+		g_assert (URF_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
+		etype = g_enum_register_static ("UrfDeviceError", values);
+	}
+
+	return etype;
+}
+
+/**
+ * urf_device_get_index
+ **/
+guint
+urf_device_get_index (UrfDevice *device)
+{
+	return device->priv->index;
+}
+
+/**
+ * urf_device_get_rf_type
+ **/
+guint
+urf_device_get_rf_type (UrfDevice *device)
+{
+	return device->priv->type;
+}
+
+/**
+ * urf_device_get_name
+ **/
+const char *
+urf_device_get_name (UrfDevice *device)
+{
+	return device->priv->name;
+}
+
+/**
+ * urf_device_get_soft
+ **/
+gboolean
+urf_device_get_soft (UrfDevice *device)
+{
+	return device->priv->soft;
+}
+
+/**
+ * urf_device_get_hard
+ **/
+gboolean
+urf_device_get_hard (UrfDevice *device)
+{
+	return device->priv->hard;
+}
 
 /**
  * urf_device_get_property:
@@ -120,48 +211,24 @@ urf_device_set_property (GObject      *object,
 }
 
 /**
- * urf_device_get_index
+ * urf_device_dispose
  **/
-guint
-urf_device_get_index (UrfDevice *device)
+static void
+urf_device_dispose (GObject *object)
 {
-	return device->priv->index;
-}
+	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (object);
 
-/**
- * urf_device_get_rf_type
- **/
-guint
-urf_device_get_rf_type (UrfDevice *device)
-{
-	return device->priv->type;
-}
+	if (priv->proxy) {
+		g_object_unref (priv->proxy);
+		priv->proxy = NULL;
+	}
 
-/**
- * urf_device_get_name
- **/
-const char *
-urf_device_get_name (UrfDevice *device)
-{
-	return device->priv->name;
-}
+	if (priv->connection) {
+		dbus_g_connection_unref (priv->connection);
+		priv->connection = NULL;
+	}
 
-/**
- * urf_device_get_soft
- **/
-gboolean
-urf_device_get_soft (UrfDevice *device)
-{
-	return device->priv->soft;
-}
-
-/**
- * urf_device_get_hard
- **/
-gboolean
-urf_device_get_hard (UrfDevice *device)
-{
-	return device->priv->hard;
+	G_OBJECT_CLASS(urf_device_parent_class)->dispose(object);
 }
 
 /**
@@ -174,6 +241,8 @@ urf_device_finalize (GObject *object)
 
 	if (priv->name)
 		g_free (priv->name);
+	if (priv->object_path)
+		g_free (priv->object_path);
 
 	G_OBJECT_CLASS(urf_device_parent_class)->finalize(object);
 }
@@ -184,10 +253,10 @@ urf_device_finalize (GObject *object)
 static void
 urf_device_init (UrfDevice *device)
 {
-	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (device);
-
-	device->priv = priv;
-	priv->name = NULL;
+	device->priv = URF_DEVICE_GET_PRIVATE (device);
+	device->priv->name = NULL;
+	device->priv->object_path = NULL;
+	device->priv->proxy = NULL;
 }
 
 /**
@@ -202,6 +271,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
 	object_class->get_property = urf_device_get_property;
 	object_class->set_property = urf_device_set_property;
+	object_class->dispose = urf_device_dispose;
 	object_class->finalize = urf_device_finalize;
 
 	pspec = g_param_spec_uint ("index",
@@ -248,6 +318,38 @@ urf_device_class_init(UrfDeviceClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_NAME,
 					 pspec);
+
+	dbus_g_object_type_install_info (URF_TYPE_DEVICE, &dbus_glib_urf_device_object_info);
+	dbus_g_error_domain_register (URF_DEVICE_ERROR, NULL, URF_DEVICE_TYPE_ERROR);
+}
+
+/**
+ * urf_device_register_device
+ **/
+static gboolean
+urf_device_register_device (UrfDevice *device)
+{
+	UrfDevicePrivate *priv = device->priv;
+	gboolean ret = TRUE;
+	guint index = priv->index;
+	GError *error = NULL;
+
+	device->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (device->priv->connection == NULL) {
+		g_error ("error getting system bus: %s", error->message);
+		g_error_free (error);
+	}
+
+	priv->object_path = g_strdup_printf ("/org/freedesktop/URfkill/devices/%u", index);
+	dbus_g_connection_register_g_object (priv->connection,
+					     priv->object_path, G_OBJECT (device));
+	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
+						 DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
+	if (priv->proxy == NULL) {
+		g_warning ("proxy invalid");
+		ret = FALSE;
+	}
+	return ret;
 }
 
 /**
@@ -260,11 +362,16 @@ urf_device_new (guint index,
 		gboolean hard)
 {
 	UrfDevice *device = URF_DEVICE(g_object_new (URF_TYPE_DEVICE, NULL));
-	device->priv->index = index;
-	device->priv->type = type;
-	device->priv->soft = soft;
-	device->priv->hard = hard;
-	device->priv->name = get_rfkill_name_by_index (index);
+	UrfDevicePrivate *priv = device->priv;
+
+	priv->index = index;
+	priv->type = type;
+	priv->soft = soft;
+	priv->hard = hard;
+	priv->name = get_rfkill_name_by_index (index);
+
+	if (!urf_device_register_device (device))
+		return NULL;
 
 	return device;
 }

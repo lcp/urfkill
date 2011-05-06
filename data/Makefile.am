@@ -3,7 +3,8 @@ NULL =
 
 dbusifdir = $(datadir)/dbus-1/interfaces
 dbusif_DATA = \
-	org.freedesktop.URfkill.xml	\
+	org.freedesktop.URfkill.xml		\
+	org.freedesktop.URfkill.Device.xml	\
 	$(NULL)
 
 servicedir       = $(datadir)/dbus-1/system-services

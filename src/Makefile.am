@@ -20,6 +20,7 @@ INCLUDES = \
 
 BUILT_SOURCES =							\
 	urf-daemon-glue.h					\
+	urf-device-glue.h					\
 	urf-marshal.h						\
 	urf-marshal.c
 
@@ -32,6 +33,10 @@ urf-marshal.c: urf-marshal.list
 urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 	dbus-binding-tool --prefix=urf_daemon --mode=glib-server --output=urf-daemon-glue.h \
 	$(top_srcdir)/data/org.freedesktop.URfkill.xml
+
+urf-device-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.Device.xml Makefile.am
+	dbus-binding-tool --prefix=urf_device --mode=glib-server --output=urf-device-glue.h \
+	$(top_srcdir)/data/org.freedesktop.URfkill.Device.xml
 
 libexec_PROGRAMS = urfkilld
 
