@@ -77,9 +77,6 @@ gboolean	 urf_daemon_block_idx		(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
-gboolean	 urf_daemon_get_killswitch	(UrfDaemon		*daemon,
-						 const guint		 index,
-						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_key_control_enabled	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_enable_key_control	(UrfDaemon		*daemon,

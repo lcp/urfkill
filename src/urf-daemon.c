@@ -327,48 +327,6 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 	return TRUE;
 }
 
-
-/**
- * urf_daemon_get_killswitch:
- **/
-gboolean
-urf_daemon_get_killswitch (UrfDaemon             *daemon,
-			   const guint            index,
-			   DBusGMethodInvocation *context)
-{
-	UrfDaemonPrivate *priv = daemon->priv;
-	UrfKillswitch *killswitch;
-	UrfDevice *device;
-	const char *device_name;
-	int type, state;
-	guint soft, hard;
-
-	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
-
-	killswitch = priv->killswitch;
-
-	device = urf_killswitch_get_device (killswitch, index);
-
-	if (device == NULL) {
-		type = -1;
-		state = -1;
-		soft = 1;
-		hard = 1;
-		device_name = NULL;
-	} else {
-		type = urf_device_get_rf_type (device);
-		soft = urf_device_get_soft (device);
-		hard = urf_device_get_hard (device);
-		device_name = urf_device_get_name (device);
-		state = event_to_state (soft, hard);
-	}
-
-	dbus_g_method_return (context, type, state, soft, hard, device_name);
-	g_object_unref (device);
-
-	return TRUE;
-}
-
 /**
  * urf_daemon_key_control:
  **/
