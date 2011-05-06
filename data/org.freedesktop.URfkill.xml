@@ -59,5 +59,8 @@
       <arg type="s" name="name"  direction="out" />
     </signal>
 
+    <property name="DaemonVersion" type="s" access="read">
+    </property>
+
   </interface>
 </node>
