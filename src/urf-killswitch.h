@@ -70,8 +70,8 @@ UrfKillswitch		*urf_killswitch_new			(void);
 gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch,
 								 UrfConfig	*config);
 
-gboolean		 urf_killswitch_has_killswitches	(UrfKillswitch	*killswitch);
-GList			*urf_killswitch_get_killswitches	(UrfKillswitch	*killswitch);
+gboolean		 urf_killswitch_has_devices		(UrfKillswitch	*killswitch);
+GList			*urf_killswitch_get_devices		(UrfKillswitch	*killswitch);
 UrfDevice		*urf_killswitch_get_device		(UrfKillswitch  *killswitch,
 								 const guint	 index);
 gboolean		 urf_killswitch_set_state		(UrfKillswitch	*killswitch,
