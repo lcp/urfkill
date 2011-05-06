@@ -370,6 +370,7 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 				UrfDaemon     *daemon)
 {
 	UrfDevice *device;
+	const char *object_path;
 
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
@@ -379,12 +380,14 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 	if (!device)
 		return;
 
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0,
-		       index,
-		       urf_device_get_rf_type (device),
-		       urf_device_get_soft (device),
-		       urf_device_get_hard (device),
-		       urf_device_get_name (device));
+	object_path = urf_device_get_object_path (device);
+	if (object_path == NULL) {
+		g_warning ("CORRUPT DEVICE OBJECT: Missing object path for %s",
+			   urf_device_get_name (device));
+		goto out;
+	}
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, object_path);
+out:
 	g_object_unref (device);
 }
 
@@ -538,8 +541,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_UINT_BOOLEAN_BOOLEAN_STRING,
-			      G_TYPE_NONE, 5, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_STRING);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	signals[SIGNAL_RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",

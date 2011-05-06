@@ -31,11 +31,7 @@
     </method>
 
     <signal name="RfkillAdded">
-      <arg type="u" name="index" direction="out" />
-      <arg type="u" name="type"  direction="out" />
-      <arg type="b" name="soft"  direction="out" />
-      <arg type="b" name="hard"  direction="out" />
-      <arg type="s" name="name"  direction="out" />
+      <arg type="o" name="device" direction="out" />
     </signal>
     <signal name="RfkillRemoved">
       <arg type="u" name="index" direction="out" />
