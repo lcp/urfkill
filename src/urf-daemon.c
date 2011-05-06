@@ -78,15 +78,6 @@ G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 #define URF_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
 				URF_TYPE_DAEMON, UrfDaemonPrivate))
 
-#define URF_DAEMON_STATES_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",	\
-								G_TYPE_UINT,	\
-								G_TYPE_UINT,	\
-								G_TYPE_INT,	\
-								G_TYPE_UINT,	\
-								G_TYPE_UINT,	\
-								G_TYPE_STRING,	\
-								G_TYPE_INVALID))
-
 /**
  * urf_daemon_register_rfkill_daemon:
  **/
@@ -310,45 +301,28 @@ event_to_state (guint soft,
  * urf_daemon_get_all:
  **/
 gboolean
-urf_daemon_get_all (UrfDaemon             *daemon,
-		    DBusGMethodInvocation *context)
+urf_daemon_enumerate_devices (UrfDaemon             *daemon,
+			      DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	UrfDevice *device;
-	GPtrArray *array;
+	GPtrArray *object_paths;
 	GList *devices = NULL, *item = NULL;
-	GValue *value;
-	guint soft, hard;
-	int state;
 
 	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
 
 	devices = urf_killswitch_get_devices (priv->killswitch);
 
-	array = g_ptr_array_sized_new (g_list_length(devices));
+	object_paths = g_ptr_array_sized_new (g_list_length(devices));
+	g_ptr_array_set_free_func (object_paths, g_free);
 	for (item = devices; item; item = g_list_next (item)) {
 		device = (UrfDevice *)item->data;
-
-		soft = urf_device_get_soft (device);
-		hard = urf_device_get_hard (device);
-		state = event_to_state (soft, hard);
-
-		value = g_new0 (GValue, 1);
-		g_value_init (value, URF_DAEMON_STATES_STRUCT_TYPE);
-		g_value_take_boxed (value, dbus_g_type_specialized_construct (URF_DAEMON_STATES_STRUCT_TYPE));
-		dbus_g_type_struct_set (value,
-					0, urf_device_get_index (device),
-					1, urf_device_get_rf_type (device),
-					2, state,
-					3, soft,
-					4, hard,
-					5, urf_device_get_name (device),
-					-1);
-		g_ptr_array_add (array, g_value_get_boxed (value));
-		g_free (value);
+		g_ptr_array_add (object_paths, g_strdup (urf_device_get_object_path (device)));
 	}
 
-	dbus_g_method_return (context, array);
+	dbus_g_method_return (context, object_paths);
+
+	g_ptr_array_unref (object_paths);
 
 	return TRUE;
 }

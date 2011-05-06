@@ -75,7 +75,7 @@ gboolean	 urf_daemon_block_idx		(UrfDaemon		*daemon,
 						 const guint		 index,
 						 const gboolean		 block,
 						 DBusGMethodInvocation  *context);
-gboolean	 urf_daemon_get_all		(UrfDaemon		*daemon,
+gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_get_killswitch	(UrfDaemon		*daemon,
 						 const guint		 index,
