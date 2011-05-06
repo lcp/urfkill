@@ -33,9 +33,8 @@
     <signal name="RfkillAdded">
       <arg type="u" name="index" direction="out" />
       <arg type="u" name="type"  direction="out" />
-      <arg type="i" name="state" direction="out" />
-      <arg type="u" name="soft"  direction="out" />
-      <arg type="u" name="hard"  direction="out" />
+      <arg type="b" name="soft"  direction="out" />
+      <arg type="b" name="hard"  direction="out" />
       <arg type="s" name="name"  direction="out" />
     </signal>
     <signal name="RfkillRemoved">
@@ -43,11 +42,8 @@
     </signal>
     <signal name="RfkillChanged">
       <arg type="u" name="index" direction="out" />
-      <arg type="u" name="type"  direction="out" />
-      <arg type="i" name="state" direction="out" />
-      <arg type="u" name="soft"  direction="out" />
-      <arg type="u" name="hard"  direction="out" />
-      <arg type="s" name="name"  direction="out" />
+      <arg type="b" name="soft"  direction="out" />
+      <arg type="b" name="hard"  direction="out" />
     </signal>
 
     <property name="DaemonVersion" type="s" access="read">

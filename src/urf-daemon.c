@@ -285,18 +285,6 @@ out:
 	return ret;
 }
 
-static KillswitchState
-event_to_state (guint soft,
-		guint hard)
-{
-	if (hard)
-		return KILLSWITCH_STATE_HARD_BLOCKED;
-	else if (soft)
-		return KILLSWITCH_STATE_SOFT_BLOCKED;
-	else
-		return KILLSWITCH_STATE_UNBLOCKED;
-}
-
 /**
  * urf_daemon_get_all:
  **/
@@ -382,8 +370,6 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 				UrfDaemon     *daemon)
 {
 	UrfDevice *device;
-	guint soft, hard;
-	int state;
 
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
@@ -393,16 +379,11 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 	if (!device)
 		return;
 
-	soft = urf_device_get_soft (device);
-	hard = urf_device_get_hard (device);
-	state = event_to_state (soft, hard);
-
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0,
 		       index,
 		       urf_device_get_rf_type (device),
-		       state,
-		       soft,
-		       hard,
+		       urf_device_get_soft (device),
+		       urf_device_get_hard (device),
 		       urf_device_get_name (device));
 	g_object_unref (device);
 }
@@ -430,8 +411,6 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 				  UrfDaemon     *daemon)
 {
 	UrfDevice *device;
-	guint soft, hard;
-	int state;
 
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
@@ -441,17 +420,10 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 	if (!device)
 		return;
 
-	soft = urf_device_get_soft (device);
-	hard = urf_device_get_hard (device);
-	state = event_to_state (soft, hard);
-
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0,
 		       index,
-		       urf_device_get_rf_type (device),
-		       state,
-		       soft,
-		       hard,
-		       urf_device_get_name (device));
+		       urf_device_get_soft (device),
+		       urf_device_get_hard (device));
 	g_object_unref (device);
 }
 
@@ -566,8 +538,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
-			      G_TYPE_NONE, 6, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
+			      urf_marshal_VOID__UINT_UINT_BOOLEAN_BOOLEAN_STRING,
+			      G_TYPE_NONE, 5, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_STRING);
 
 	signals[SIGNAL_RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",
@@ -582,8 +554,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
-			      G_TYPE_NONE, 6, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
+			      urf_marshal_VOID__UINT_BOOLEAN_BOOLEAN,
+			      G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
