@@ -211,8 +211,8 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
-	int type_state = KILLSWITCH_STATE_NO_ADAPTER;
-	int i, state;
+	int state = KILLSWITCH_STATE_NO_ADAPTER;
+	int i;
 	gboolean soft, hard;
 
 	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
@@ -224,11 +224,11 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 		hard = urf_device_get_hard (device);
 		switch (event_to_state (soft, hard)) {
 			case KILLSWITCH_STATE_UNBLOCKED:
-				if (type_state == KILLSWITCH_STATE_NO_ADAPTER)
-					type_state = KILLSWITCH_STATE_UNBLOCKED;
+				if (state == KILLSWITCH_STATE_NO_ADAPTER)
+					state = KILLSWITCH_STATE_UNBLOCKED;
 				break;
 			case KILLSWITCH_STATE_SOFT_BLOCKED:
-				type_state = KILLSWITCH_STATE_SOFT_BLOCKED;
+				state = KILLSWITCH_STATE_SOFT_BLOCKED;
 				break;
 			case KILLSWITCH_STATE_HARD_BLOCKED:
 				return KILLSWITCH_STATE_HARD_BLOCKED;
@@ -237,7 +237,7 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 		}
 	}
 
-	return type_state;
+	return state;
 }
 
 /**
