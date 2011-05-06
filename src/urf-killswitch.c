@@ -720,7 +720,7 @@ urf_killswitch_finalize (GObject *object)
 	}
 	close(priv->fd);
 
-	g_list_foreach (priv->killswitches, (GFunc) g_free, NULL);
+	g_list_foreach (priv->killswitches, (GFunc) g_object_unref, NULL);
 	g_list_free (priv->killswitches);
 	priv->killswitches = NULL;
 
