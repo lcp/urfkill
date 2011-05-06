@@ -200,6 +200,8 @@ urf_device_class_init(UrfDeviceClass *klass)
 	GParamSpec *pspec;
 
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
+	object_class->get_property = urf_device_get_property;
+	object_class->set_property = urf_device_set_property;
 	object_class->finalize = urf_device_finalize;
 
 	pspec = g_param_spec_uint ("index",
