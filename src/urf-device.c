@@ -286,7 +286,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	pspec = g_param_spec_uint ("index",
 				   "Killswitch Index",
 				   "The Index of the killswitch device",
-				   0, G_MAXUINT32-1, 0,
+				   0, G_MAXUINT, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_INDEX,
