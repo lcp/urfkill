@@ -24,25 +24,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
-
-typedef enum {
-        KILLSWITCH_TYPE_ALL = 0,
-        KILLSWITCH_TYPE_WLAN,
-        KILLSWITCH_TYPE_BLUETOOTH,
-        KILLSWITCH_TYPE_UWB,
-        KILLSWITCH_TYPE_WIMAX,
-        KILLSWITCH_TYPE_WWAN,
-        KILLSWITCH_TYPE_GPS,
-        KILLSWITCH_TYPE_FM,
-        NUM_KILLSWITCH_TYPES,
-} KillswitchType;
-
-typedef enum {
-        KILLSWITCH_STATE_NO_ADAPTER = -1,
-        KILLSWITCH_STATE_SOFT_BLOCKED = 0,
-        KILLSWITCH_STATE_UNBLOCKED,
-        KILLSWITCH_STATE_HARD_BLOCKED
-} KillswitchState;
+#include <linux/rfkill.h>
 
 G_BEGIN_DECLS
 
@@ -70,11 +52,10 @@ typedef struct
 
 /* general */
 GType			 urf_killswitch_get_type		(void);
-UrfKillswitch		*urf_killswitch_new			(void);
+UrfKillswitch		*urf_killswitch_new			(const char	*object_path);
 
 guint			 urf_killswitch_get_rfkill_index	(UrfKillswitch	*killswitch);
-KillswitchType		 urf_killswitch_get_rfkill_type		(UrfKillswitch	*killswitch);
-KillswitchState		 urf_killswitch_get_rfkill_state	(UrfKillswitch	*killswitch);
+guint			 urf_killswitch_get_rfkill_type		(UrfKillswitch	*killswitch);
 guint			 urf_killswitch_get_rfkill_soft		(UrfKillswitch	*killswitch);
 guint			 urf_killswitch_get_rfkill_hard		(UrfKillswitch	*killswitch);
 gchar			*urf_killswitch_get_rfkill_name		(UrfKillswitch	*killswitch);
