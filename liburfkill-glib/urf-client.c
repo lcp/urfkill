@@ -95,6 +95,7 @@ urf_client_get_killswitches (UrfClient *client)
 	return g_ptr_array_ref (client->priv->killswitches);
 }
 
+#if 0
 /**
  * urf_client_get_killswitch:
  **/
@@ -164,6 +165,7 @@ out:
 
 	return killswitch;
 }
+#endif
 
 /**
  * urf_client_block
@@ -355,31 +357,15 @@ urf_client_set_wwan_block (UrfClient     *client,
  **/
 static void
 urf_rfkill_added_cb (DBusGProxy  *proxy,
-		     const guint  index,
-		     const guint  type,
-		     const gint   state,
-		     const guint  soft,
-		     const guint  hard,
-		     const gchar *name,
+		     const gchar *object_path,
 		     UrfClient   *client)
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfKillswitch *killswitch;
 
-	killswitch = urf_client_find_killswitch (client, index);
+	/* TODO search the existed killswitches to prevent duplicate */
 
-	if (killswitch != NULL)
-		return;
-
-	killswitch = urf_killswitch_new ();
-	g_object_set (G_OBJECT (killswitch),
-		      "index", index,
-		      "type", type,
-		      "state", state,
-		      "soft", soft,
-		      "hard", hard,
-		      "name", name,
-		      NULL);
+	killswitch = urf_killswitch_new (object_path);
 
 	g_ptr_array_add (priv->killswitches, killswitch);
 
@@ -413,11 +399,8 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
 static void
 urf_rfkill_changed_cb (DBusGProxy  *proxy,
 		       const guint  index,
-		       const guint  type,
-		       const gint   state,
 		       const guint  soft,
 		       const guint  hard,
-		       const gchar *name,
 		       UrfClient   *client)
 {
 	UrfKillswitch *killswitch;
@@ -428,12 +411,8 @@ urf_rfkill_changed_cb (DBusGProxy  *proxy,
 		return;
 
 	g_object_set (G_OBJECT (killswitch),
-		      "index", index,
-		      "type", type,
-		      "state", state,
 		      "soft", soft,
 		      "hard", hard,
-		      "name", name,
 		      NULL);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, killswitch);
@@ -460,11 +439,6 @@ urf_client_get_killswitches_private (UrfClient *client,
 
 	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
 						dbus_g_type_get_struct("GValueArray",
-							G_TYPE_UINT,
-							G_TYPE_UINT,
-							G_TYPE_INT,
-							G_TYPE_UINT,
-							G_TYPE_UINT,
 							G_TYPE_STRING,
 							G_TYPE_INVALID));
 
@@ -487,49 +461,20 @@ urf_client_get_killswitches_private (UrfClient *client,
 
 	/* convert */
 	for (i=0; i<gvalue_ptr_array->len; i++) {
-		guint index, type, soft, hard;
-		gint state;
-		gchar *name;
+		gchar *object_path;
 
 		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
 
-		/* 0: index */
-		gv = g_value_array_get_nth (gva, 0);
-		index = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 1: type */
+		/* object path */
 		gv = g_value_array_get_nth (gva, 1);
-		type = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 2: state */
-		gv = g_value_array_get_nth (gva, 2);
-		state = g_value_get_int (gv);
-		g_value_unset (gv);
-		/* 3: soft */
-		gv = g_value_array_get_nth (gva, 3);
-		soft = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 4: hard */
-		gv = g_value_array_get_nth (gva, 4);
-		hard = g_value_get_uint (gv);
-		g_value_unset (gv);
-		/* 5: name */
-		gv = g_value_array_get_nth (gva, 5);
-		name = g_value_dup_string (gv);
+		object_path = g_value_dup_string (gv);
 		g_value_unset (gv);
 
-		killswitch = urf_killswitch_new ();
-		g_object_set (G_OBJECT (killswitch),
-			      "index", index,
-			      "type", type,
-			      "state", state,
-			      "soft", soft,
-			      "hard", hard,
-			      "name", name,
-			      NULL);
+		killswitch = urf_killswitch_new (object_path);
 
 		g_ptr_array_add (client->priv->killswitches, (gpointer)killswitch);
 		g_value_array_free (gva);
+		g_free (object_path);
 	}
 out:
 	if (gvalue_ptr_array != NULL)
