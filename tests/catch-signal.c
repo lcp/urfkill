@@ -62,10 +62,6 @@ int
 main ()
 {
 	UrfClient *client = NULL;
-	gboolean status;
-	GPtrArray *devices;
-	guint i;
-	UrfDevice *item;
 
 	g_type_init();
 
@@ -74,45 +70,6 @@ main ()
 	g_signal_connect (client, "rfkill-added", G_CALLBACK (rfkill_added_cb), NULL);
 	g_signal_connect (client, "rfkill-removed", G_CALLBACK (rfkill_removed_cb), NULL);
 	g_signal_connect (client, "rfkill-changed", G_CALLBACK (rfkill_changed_cb), NULL);
-
-	status = urf_client_set_wlan_block (client, TRUE);
-	printf ("Status of block: %d\n", status);
-
-	sleep (2);
-
-	status = urf_client_set_wlan_block (client, FALSE);
-	printf ("Status of unblock: %d\n", status);
-
-	status = urf_client_key_control_enabled (client, NULL);
-	printf ("Key control is %s\n", status?"on":"off");
-
-	sleep (2);
-
-	status = urf_client_enable_key_control (client, FALSE, NULL);
-	if (!status)
-		printf ("failed to disable key control\n");
-	else {
-		status = urf_client_key_control_enabled (client, NULL);
-		printf ("Key control is %s\n", status?"on":"off");
-	}
-
-	sleep (2);
-
-	status = urf_client_enable_key_control (client, TRUE, NULL);
-	if (!status)
-		printf ("failed to enable key control\n");
-	else {
-		status = urf_client_key_control_enabled (client, NULL);
-		printf ("Key control is %s\n", status?"on":"off");
-	}
-
-	devices = urf_client_get_devices (client);
-
-	for (i = 0; i<devices->len; i++) {
-		item = (UrfDevice *)g_ptr_array_index (devices, i);
-		print_urf_device (item);
-		printf ("\n");
-	}
 
 	loop = g_main_loop_new (NULL, FALSE);
 

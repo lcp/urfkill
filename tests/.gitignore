@@ -1,4 +1,6 @@
 test-urfkill-client
+enumerate-devices
+catch-signal
 .deps
 .libs
 *.o
