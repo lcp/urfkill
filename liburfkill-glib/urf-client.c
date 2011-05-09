@@ -64,9 +64,36 @@ static gpointer urf_client_object = NULL;
 
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
+/**
+ * urf_client_find_device_by_index
+ **/
+static UrfDevice *
+urf_client_find_device_by_index (UrfClient   *client,
+				 const guint  index)
+{
+	UrfClientPrivate *priv = client->priv;
+	UrfDevice *device = NULL;
+	guint i, device_index;
+
+	if (priv->devices == NULL)
+		return NULL;
+
+	for (i=0; i<priv->devices->len; i++) {
+		device = (UrfDevice *) g_ptr_array_index (priv->devices, i);
+		g_object_get (device, "index", &device_index, NULL);
+		if (index == device_index)
+			return device;
+	}
+
+	return NULL;
+}
+
+/**
+ * urf_client_find_device
+ **/
 static UrfDevice *
 urf_client_find_device (UrfClient   *client,
-			const guint  index)
+			const char  *object_path)
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device = NULL;
@@ -77,7 +104,7 @@ urf_client_find_device (UrfClient   *client,
 
 	for (i=0; i<priv->devices->len; i++) {
 		device = (UrfDevice *) g_ptr_array_index (priv->devices, i);
-		if (index == urf_device_get_rfkill_index (device))
+		if (g_strcmp0 (urf_device_get_object_path (device), object_path) == 0)
 			return device;
 	}
 
@@ -94,78 +121,6 @@ urf_client_get_devices (UrfClient *client)
 
 	return g_ptr_array_ref (client->priv->devices);
 }
-
-#if 0
-/**
- * urf_client_get_killswitch:
- **/
-UrfKillswitch *
-urf_client_get_killswitch (UrfClient    *client,
-			   const guint   index,
-			   GCancellable *cancellable,
-			   GError      **error)
-{
-	UrfClientPrivate *priv;
-	UrfKillswitch *killswitch = NULL;
-	gboolean ret;
-	int type, state;
-	guint soft, hard;
-	char *name = NULL;
-	GError *error_local = NULL;
-
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	priv = client->priv;
-
-	killswitch = urf_client_find_killswitch (client, index);
-	if (killswitch != NULL)
-		return killswitch;
-
-	ret = dbus_g_proxy_call (priv->proxy, "GetKillswitch", &error_local,
-				 G_TYPE_UINT, index,
-				 G_TYPE_INVALID,
-				 G_TYPE_INT, &type,
-				 G_TYPE_INT, &state,
-				 G_TYPE_UINT, &soft,
-				 G_TYPE_UINT, &hard,
-				 G_TYPE_STRING, &name,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-		}
-
-		/* an actual error */
-		g_warning ("Couldn't got killswitch: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		goto out;
-	}
-
-	if (type < 0) {
-		killswitch = NULL;
-		goto out;
-	}
-
-	killswitch = urf_killswitch_new ();
-	g_object_set (G_OBJECT (killswitch),
-		      "index", index,
-		      "type", type,
-		      "state", state,
-		      "soft", soft,
-		      "hard", hard,
-		      "name", name,
-		      NULL);
-	g_ptr_array_add (priv->killswitches, killswitch);
-
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
-
-	return killswitch;
-}
-#endif
 
 /**
  * urf_client_block
@@ -363,9 +318,14 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
 
-	/* TODO search the existed killswitches to prevent duplicate */
+	device = urf_client_find_device (client, object_path);
+	if (device != NULL) {
+		g_warning ("already added: %s", object_path);
+		return;
+	}
 
-	device = urf_device_new (object_path);
+	device = urf_device_new ();
+	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
 
 	g_ptr_array_add (priv->devices, device);
 
@@ -383,10 +343,12 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
 
-	device = urf_client_find_device (client, index);
+	device = urf_client_find_device_by_index (client, index);
 
-	if (device == NULL)
+	if (device == NULL) {
+		g_warning ("no such device to be removed: index %u", index);
 		return;
+	}
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, device);
 
@@ -397,18 +359,20 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
  * urf_rfkill_changed_cb:
  **/
 static void
-urf_rfkill_changed_cb (DBusGProxy  *proxy,
-		       const guint  index,
-		       const guint  soft,
-		       const guint  hard,
-		       UrfClient   *client)
+urf_rfkill_changed_cb (DBusGProxy     *proxy,
+		       const guint     index,
+		       const gboolean  soft,
+		       const gboolean  hard,
+		       UrfClient      *client)
 {
 	UrfDevice *device;
 
-	device = urf_client_find_device (client, index);
+	device = urf_client_find_device_by_index (client, index);
 
-	if (device == NULL)
+	if (device == NULL) {
+		g_warning ("no device to be changed: index %u", index);
 		return;
+	}
 
 	g_object_set (G_OBJECT (device),
 		      "soft", soft,
@@ -423,7 +387,7 @@ urf_rfkill_changed_cb (DBusGProxy  *proxy,
  **/
 static void
 urf_client_get_devices_private (UrfClient *client,
-				GError   **error)
+				GError    **error)
 {
 	UrfDevice *device;
 	GError *error_local = NULL;
@@ -470,7 +434,8 @@ urf_client_get_devices_private (UrfClient *client,
 		object_path = g_value_dup_string (gv);
 		g_value_unset (gv);
 
-		device = urf_device_new (object_path);
+		device = urf_device_new ();
+		urf_device_set_object_path_sync (device, object_path, NULL, NULL);
 
 		g_ptr_array_add (client->priv->devices, (gpointer)device);
 		g_value_array_free (gva);
@@ -551,19 +516,19 @@ urf_client_init (UrfClient *client)
 	urf_client_get_devices_private (client, NULL);
 
 	/* connect signals */
-	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
+	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_BOOLEAN_BOOLEAN,
 					   G_TYPE_NONE,
-					   G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
+					   G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 					   G_TYPE_INVALID);
 
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
-				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
+				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillRemoved",
 				 G_TYPE_UINT,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillChanged",
-				 G_TYPE_UINT, G_TYPE_UINT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING,
+				 G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 				 G_TYPE_INVALID);
 	/* callbacks */
 	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillAdded",
