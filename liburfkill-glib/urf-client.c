@@ -42,9 +42,9 @@ static void	urf_client_dispose	(GObject	*object);
  **/
 struct UrfClientPrivate
 {
-	DBusGConnection		*bus;
-	DBusGProxy		*proxy;
-	GPtrArray		*killswitches;
+	DBusGConnection	*bus;
+	DBusGProxy	*proxy;
+	GPtrArray	*devices;
 };
 
 enum {
@@ -64,35 +64,35 @@ static gpointer urf_client_object = NULL;
 
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
-static UrfKillswitch *
-urf_client_find_killswitch (UrfClient   *client,
-			    const guint  index)
+static UrfDevice *
+urf_client_find_device (UrfClient   *client,
+			const guint  index)
 {
 	UrfClientPrivate *priv = client->priv;
-	UrfKillswitch *killswitch = NULL;
+	UrfDevice *device = NULL;
 	guint i;
 
-	if (priv->killswitches == NULL)
+	if (priv->devices == NULL)
 		return NULL;
 
-	for (i=0; i<priv->killswitches->len; i++) {
-		killswitch = (UrfKillswitch *) g_ptr_array_index (priv->killswitches, i);
-		if (index == urf_killswitch_get_rfkill_index (killswitch))
-			return killswitch;
+	for (i=0; i<priv->devices->len; i++) {
+		device = (UrfDevice *) g_ptr_array_index (priv->devices, i);
+		if (index == urf_device_get_rfkill_index (device))
+			return device;
 	}
 
 	return NULL;
 }
 
 /**
- * urf_client_get_killswitches:
+ * urf_client_get_devices:
  **/
 GPtrArray *
-urf_client_get_killswitches (UrfClient *client)
+urf_client_get_devices (UrfClient *client)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
-	return g_ptr_array_ref (client->priv->killswitches);
+	return g_ptr_array_ref (client->priv->devices);
 }
 
 #if 0
@@ -361,15 +361,15 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 		     UrfClient   *client)
 {
 	UrfClientPrivate *priv = client->priv;
-	UrfKillswitch *killswitch;
+	UrfDevice *device;
 
 	/* TODO search the existed killswitches to prevent duplicate */
 
-	killswitch = urf_killswitch_new (object_path);
+	device = urf_device_new (object_path);
 
-	g_ptr_array_add (priv->killswitches, killswitch);
+	g_ptr_array_add (priv->devices, device);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, killswitch);
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, device);
 }
 
 /**
@@ -381,16 +381,16 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
 		       UrfClient  *client)
 {
 	UrfClientPrivate *priv = client->priv;
-	UrfKillswitch *killswitch;
+	UrfDevice *device;
 
-	killswitch = urf_client_find_killswitch (client, index);
+	device = urf_client_find_device (client, index);
 
-	if (killswitch == NULL)
+	if (device == NULL)
 		return;
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, killswitch);
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, device);
 
-	g_ptr_array_remove (priv->killswitches, killswitch);
+	g_ptr_array_remove (priv->devices, device);
 }
 
 /**
@@ -403,35 +403,35 @@ urf_rfkill_changed_cb (DBusGProxy  *proxy,
 		       const guint  hard,
 		       UrfClient   *client)
 {
-	UrfKillswitch *killswitch;
+	UrfDevice *device;
 
-	killswitch = urf_client_find_killswitch (client, index);
+	device = urf_client_find_device (client, index);
 
-	if (killswitch == NULL)
+	if (device == NULL)
 		return;
 
-	g_object_set (G_OBJECT (killswitch),
+	g_object_set (G_OBJECT (device),
 		      "soft", soft,
 		      "hard", hard,
 		      NULL);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, killswitch);
+	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, device);
 }
 
 /**
- * urf_client_get_killswitches_private:
+ * urf_client_get_devices_private:
  **/
 static void
-urf_client_get_killswitches_private (UrfClient *client,
-				     GError   **error)
+urf_client_get_devices_private (UrfClient *client,
+				GError   **error)
 {
+	UrfDevice *device;
 	GError *error_local = NULL;
 	GType g_type_gvalue_array;
 	GPtrArray *gvalue_ptr_array = NULL;
 	GValueArray *gva;
 	GValue *gv;
 	guint i;
-	UrfKillswitch *killswitch;
 	gboolean ret;
 
 	g_return_if_fail (URF_IS_CLIENT (client));
@@ -470,9 +470,9 @@ urf_client_get_killswitches_private (UrfClient *client,
 		object_path = g_value_dup_string (gv);
 		g_value_unset (gv);
 
-		killswitch = urf_killswitch_new (object_path);
+		device = urf_device_new (object_path);
 
-		g_ptr_array_add (client->priv->killswitches, (gpointer)killswitch);
+		g_ptr_array_add (client->priv->devices, (gpointer)device);
 		g_value_array_free (gva);
 		g_free (object_path);
 	}
@@ -546,9 +546,9 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->killswitches = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	client->priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	urf_client_get_killswitches_private (client, NULL);
+	urf_client_get_devices_private (client, NULL);
 
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_UINT_INT_UINT_UINT_STRING,
@@ -599,9 +599,9 @@ urf_client_dispose (GObject *object)
 		client->priv->proxy = NULL;
 	}
 
-	if (client->priv->killswitches) {
-		g_ptr_array_unref (client->priv->killswitches);
-		client->priv->killswitches = NULL;
+	if (client->priv->devices) {
+		g_ptr_array_unref (client->priv->devices);
+		client->priv->devices = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);

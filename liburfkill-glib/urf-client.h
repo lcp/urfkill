@@ -25,7 +25,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include "urf-killswitch.h"
+#include "urf-device.h"
 
 G_BEGIN_DECLS
 
@@ -50,11 +50,11 @@ typedef struct
 {
 	GObjectClass		 parent_class;
 	void			(*rfkill_added)		(UrfClient	*client,
-							 UrfKillswitch	*killswitch);
+							 UrfDevice	*device);
 	void			(*rfkill_removed)	(UrfClient	*client,
-							 UrfKillswitch	*killswitch);
+							 UrfDevice	*device);
 	void			(*rfkill_changed)	(UrfClient	*client,
-							 UrfKillswitch	*killswitch);
+							 UrfDevice	*device);
 } UrfClientClass;
 
 /* general */
@@ -62,11 +62,7 @@ GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
 
 /* generic */
-GPtrArray	*urf_client_get_killswitches		(UrfClient	*client);
-UrfKillswitch	*urf_client_get_killswitch		(UrfClient	*client,
-							 const guint	 index,
-							 GCancellable	*cancellable,
-							 GError		**error);
+GPtrArray	*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 const char	*type,
 							 const gboolean	 block,
