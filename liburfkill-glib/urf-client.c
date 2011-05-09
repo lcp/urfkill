@@ -308,6 +308,21 @@ urf_client_set_wwan_block (UrfClient     *client,
 }
 
 /**
+ * urf_client_add
+ **/
+static void
+urf_client_add (UrfClient  *client,
+		const char *object_path)
+{
+	UrfDevice *device;
+
+	device = urf_device_new ();
+	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
+
+	g_ptr_array_add (client->priv->devices, device);
+}
+
+/**
  * urf_rfkill_added_cb:
  **/
 static void
@@ -315,7 +330,6 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 		     const gchar *object_path,
 		     UrfClient   *client)
 {
-	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
 
 	device = urf_client_find_device (client, object_path);
@@ -324,10 +338,7 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 		return;
 	}
 
-	device = urf_device_new ();
-	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
-
-	g_ptr_array_add (priv->devices, device);
+	urf_client_add (client, object_path);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, device);
 }
@@ -389,61 +400,39 @@ static void
 urf_client_get_devices_private (UrfClient *client,
 				GError    **error)
 {
-	UrfDevice *device;
 	GError *error_local = NULL;
-	GType g_type_gvalue_array;
-	GPtrArray *gvalue_ptr_array = NULL;
-	GValueArray *gva;
-	GValue *gv;
-	guint i;
+	GType g_type_array;
+	GPtrArray *devices = NULL;
+	const char *object_path;
 	gboolean ret;
+	guint i;
 
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	g_type_gvalue_array = dbus_g_type_get_collection ("GPtrArray",
-						dbus_g_type_get_struct("GValueArray",
-							G_TYPE_STRING,
-							G_TYPE_INVALID));
-
-	ret = dbus_g_proxy_call (client->priv->proxy, "GetAll", &error_local,
+	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
+	ret = dbus_g_proxy_call (client->priv->proxy, "EnumerateDevices", &error_local,
 				 G_TYPE_INVALID,
-				 g_type_gvalue_array, &gvalue_ptr_array,
+				 g_type_array, &devices,
 				 G_TYPE_INVALID);
 	if (!ret) {
 		/* an actual error */
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		g_error_free (error_local);
-		goto out;
+		return;
 	}
 
 	/* no data */
-	if (gvalue_ptr_array->len == 0) {
+	if (devices == NULL) {
 		g_set_error_literal (error, 1, 0, "no data");
-		goto out;
+		return;
 	}
 
 	/* convert */
-	for (i=0; i<gvalue_ptr_array->len; i++) {
-		gchar *object_path;
-
-		gva = (GValueArray *) g_ptr_array_index (gvalue_ptr_array, i);
-
-		/* object path */
-		gv = g_value_array_get_nth (gva, 1);
-		object_path = g_value_dup_string (gv);
-		g_value_unset (gv);
-
-		device = urf_device_new ();
-		urf_device_set_object_path_sync (device, object_path, NULL, NULL);
-
-		g_ptr_array_add (client->priv->devices, (gpointer)device);
-		g_value_array_free (gva);
-		g_free (object_path);
+	for (i=0; i < devices->len; i++) {
+		object_path = (const char *) g_ptr_array_index (devices, i);
+		urf_client_add (client, object_path);
 	}
-out:
-	if (gvalue_ptr_array != NULL)
-		g_ptr_array_free (gvalue_ptr_array, TRUE);
 }
 
 /*
@@ -513,7 +502,12 @@ urf_client_init (UrfClient *client)
 
 	client->priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	urf_client_get_devices_private (client, NULL);
+	urf_client_get_devices_private (client, &error);
+	if (error) {
+		g_warning ("Failed to enumerate devices: %s", error->message);
+		g_error_free (error);
+		goto out;
+	}
 
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_BOOLEAN_BOOLEAN,
