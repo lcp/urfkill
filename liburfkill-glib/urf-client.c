@@ -65,30 +65,6 @@ static gpointer urf_client_object = NULL;
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
 /**
- * urf_client_find_device_by_index
- **/
-static UrfDevice *
-urf_client_find_device_by_index (UrfClient   *client,
-				 const guint  index)
-{
-	UrfClientPrivate *priv = client->priv;
-	UrfDevice *device = NULL;
-	guint i, device_index;
-
-	if (priv->devices == NULL)
-		return NULL;
-
-	for (i=0; i<priv->devices->len; i++) {
-		device = (UrfDevice *) g_ptr_array_index (priv->devices, i);
-		g_object_get (device, "index", &device_index, NULL);
-		if (index == device_index)
-			return device;
-	}
-
-	return NULL;
-}
-
-/**
  * urf_client_find_device
  **/
 static UrfDevice *
@@ -350,16 +326,16 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
  **/
 static void
 urf_rfkill_removed_cb (DBusGProxy *proxy,
-		       guint       index,
+		       const char *object_path,
 		       UrfClient  *client)
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
 
-	device = urf_client_find_device_by_index (client, index);
+	device = urf_client_find_device (client, object_path);
 
 	if (device == NULL) {
-		g_warning ("no such device to be removed: index %u", index);
+		g_warning ("no such device to be removed: %s", object_path);
 		return;
 	}
 
@@ -373,17 +349,17 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
  **/
 static void
 urf_rfkill_changed_cb (DBusGProxy     *proxy,
-		       const guint     index,
+		       const char     *object_path,
 		       const gboolean  soft,
 		       const gboolean  hard,
 		       UrfClient      *client)
 {
 	UrfDevice *device;
 
-	device = urf_client_find_device_by_index (client, index);
+	device = urf_client_find_device (client, object_path);
 
 	if (device == NULL) {
-		g_warning ("no device to be changed: index %u", index);
+		g_warning ("no device to be changed: index %s", object_path);
 		return;
 	}
 
@@ -512,19 +488,19 @@ urf_client_init (UrfClient *client)
 	}
 
 	/* connect signals */
-	dbus_g_object_register_marshaller (urf_marshal_VOID__UINT_BOOLEAN_BOOLEAN,
+	dbus_g_object_register_marshaller (urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
 					   G_TYPE_NONE,
-					   G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+					   G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 					   G_TYPE_INVALID);
 
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillRemoved",
-				 G_TYPE_UINT,
+				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillChanged",
-				 G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+				 G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 				 G_TYPE_INVALID);
 	/* callbacks */
 	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillAdded",
