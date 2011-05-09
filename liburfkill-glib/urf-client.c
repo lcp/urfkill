@@ -310,7 +310,7 @@ urf_client_set_wwan_block (UrfClient     *client,
 /**
  * urf_client_add
  **/
-static void
+static UrfDevice *
 urf_client_add (UrfClient  *client,
 		const char *object_path)
 {
@@ -320,6 +320,8 @@ urf_client_add (UrfClient  *client,
 	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
 
 	g_ptr_array_add (client->priv->devices, device);
+
+	return device;
 }
 
 /**
@@ -338,7 +340,7 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 		return;
 	}
 
-	urf_client_add (client, object_path);
+	device = urf_client_add (client, object_path);
 
 	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, device);
 }
