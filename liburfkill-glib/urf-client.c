@@ -106,7 +106,7 @@ urf_client_set_block (UrfClient      *client,
 		      const char     *type,
 		      const gboolean  block,
 		      GCancellable   *cancellable,
-		      GError        **error)
+		      GError         **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -146,7 +146,7 @@ urf_client_set_block_idx (UrfClient      *client,
 			  const guint     index,
 			  const gboolean  block,
 			  GCancellable   *cancellable,
-			  GError        **error)
+			  GError         **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -183,7 +183,7 @@ out:
  **/
 gboolean
 urf_client_key_control_enabled (UrfClient *client,
-				GError   **error)
+				GError    **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;
@@ -219,7 +219,7 @@ out:
 gboolean
 urf_client_enable_key_control (UrfClient      *client,
 			       const gboolean  enable,
-			       GError        **error)
+			       GError         **error)
 {
 	gboolean ret, status;
 	GError *error_local = NULL;

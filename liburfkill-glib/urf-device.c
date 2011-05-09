@@ -205,9 +205,9 @@ urf_device_get_object_path (UrfDevice *device)
  **/
 static void
 urf_device_get_property (GObject    *object,
-			     guint       prop_id,
-			     GValue     *value,
-			     GParamSpec *pspec)
+			 guint       prop_id,
+			 GValue     *value,
+			 GParamSpec *pspec)
 {
 	UrfDevice *device = URF_DEVICE (object);
 	UrfDevicePrivate *priv = device->priv;
@@ -239,9 +239,9 @@ urf_device_get_property (GObject    *object,
  **/
 static void
 urf_device_set_property (GObject      *object,
-			     guint         prop_id,
-			     const GValue *value,
-			     GParamSpec   *pspec)
+			 guint         prop_id,
+			 const GValue *value,
+			 GParamSpec   *pspec)
 {
 	UrfDevice *device = URF_DEVICE (object);
 	UrfDevicePrivate *priv = device->priv;
@@ -312,7 +312,6 @@ urf_device_class_init(UrfDeviceClass *klass)
 				   0, NUM_RFKILL_TYPES-1, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
-
 
 	/**
 	 * UrfDevice:soft:
