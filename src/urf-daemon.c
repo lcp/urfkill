@@ -366,29 +366,17 @@ out:
  **/
 static void
 urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
-				guint          index,
+				const char    *object_path,
 				UrfDaemon     *daemon)
 {
-	UrfDevice *device;
-	const char *object_path;
-
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
 
-	device = urf_killswitch_get_device (killswitch, index);
-
-	if (!device)
-		return;
-
-	object_path = urf_device_get_object_path (device);
 	if (object_path == NULL) {
-		g_warning ("CORRUPT DEVICE OBJECT: Missing object path for %s",
-			   urf_device_get_name (device));
-		goto out;
+		g_warning ("Invalid object path");
+		return;
 	}
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, object_path);
-out:
-	g_object_unref (device);
 }
 
 /**
@@ -396,13 +384,16 @@ out:
  **/
 static void
 urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
-				  guint          index,
+				  const char    *object_path,
 				  UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
-
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_REMOVED], 0, index);
+	if (object_path == NULL) {
+		g_warning ("Invalid object path");
+		return;
+	}
+	g_signal_emit (daemon, signals[SIGNAL_RFKILL_REMOVED], 0, object_path);
 }
 
 /**
@@ -410,7 +401,7 @@ urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
  **/
 static void
 urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
-				  guint          index,
+				  const guint    index,
 				  UrfDaemon     *daemon)
 {
 	UrfDevice *device;
@@ -424,7 +415,7 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 		return;
 
 	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0,
-		       index,
+		       urf_device_get_object_path (device),
 		       urf_device_get_soft (device),
 		       urf_device_get_hard (device));
 	g_object_unref (device);
@@ -549,16 +540,16 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	signals[SIGNAL_RFKILL_CHANGED] =
 		g_signal_new ("rfkill-changed",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__UINT_BOOLEAN_BOOLEAN,
-			      G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+			      urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
+			      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,

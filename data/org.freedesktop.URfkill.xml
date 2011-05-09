@@ -34,12 +34,12 @@
       <arg type="o" name="device" direction="out" />
     </signal>
     <signal name="RfkillRemoved">
-      <arg type="u" name="index" direction="out" />
+      <arg type="o" name="device" direction="out" />
     </signal>
     <signal name="RfkillChanged">
-      <arg type="u" name="index" direction="out" />
-      <arg type="b" name="soft"  direction="out" />
-      <arg type="b" name="hard"  direction="out" />
+      <arg type="o" name="device" direction="out" />
+      <arg type="b" name="soft"   direction="out" />
+      <arg type="b" name="hard"   direction="out" />
     </signal>
 
     <property name="DaemonVersion" type="s" access="read">
