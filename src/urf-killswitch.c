@@ -442,6 +442,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 	guint type;
 	const char *name;
 	gboolean pivot_changed = FALSE;
+	char *object_path = NULL;
 
 	for (l = priv->devices; l != NULL; l = l->next) {
 		device = (UrfDevice *)l->data;
@@ -449,6 +450,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 
 			type = urf_device_get_rf_type (device);
 			priv->devices = g_list_remove (priv->devices, device);
+			object_path = g_strdup (urf_device_get_object_path(device));
 
 			name = urf_device_get_name (device);
 			g_debug ("removing killswitch idx %d %s", index, name);
@@ -476,7 +478,9 @@ remove_killswitch (UrfKillswitch *killswitch,
 			}
 		}
 	}
-	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, index);
+	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, object_path);
+	if (object_path != NULL)
+		g_free (object_path);
 }
 
 /**
@@ -506,7 +510,8 @@ add_killswitch (UrfKillswitch *killswitch,
 		g_debug ("assign killswitch idx %d %s as a pivot", index, name);
 	}
 
-	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0, index);
+	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0,
+		       urf_device_get_object_path (device));
 	if (priv->force_sync && priv->type_pivot[type] != device) {
 		int state = event_to_state (soft, hard);
 		urf_killswitch_set_state_idx (killswitch, index, state);
@@ -746,8 +751,8 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_added),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	signals[RFKILL_REMOVED] =
 		g_signal_new ("rfkill-removed",
@@ -755,8 +760,8 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_removed),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	signals[RFKILL_CHANGED] =
 		g_signal_new ("rfkill-changed",
@@ -765,7 +770,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_changed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_INT);
+			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
 }
 

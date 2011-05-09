@@ -52,16 +52,19 @@ typedef enum {
 typedef struct UrfKillswitchPrivate UrfKillswitchPrivate;
 
 typedef struct {
-	GObject parent;
-	UrfKillswitchPrivate *priv;
+	GObject			 parent;
+	UrfKillswitchPrivate	*priv;
 } UrfKillswitch;
 
 typedef struct {
-        GObjectClass parent_class;
+        GObjectClass 		 parent_class;
 
-        void (*rfkill_added)   (UrfKillswitch *killswitch, guint index);
-        void (*rfkill_removed) (UrfKillswitch *killswitch, guint index);
-        void (*rfkill_changed) (UrfKillswitch *killswitch, guint index);
+        void 			(*rfkill_added)		(UrfKillswitch	*killswitch,
+							 const char	*object_path);
+        void 			(*rfkill_removed)	(UrfKillswitch	*killswitch,
+							 const char	*object_path);
+        void 			(*rfkill_changed)	(UrfKillswitch	*killswitch,
+							 const guint	 index);
 } UrfKillswitchClass;
 
 GType			 urf_killswitch_get_type		(void);
