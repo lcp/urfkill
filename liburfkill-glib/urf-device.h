@@ -51,14 +51,14 @@ typedef struct
 } UrfDeviceClass;
 
 /* general */
-GType			 urf_device_get_type		(void);
-UrfDevice		*urf_device_new			(const char	*object_path);
+GType			 urf_device_get_type			(void);
+UrfDevice		*urf_device_new				(void);
+gboolean		 urf_device_set_object_path_sync	(UrfDevice	*device,
+								 const char	*object_path,
+								 GCancellable	*cancellable,
+								 GError		**error);
 
-guint			 urf_device_get_rfkill_index	(UrfDevice	*device);
-guint			 urf_device_get_rfkill_type		(UrfDevice	*device);
-guint			 urf_device_get_rfkill_soft		(UrfDevice	*device);
-guint			 urf_device_get_rfkill_hard		(UrfDevice	*device);
-gchar			*urf_device_get_rfkill_name		(UrfDevice	*device);
+const char		*urf_device_get_object_path		(UrfDevice	*device);
 
 G_END_DECLS
 

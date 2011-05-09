@@ -38,12 +38,14 @@
  **/
 struct UrfDevicePrivate
 {
-	guint index;
-	guint type;
-	guint soft;
-	guint hard;
-	char *name;
-	char *object_path;
+	DBusGConnection *bus;
+	DBusGProxy      *proxy_props;
+	char            *object_path;
+	guint            index;
+	guint            type;
+	gboolean         soft;
+	gboolean         hard;
+	char            *name;
 };
 
 enum {
@@ -59,60 +61,143 @@ enum {
 G_DEFINE_TYPE (UrfDevice, urf_device, G_TYPE_OBJECT)
 
 /**
- * urf_device_get_rfkill_index:
+ * urf_device_get_device_properties
  **/
-guint
-urf_device_get_rfkill_index (UrfDevice *device)
+static GHashTable *
+urf_device_get_device_properties (UrfDevice *device,
+				  GError    **error)
 {
-	/* TODO */
-	/* Choose a better return value */
-	g_return_val_if_fail (URF_IS_DEVICE (device), 0);
+	gboolean ret;
+	GError *error_local = NULL;
+	GHashTable *hash_table = NULL;
 
-	return device->priv->index;
+	ret = dbus_g_proxy_call (device->priv->proxy_props, "GetAll", &error_local,
+				 G_TYPE_STRING, "org.freedesktop.URfkill.Device",
+				 G_TYPE_INVALID,
+				 dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
+				 &hash_table,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		g_set_error (error, 1, 0, "Couldn't call GetAll() to get properties for %s: %s",
+			     device->priv->object_path, error_local->message);
+		g_error_free (error_local);
+		goto out;
+	}
+out:
+	return hash_table;
 }
 
 /**
- * urf_device_get_rfkill_type:
+ * urf_device_collect_props_cb
  **/
-guint
-urf_device_get_rfkill_type (UrfDevice *device)
+static void
+urf_device_collect_props_cb (const char   *key,
+			     const GValue *value,
+			     UrfDevice    *device)
 {
-	g_return_val_if_fail (URF_IS_DEVICE (device), NUM_RFKILL_TYPES);
-
-	return device->priv->type;
+	if (g_strcmp0 (key, "index") == 0) {
+		device->priv->index = g_value_get_uint (value);
+	} else if (g_strcmp0 (key, "type") == 0) {
+		device->priv->type = g_value_get_uint (value);
+	} else if (g_strcmp0 (key, "soft") == 0) {
+		device->priv->soft = g_value_get_boolean (value);
+	} else if (g_strcmp0 (key, "hard") == 0) {
+		device->priv->hard = g_value_get_boolean (value);
+	} else if (g_strcmp0 (key, "name") == 0) {
+		g_free (device->priv->name);
+		device->priv->name = g_strdup (g_value_get_string (value));
+	} else {
+		g_warning ("unhandled property '%s'", key);
+	}
 }
 
 /**
- * urf_device_get_rfkill_soft:
+ * urf_device_refresh_private
  **/
-guint
-urf_device_get_rfkill_soft (UrfDevice *device)
+static gboolean
+urf_device_refresh_private (UrfDevice *device,
+			    GError    **error)
 {
-	g_return_val_if_fail (URF_IS_DEVICE (device), 1);
+	GHashTable *hash;
+	GError *error_local = NULL;
 
-	return device->priv->soft;
+	/* get all the properties */
+	hash = urf_device_get_device_properties (device, &error_local);
+	if (hash == NULL) {
+		g_set_error (error, 1, 0, "Cannot get device properties for %s: %s",
+			     device->priv->object_path, error_local->message);
+		g_error_free (error_local);
+		return FALSE;
+	}
+	g_hash_table_foreach (hash, (GHFunc) urf_device_collect_props_cb, device);
+	g_hash_table_unref (hash);
+	return TRUE;
 }
 
 /**
- * urf_device_get_rfkill_hard:
+ * urf_device_set_object_path_sync
  **/
-guint
-urf_device_get_rfkill_hard (UrfDevice *device)
+gboolean
+urf_device_set_object_path_sync (UrfDevice    *device,
+				 const char   *object_path,
+				 GCancellable *cancellable,
+				 GError       **error)
 {
-	g_return_val_if_fail (URF_IS_DEVICE (device), 1);
+	GError *error_local = NULL;
+	gboolean ret = FALSE;
+	DBusGProxy *proxy_props;
 
-	return device->priv->hard;
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	if (device->priv->object_path != NULL)
+		return FALSE;
+	if (object_path == NULL)
+		return FALSE;
+
+	/* invalid */
+	if (object_path == NULL || object_path[0] != '/') {
+		g_set_error (error, 1, 0, "Object path %s invalid", object_path);
+		goto out;
+	}
+
+	/* connect to the bus */
+	device->priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error_local);
+	if (device->priv->bus == NULL) {
+		g_set_error (error, 1, 0, "Couldn't connect to system bus: %s", error_local->message);
+		g_error_free (error_local);
+		goto out;
+	}
+
+	/* connect to the correct path for properties */
+	proxy_props = dbus_g_proxy_new_for_name (device->priv->bus, "org.freedesktop.URfkill",
+						 object_path, "org.freedesktop.DBus.Properties");
+	if (proxy_props == NULL) {
+		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
+		goto out;
+	}
+
+        device->priv->proxy_props = proxy_props;
+        device->priv->object_path = g_strdup (object_path);
+
+	ret = urf_device_refresh_private (device, &error_local);
+
+	if (!ret) {
+		g_set_error (error, 1, 0, "cannot refresh: %s", error_local->message);
+		g_error_free (error_local);
+	}
+out:
+	return ret;
 }
 
 /**
- * urf_device_get_rfkill_name:
+ * urf_device_get_object_path
  **/
-gchar *
-urf_device_get_rfkill_name (UrfDevice *device)
+const char *
+urf_device_get_object_path (UrfDevice *device)
 {
 	g_return_val_if_fail (URF_IS_DEVICE (device), NULL);
 
-	return device->priv->name;
+	return device->priv->object_path;
 }
 
 /**
@@ -214,7 +299,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 * UrfDevice:index:
 	 */
 	pspec = g_param_spec_uint ("index",
-				   "Index", "The index of the killswitch",
+				   "Index", "The index of the rfkill device",
 				   0, G_MAXUINT, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_INDEX, pspec);
@@ -223,7 +308,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 * UrfDevice:type:
 	 */
 	pspec = g_param_spec_uint ("type",
-				   "Type", "The type of the killswitch",
+				   "Type", "The type of the rfkill device",
 				   0, NUM_RFKILL_TYPES-1, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
@@ -251,7 +336,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 * UrfDevice:name:
 	 */
 	pspec = g_param_spec_string ("name",
-				     "Name", "The name of the killswitch",
+				     "Name", "The name of the rfkill device",
 				     NULL, G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_NAME, pspec);
 }
@@ -273,14 +358,10 @@ urf_device_init (UrfDevice *device)
  *
  **/
 UrfDevice *
-urf_device_new (const char *object_path)
+urf_device_new ()
 {
 	UrfDevice *device;
 	device = URF_DEVICE (g_object_new (URF_TYPE_DEVICE, NULL));
-	device->priv->object_path = g_strdup (object_path);
-
-	/* TODO get the dbus object properties */
-
 	return device;
 }
 
