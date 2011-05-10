@@ -48,9 +48,9 @@ struct UrfClientPrivate
 };
 
 enum {
-	URF_CLIENT_RFKILL_ADDED,
-	URF_CLIENT_RFKILL_REMOVED,
-	URF_CLIENT_RFKILL_CHANGED,
+	URF_CLIENT_DEVICE_ADDED,
+	URF_CLIENT_DEVICE_REMOVED,
+	URF_CLIENT_DEVICE_CHANGED,
 	URF_CLIENT_LAST_SIGNAL
 };
 
@@ -301,12 +301,12 @@ urf_client_add (UrfClient  *client,
 }
 
 /**
- * urf_rfkill_added_cb:
+ * urf_client_device_added_cb:
  **/
 static void
-urf_rfkill_added_cb (DBusGProxy  *proxy,
-		     const gchar *object_path,
-		     UrfClient   *client)
+urf_client_device_added_cb (DBusGProxy  *proxy,
+			    const gchar *object_path,
+			    UrfClient   *client)
 {
 	UrfDevice *device;
 
@@ -318,16 +318,16 @@ urf_rfkill_added_cb (DBusGProxy  *proxy,
 
 	device = urf_client_add (client, object_path);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_ADDED], 0, device);
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_ADDED], 0, device);
 }
 
 /**
- * urf_rfkill_removed_cb:
+ * urf_client_device_removed_cb:
  **/
 static void
-urf_rfkill_removed_cb (DBusGProxy *proxy,
-		       const char *object_path,
-		       UrfClient  *client)
+urf_client_device_removed_cb (DBusGProxy *proxy,
+			      const char *object_path,
+			      UrfClient  *client)
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
@@ -339,20 +339,20 @@ urf_rfkill_removed_cb (DBusGProxy *proxy,
 		return;
 	}
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_REMOVED], 0, device);
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_REMOVED], 0, device);
 
 	g_ptr_array_remove (priv->devices, device);
 }
 
 /**
- * urf_rfkill_changed_cb:
+ * urf_client_device_changed_cb:
  **/
 static void
-urf_rfkill_changed_cb (DBusGProxy     *proxy,
-		       const char     *object_path,
-		       const gboolean  soft,
-		       const gboolean  hard,
-		       UrfClient      *client)
+urf_client_device_changed_cb (DBusGProxy     *proxy,
+			      const char     *object_path,
+			      const gboolean  soft,
+			      const gboolean  hard,
+			      UrfClient      *client)
 {
 	UrfDevice *device;
 
@@ -368,7 +368,7 @@ urf_rfkill_changed_cb (DBusGProxy     *proxy,
 		      "hard", hard,
 		      NULL);
 
-	g_signal_emit (client, signals [URF_CLIENT_RFKILL_CHANGED], 0, device);
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_CHANGED], 0, device);
 }
 
 /**
@@ -425,24 +425,24 @@ urf_client_class_init (UrfClientClass *klass)
 	object_class->dispose = urf_client_dispose;
 
 	/* install signals */
-        signals[URF_CLIENT_RFKILL_ADDED] =
-                g_signal_new ("rfkill-added",
+        signals[URF_CLIENT_DEVICE_ADDED] =
+                g_signal_new ("device-added",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfClientClass, rfkill_added),
+			      G_STRUCT_OFFSET (UrfClientClass, device_added),
 			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
 			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-        signals[URF_CLIENT_RFKILL_REMOVED] =
-                g_signal_new ("rfkill-removed",
+        signals[URF_CLIENT_DEVICE_REMOVED] =
+                g_signal_new ("device-removed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfClientClass, rfkill_removed),
+			      G_STRUCT_OFFSET (UrfClientClass, device_removed),
 			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
 			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-        signals[URF_CLIENT_RFKILL_CHANGED] =
-                g_signal_new ("rfkill-changed",
+        signals[URF_CLIENT_DEVICE_CHANGED] =
+                g_signal_new ("device-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfClientClass, rfkill_changed),
+			      G_STRUCT_OFFSET (UrfClientClass, device_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
 			      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
@@ -493,22 +493,22 @@ urf_client_init (UrfClient *client)
 					   G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 					   G_TYPE_INVALID);
 
-	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillAdded",
+	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceAdded",
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillRemoved",
+	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceRemoved",
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (client->priv->proxy, "RfkillChanged",
+	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceChanged",
 				 G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 				 G_TYPE_INVALID);
 	/* callbacks */
-	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillAdded",
-				     G_CALLBACK (urf_rfkill_added_cb), client, NULL);
-	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillRemoved",
-				     G_CALLBACK (urf_rfkill_removed_cb), client, NULL);
-	dbus_g_proxy_connect_signal (client->priv->proxy, "RfkillChanged",
-				     G_CALLBACK (urf_rfkill_changed_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceAdded",
+				     G_CALLBACK (urf_client_device_added_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceRemoved",
+				     G_CALLBACK (urf_client_device_removed_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceChanged",
+				     G_CALLBACK (urf_client_device_changed_cb), client, NULL);
 
 out:
 	return;
