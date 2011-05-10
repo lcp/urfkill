@@ -333,6 +333,16 @@ urf_device_class_init(UrfDeviceClass *klass)
 }
 
 /**
+ * urf_device_compute_object_path:
+ **/
+static char *
+urf_device_compute_object_path (UrfDevice *device)
+{
+	const char *path_template = "/org/freedesktop/URfkill/devices/%u";
+	return g_strdup_printf (path_template, device->priv->index);
+}
+
+/**
  * urf_device_register_device
  **/
 static gboolean
@@ -340,7 +350,6 @@ urf_device_register_device (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
 	gboolean ret = TRUE;
-	guint index = priv->index;
 	GError *error = NULL;
 
 	device->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -349,7 +358,7 @@ urf_device_register_device (UrfDevice *device)
 		g_error_free (error);
 	}
 
-	priv->object_path = g_strdup_printf ("/org/freedesktop/URfkill/devices/%u", index);
+	priv->object_path = urf_device_compute_object_path (device);
 	dbus_g_connection_register_g_object (priv->connection,
 					     priv->object_path, G_OBJECT (device));
 	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
