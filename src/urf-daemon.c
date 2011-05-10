@@ -51,9 +51,9 @@ enum
 
 enum
 {
-	SIGNAL_RFKILL_ADDED,
-	SIGNAL_RFKILL_REMOVED,
-	SIGNAL_RFKILL_CHANGED,
+	SIGNAL_DEVICE_ADDED,
+	SIGNAL_DEVICE_REMOVED,
+	SIGNAL_DEVICE_CHANGED,
 	SIGNAL_LAST,
 };
 
@@ -362,12 +362,12 @@ out:
 }
 
 /**
- * urf_daemon_killswitch_added_cb:
+ * urf_daemon_device_added_cb:
  **/
 static void
-urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
-				const char    *object_path,
-				UrfDaemon     *daemon)
+urf_daemon_device_added_cb (UrfKillswitch *killswitch,
+			    const char    *object_path,
+			    UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
@@ -376,16 +376,16 @@ urf_daemon_killswitch_added_cb (UrfKillswitch *killswitch,
 		g_warning ("Invalid object path");
 		return;
 	}
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_ADDED], 0, object_path);
+	g_signal_emit (daemon, signals[SIGNAL_DEVICE_ADDED], 0, object_path);
 }
 
 /**
- * urf_daemon_killswitch_removed_cb:
+ * urf_daemon_device_removed_cb:
  **/
 static void
-urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
-				  const char    *object_path,
-				  UrfDaemon     *daemon)
+urf_daemon_device_removed_cb (UrfKillswitch *killswitch,
+			      const char    *object_path,
+			      UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
@@ -393,16 +393,16 @@ urf_daemon_killswitch_removed_cb (UrfKillswitch *killswitch,
 		g_warning ("Invalid object path");
 		return;
 	}
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_REMOVED], 0, object_path);
+	g_signal_emit (daemon, signals[SIGNAL_DEVICE_REMOVED], 0, object_path);
 }
 
 /**
- * urf_daemon_killswitch_changed_cb:
+ * urf_daemon_device_changed_cb:
  **/
 static void
-urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
-				  const guint    index,
-				  UrfDaemon     *daemon)
+urf_daemon_device_changed_cb (UrfKillswitch *killswitch,
+			      const guint    index,
+			      UrfDaemon     *daemon)
 {
 	UrfDevice *device;
 
@@ -414,7 +414,7 @@ urf_daemon_killswitch_changed_cb (UrfKillswitch *killswitch,
 	if (!device)
 		return;
 
-	g_signal_emit (daemon, signals[SIGNAL_RFKILL_CHANGED], 0,
+	g_signal_emit (daemon, signals[SIGNAL_DEVICE_CHANGED], 0,
 		       urf_device_get_object_path (device),
 		       urf_device_get_soft (device),
 		       urf_device_get_hard (device));
@@ -431,12 +431,12 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
-	g_signal_connect (daemon->priv->killswitch, "rfkill-added",
-			  G_CALLBACK (urf_daemon_killswitch_added_cb), daemon);
-	g_signal_connect (daemon->priv->killswitch, "rfkill-removed",
-			  G_CALLBACK (urf_daemon_killswitch_removed_cb), daemon);
-	g_signal_connect (daemon->priv->killswitch, "rfkill-changed",
-			  G_CALLBACK (urf_daemon_killswitch_changed_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "device-added",
+			  G_CALLBACK (urf_daemon_device_added_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "device-removed",
+			  G_CALLBACK (urf_daemon_device_removed_cb), daemon);
+	g_signal_connect (daemon->priv->killswitch, "device-changed",
+			  G_CALLBACK (urf_daemon_device_changed_cb), daemon);
 
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf_key_pressed",
@@ -527,24 +527,24 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 
 	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
-	signals[SIGNAL_RFKILL_ADDED] =
-		g_signal_new ("rfkill-added",
+	signals[SIGNAL_DEVICE_ADDED] =
+		g_signal_new ("device-added",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
-	signals[SIGNAL_RFKILL_REMOVED] =
-		g_signal_new ("rfkill-removed",
+	signals[SIGNAL_DEVICE_REMOVED] =
+		g_signal_new ("device-removed",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
-	signals[SIGNAL_RFKILL_CHANGED] =
-		g_signal_new ("rfkill-changed",
+	signals[SIGNAL_DEVICE_CHANGED] =
+		g_signal_new ("device-changed",
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
