@@ -44,9 +44,9 @@
 #include "urf-utils.h"
 
 enum {
-	RFKILL_ADDED,
-	RFKILL_REMOVED,
-	RFKILL_CHANGED,
+	DEVICE_ADDED,
+	DEVICE_REMOVED,
+	DEVICE_CHANGED,
 	LAST_SIGNAL
 };
 
@@ -417,7 +417,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	if (changed != FALSE) {
 		g_debug ("updating killswitch status %d to soft %d hard %d",
 			 index, soft, hard);
-		g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_CHANGED], 0, index);
+		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, index);
 
 		if (priv->force_sync) {
 			/* Sync soft and hard blocks */
@@ -478,7 +478,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 			}
 		}
 	}
-	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_REMOVED], 0, object_path);
+	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_REMOVED], 0, object_path);
 	if (object_path != NULL)
 		g_free (object_path);
 }
@@ -510,7 +510,7 @@ add_killswitch (UrfKillswitch *killswitch,
 		g_debug ("assign killswitch idx %d %s as a pivot", index, name);
 	}
 
-	g_signal_emit (G_OBJECT (killswitch), signals[RFKILL_ADDED], 0,
+	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_ADDED], 0,
 		       urf_device_get_object_path (device));
 	if (priv->force_sync && priv->type_pivot[type] != device) {
 		int state = event_to_state (soft, hard);
@@ -745,29 +745,29 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 	g_type_class_add_private(klass, sizeof(UrfKillswitchPrivate));
 	object_class->finalize = urf_killswitch_finalize;
 
-	signals[RFKILL_ADDED] =
-		g_signal_new ("rfkill-added",
+	signals[DEVICE_ADDED] =
+		g_signal_new ("device-added",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_added),
+			      G_STRUCT_OFFSET (UrfKillswitchClass, device_added),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
-	signals[RFKILL_REMOVED] =
-		g_signal_new ("rfkill-removed",
+	signals[DEVICE_REMOVED] =
+		g_signal_new ("device-removed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_removed),
+			      G_STRUCT_OFFSET (UrfKillswitchClass, device_removed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
-	signals[RFKILL_CHANGED] =
-		g_signal_new ("rfkill-changed",
+	signals[DEVICE_CHANGED] =
+		g_signal_new ("device-changed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, rfkill_changed),
+			      G_STRUCT_OFFSET (UrfKillswitchClass, device_changed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);

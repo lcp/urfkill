@@ -59,11 +59,11 @@ typedef struct {
 typedef struct {
         GObjectClass 		 parent_class;
 
-        void 			(*rfkill_added)		(UrfKillswitch	*killswitch,
+        void 			(*device_added)		(UrfKillswitch	*killswitch,
 							 const char	*object_path);
-        void 			(*rfkill_removed)	(UrfKillswitch	*killswitch,
+        void 			(*device_removed)	(UrfKillswitch	*killswitch,
 							 const char	*object_path);
-        void 			(*rfkill_changed)	(UrfKillswitch	*killswitch,
+        void 			(*device_changed)	(UrfKillswitch	*killswitch,
 							 const guint	 index);
 } UrfKillswitchClass;
 
