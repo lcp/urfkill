@@ -28,7 +28,7 @@ print_urf_device (UrfDevice *device)
 }
 
 static void
-rfkill_added_cb (UrfClient *client, UrfDevice *device, gpointer data)
+device_added_cb (UrfClient *client, UrfDevice *device, gpointer data)
 {
 	printf ("== Added ==\n");
 	print_urf_device (device);
@@ -36,7 +36,7 @@ rfkill_added_cb (UrfClient *client, UrfDevice *device, gpointer data)
 }
 
 static void
-rfkill_removed_cb (UrfClient *client, UrfDevice *device, gpointer data)
+device_removed_cb (UrfClient *client, UrfDevice *device, gpointer data)
 {
 	printf ("== removed ==\n");
 	print_urf_device (device);
@@ -44,7 +44,7 @@ rfkill_removed_cb (UrfClient *client, UrfDevice *device, gpointer data)
 }
 
 static void
-rfkill_changed_cb (UrfClient *client, UrfDevice *device, gpointer data)
+device_changed_cb (UrfClient *client, UrfDevice *device, gpointer data)
 {
 	printf ("== Changed ==\n");
 	print_urf_device (device);
@@ -71,9 +71,9 @@ main ()
 
 	client = urf_client_new ();
 
-	g_signal_connect (client, "rfkill-added", G_CALLBACK (rfkill_added_cb), NULL);
-	g_signal_connect (client, "rfkill-removed", G_CALLBACK (rfkill_removed_cb), NULL);
-	g_signal_connect (client, "rfkill-changed", G_CALLBACK (rfkill_changed_cb), NULL);
+	g_signal_connect (client, "device-added", G_CALLBACK (device_added_cb), NULL);
+	g_signal_connect (client, "device-removed", G_CALLBACK (device_removed_cb), NULL);
+	g_signal_connect (client, "device-changed", G_CALLBACK (device_changed_cb), NULL);
 
 	status = urf_client_set_wlan_block (client, TRUE);
 	printf ("Status of block: %d\n", status);
