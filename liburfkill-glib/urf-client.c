@@ -116,7 +116,7 @@ urf_client_get_devices (UrfClient *client)
 }
 
 /**
- * urf_client_set_block
+ * urf_client_set_block:
  * @client: a #UrfClient instance
  * @type: the type name of the devices
  * @block: %TRUE to block the devices or %FALSE to unblock
@@ -167,7 +167,7 @@ out:
 }
 
 /**
- * urf_client_set_block_idx
+ * urf_client_set_block_idx:
  * @client: a #UrfClient instance
  * @index: the index of the device
  * @block: %TRUE to block the device or %FALSE to unblock
@@ -345,7 +345,7 @@ urf_client_set_bluetooth_block (UrfClient     *client,
 }
 
 /**
- * urf_client_set_wwan_block
+ * urf_client_set_wwan_block:
  * @client: a #UrfClient instance
  * @block: %TRUE to block the WWAN devices or %FALSE to unblock
  *
