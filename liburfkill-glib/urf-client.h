@@ -91,6 +91,9 @@ gboolean	 urf_client_set_bluetooth_block		(UrfClient	*client,
 gboolean	 urf_client_set_wwan_block		(UrfClient	*client,
 							 const gboolean  block);
 
+/* accessors */
+const char	*urf_client_get_daemon_version		(UrfClient	*client);
+
 G_END_DECLS
 
 #endif /* __URF_CLIENT_H */

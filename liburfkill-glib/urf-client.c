@@ -42,6 +42,7 @@
 static void	urf_client_class_init	(UrfClientClass	*klass);
 static void	urf_client_init		(UrfClient	*client);
 static void	urf_client_dispose	(GObject	*object);
+static void	urf_client_finalize	(GObject	*object);
 
 #define URF_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URF_TYPE_CLIENT, UrfClientPrivate))
 
@@ -54,7 +55,10 @@ struct UrfClientPrivate
 {
 	DBusGConnection	*bus;
 	DBusGProxy	*proxy;
+	DBusGProxy	*prop_proxy;
 	GPtrArray	*devices;
+	char		*daemon_version;
+	gboolean	 have_properties;
 };
 
 enum {
@@ -66,6 +70,7 @@ enum {
 
 enum {
 	PROP_0,
+	PROP_DAEMON_VERSION,
 	PROP_LAST
 };
 
@@ -364,6 +369,68 @@ urf_client_set_wwan_block (UrfClient     *client,
 }
 
 /**
+ * urf_client_get_properties_sync:
+ **/
+static gboolean
+urf_client_get_properties_sync (UrfClient    *client,
+				GCancellable *cancellable,
+				GError       **error)
+{
+	gboolean ret = TRUE;
+	GHashTable *props;
+	GValue *value;
+
+	props = NULL;
+
+	if (client->priv->have_properties)
+		goto out;
+	if (!client->priv->prop_proxy)
+		goto out;
+
+	error = NULL;
+	ret = dbus_g_proxy_call (client->priv->prop_proxy, "GetAll", error,
+				 G_TYPE_STRING, "org.freedesktop.URfkill",
+				 G_TYPE_INVALID,
+				 dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE), &props,
+				 G_TYPE_INVALID);
+
+	if (!ret)
+		goto out;
+
+	value = g_hash_table_lookup (props, "DaemonVersion");
+	if (value == NULL) {
+		g_warning ("No 'DaemonVersion' property");
+		goto out;
+	}
+	client->priv->daemon_version = g_strdup (g_value_get_string (value));
+
+	/* All done */
+	client->priv->have_properties = TRUE;
+out:
+	if (props != NULL)
+		g_hash_table_unref (props);
+	return ret;
+}
+
+/**
+ * urf_client_get_daemon_version:
+ * @client: a #UrfClient instance
+ *
+ * Get urfkill daemon version
+ *
+ * Return value: string containing the daemon version, e.g. 0.2.0
+ *
+ * Since: 0.2.0
+ **/
+const char *
+urf_client_get_daemon_version (UrfClient *client)
+{
+	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
+	urf_client_get_properties_sync (client, NULL, NULL);
+	return client->priv->daemon_version;
+}
+
+/**
  * urf_client_add:
  **/
 static UrfDevice *
@@ -494,6 +561,29 @@ urf_client_get_devices_private (UrfClient *client,
 }
 
 /**
+ * urf_client_get_property:
+ **/
+static void
+urf_client_get_property (GObject    *object,
+			 guint       prop_id,
+			 GValue     *value,
+			 GParamSpec *pspec)
+{
+	UrfClient *client = URF_CLIENT (object);
+
+	urf_client_get_properties_sync (client, NULL, NULL);
+
+	switch (prop_id) {
+	case PROP_DAEMON_VERSION:
+		g_value_set_string (value, client->priv->daemon_version);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+/**
  * urf_client_class_init:
  * @klass: The UrfClientClass
  **/
@@ -502,7 +592,24 @@ urf_client_class_init (UrfClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+	object_class->get_property = urf_client_get_property;
 	object_class->dispose = urf_client_dispose;
+	object_class->finalize = urf_client_finalize;
+
+	/**
+	 * UrfClient:daemon-version:
+	 *
+	 * The daemon version.
+	 *
+	 * Since: 0.2.0
+	 */
+	g_object_class_install_property (object_class,
+					 PROP_DAEMON_VERSION,
+					 g_param_spec_string ("daemon-version",
+							      "Daemon version",
+							      NULL,
+							      NULL,
+							      G_PARAM_READABLE));
 
 	/* install signals */
 	/**
@@ -566,6 +673,8 @@ urf_client_init (UrfClient *client)
 	GError *error = NULL;
 
 	client->priv = URF_CLIENT_GET_PRIVATE (client);
+	client->priv->daemon_version = NULL;
+	client->priv->have_properties = FALSE;
 
 	/* get on the bus */
 	client->priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -581,6 +690,16 @@ urf_client_init (UrfClient *client)
 							 "/org/freedesktop/URfkill",
 							 "org.freedesktop.URfkill");
 	if (client->priv->proxy == NULL) {
+		g_warning ("Couldn't connect to proxy");
+		goto out;
+	}
+
+	/* connect to main interface */
+	client->priv->prop_proxy = dbus_g_proxy_new_for_name (client->priv->bus,
+							      "org.freedesktop.URfkill",
+							      "/org/freedesktop/URfkill",
+							      "org.freedesktop.DBus.Properties");
+	if (client->priv->prop_proxy == NULL) {
 		g_warning ("Couldn't connect to proxy");
 		goto out;
 	}
@@ -643,12 +762,34 @@ urf_client_dispose (GObject *object)
 		client->priv->proxy = NULL;
 	}
 
+	if (client->priv->prop_proxy) {
+		g_object_unref (client->priv->prop_proxy);
+		client->priv->prop_proxy = NULL;
+	}
+
 	if (client->priv->devices) {
 		g_ptr_array_unref (client->priv->devices);
 		client->priv->devices = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);
+}
+
+/**
+ * urf_client_finalize:
+ **/
+static void
+urf_client_finalize (GObject *object)
+{
+	UrfClient *client;
+
+	g_return_if_fail (URF_IS_CLIENT (object));
+
+	client = URF_CLIENT (object);
+
+	g_free (client->priv->daemon_version);
+
+	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
 }
 
 /**
