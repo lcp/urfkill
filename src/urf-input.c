@@ -175,6 +175,9 @@ input_dev_open_channel (UrfInput   *input,
 	return TRUE;
 }
 
+/**
+ * urf_input_startup:
+ **/
 gboolean
 urf_input_startup (UrfInput *input)
 {

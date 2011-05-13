@@ -602,7 +602,7 @@ urf_client_class_init (UrfClientClass *klass)
 	 * The daemon version.
 	 *
 	 * Since: 0.2.0
-	 */
+	 **/
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
 					 g_param_spec_string ("daemon-version",

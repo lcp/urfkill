@@ -114,6 +114,9 @@ out:
 	return ret;
 }
 
+/**
+ * urf_daemon_input_event_cb:
+ **/
 static void
 urf_daemon_input_event_cb (UrfInput *input,
 			   guint     code,

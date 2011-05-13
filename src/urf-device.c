@@ -98,7 +98,7 @@ static GType etype = 0;
 }
 
 /**
- * urf_device_get_index
+ * urf_device_get_index:
  **/
 guint
 urf_device_get_index (UrfDevice *device)
@@ -107,7 +107,7 @@ urf_device_get_index (UrfDevice *device)
 }
 
 /**
- * urf_device_get_rf_type
+ * urf_device_get_rf_type:
  **/
 guint
 urf_device_get_rf_type (UrfDevice *device)
@@ -116,7 +116,7 @@ urf_device_get_rf_type (UrfDevice *device)
 }
 
 /**
- * urf_device_get_name
+ * urf_device_get_name:
  **/
 const char *
 urf_device_get_name (UrfDevice *device)
@@ -125,7 +125,7 @@ urf_device_get_name (UrfDevice *device)
 }
 
 /**
- * urf_device_get_soft
+ * urf_device_get_soft:
  **/
 gboolean
 urf_device_get_soft (UrfDevice *device)
@@ -134,7 +134,7 @@ urf_device_get_soft (UrfDevice *device)
 }
 
 /**
- * urf_device_get_hard
+ * urf_device_get_hard:
  **/
 gboolean
 urf_device_get_hard (UrfDevice *device)
@@ -143,7 +143,7 @@ urf_device_get_hard (UrfDevice *device)
 }
 
 /**
- * urf_device_get_object_path
+ * urf_device_get_object_path:
  **/
 const char *
 urf_device_get_object_path (UrfDevice *device)
@@ -220,7 +220,7 @@ urf_device_set_property (GObject      *object,
 }
 
 /**
- * urf_device_dispose
+ * urf_device_dispose:
  **/
 static void
 urf_device_dispose (GObject *object)
@@ -241,7 +241,7 @@ urf_device_dispose (GObject *object)
 }
 
 /**
- * urf_device_finalize
+ * urf_device_finalize:
  **/
 static void
 urf_device_finalize (GObject *object)
@@ -343,7 +343,7 @@ urf_device_compute_object_path (UrfDevice *device)
 }
 
 /**
- * urf_device_register_device
+ * urf_device_register_device:
  **/
 static gboolean
 urf_device_register_device (UrfDevice *device)
@@ -371,7 +371,7 @@ urf_device_register_device (UrfDevice *device)
 }
 
 /**
- * urf_device_new
+ * urf_device_new:
  */
 UrfDevice *
 urf_device_new (guint index,
