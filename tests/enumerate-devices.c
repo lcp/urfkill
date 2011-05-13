@@ -30,6 +30,7 @@ main ()
 {
 	UrfClient *client = NULL;
 	UrfDevice *item;
+	char *daemon_version;
 	gboolean status;
 	GPtrArray *devices;
 	guint i;
@@ -37,6 +38,8 @@ main ()
 	g_type_init();
 
 	client = urf_client_new ();
+
+	g_print ("Daemon Version: %s\n\n", urf_client_get_daemon_version (client));
 
 	devices = urf_client_get_devices (client);
 
