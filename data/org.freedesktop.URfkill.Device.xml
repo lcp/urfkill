@@ -4,19 +4,58 @@
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.URfkill.Device">
+    <doc:doc>
+      <doc:description>
+        <doc:para>
+        </doc:para>
+      </doc:description>
+    </doc:doc>
+
+    <!-- ************************************************************ -->
+
     <property name="index" type="u" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
     <property name="type" type="u" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
     <property name="name" type="s" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
     <property name="soft" type="b" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
     <property name="hard" type="b" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
   </interface>

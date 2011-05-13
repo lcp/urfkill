@@ -4,45 +4,183 @@
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.URfkill">
+    <doc:doc>
+      <doc:description>
+        <doc:para>
+        </doc:para>
+      </doc:description>
+    </doc:doc>
+
+    <!-- ************************************************************ -->
+
     <method name="Block">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="s" name="type" direction="in" />
-      <arg type="b" name="block" direction="in" />
-      <arg type="b" name="ret" direction="out" />
+      <arg type="s" name="type" direction="in">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="block" direction="in">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="ret" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
+
     <method name="BlockIdx">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="u" name="index" direction="in" />
-      <arg type="b" name="block" direction="in" />
-      <arg type="b" name="ret" direction="out" />
+      <arg type="u" name="index" direction="in">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="block" direction="in">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="ret" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EnumerateDevices">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="ao" name="array" direction="out" />
+      <arg type="ao" name="array" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
+
     <method name="KeyControlEnabled">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="b" name="ret" direction="out" />
+      <arg type="b" name="ret" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EnableKeyControl">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="b" name="enable" direction="in" />
-      <arg type="b" name="ret" direction="out" />
+      <arg type="b" name="enable" direction="in">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="ret" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
+    <!-- ************************************************************ -->
+
     <signal name="DeviceAdded">
-      <arg type="o" name="device" direction="out" />
-    </signal>
-    <signal name="DeviceRemoved">
-      <arg type="o" name="device" direction="out" />
-    </signal>
-    <signal name="DeviceChanged">
-      <arg type="o" name="device" direction="out" />
-      <arg type="b" name="soft"   direction="out" />
-      <arg type="b" name="hard"   direction="out" />
+      <arg type="o" name="device" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
 
+    <!-- ************************************************************ -->
+
+    <signal name="DeviceRemoved">
+      <arg type="o" name="device" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="DeviceChanged">
+      <arg type="o" name="device" direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="soft"   direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+      <arg type="b" name="hard"   direction="out">
+        <doc:doc><doc:summary>
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
     <property name="DaemonVersion" type="s" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </property>
 
   </interface>
