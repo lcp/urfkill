@@ -505,26 +505,53 @@ urf_client_class_init (UrfClientClass *klass)
 	object_class->dispose = urf_client_dispose;
 
 	/* install signals */
+	/**
+	 * UrfClient::device-added:
+	 * @client: the #UrfClient instance that emitted the signa
+	 * @device: the #UrfDevice that was added.
+	 *
+	 * The ::device-added signal is emitted when a rfkill device is added.
+	 *
+	 * Since 0.2.0
+	 **/
         signals[URF_CLIENT_DEVICE_ADDED] =
                 g_signal_new ("device-added",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfClientClass, device_added),
-			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-			      G_TYPE_NONE, 1, G_TYPE_POINTER);
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, URF_TYPE_DEVICE);
 
+	/**
+	 * UrfClient::device-removed:
+	 * @client: the #UrfClient instance that emitted the signa
+	 * @device: the #UrfDevice that was removed.
+	 *
+	 * The ::device-removed signal is emitted when a rfkill device is removed.
+	 *
+	 * Since 0.2.0
+	 **/
         signals[URF_CLIENT_DEVICE_REMOVED] =
                 g_signal_new ("device-removed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfClientClass, device_removed),
-			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-			      G_TYPE_NONE, 1, G_TYPE_POINTER);
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, URF_TYPE_DEVICE);
 
+	/**
+	 * UrfClient::device-changed:
+	 * @client: the #UrfClient instance that emitted the signa
+	 * @device: the #UrfDevice that was changed.
+	 *
+	 * The ::device-changed signal is emitted when a rfkill device is changed.
+	 *
+	 * Since 0.2.0
+	 **/
         signals[URF_CLIENT_DEVICE_CHANGED] =
                 g_signal_new ("device-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfClientClass, device_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-			      G_TYPE_NONE, 1, G_TYPE_POINTER);
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, URF_TYPE_DEVICE);
 
 	g_type_class_add_private (klass, sizeof (UrfClientPrivate));
 }
