@@ -19,6 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/**
+ * SECTION:urf-device
+ * @short_description: Client object for accessing information about rfkill devices
+ *
+ * A helper GObject for accessing rfkill devices
+ *
+ * See also: #UrfClient
+ */
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -61,7 +70,7 @@ enum {
 G_DEFINE_TYPE (UrfDevice, urf_device, G_TYPE_OBJECT)
 
 /**
- * urf_device_get_device_properties
+ * urf_device_get_device_properties:
  **/
 static GHashTable *
 urf_device_get_device_properties (UrfDevice *device,
@@ -88,7 +97,7 @@ out:
 }
 
 /**
- * urf_device_collect_props_cb
+ * urf_device_collect_props_cb:
  **/
 static void
 urf_device_collect_props_cb (const char   *key,
@@ -112,7 +121,7 @@ urf_device_collect_props_cb (const char   *key,
 }
 
 /**
- * urf_device_refresh_private
+ * urf_device_refresh_private:
  **/
 static gboolean
 urf_device_refresh_private (UrfDevice *device,
@@ -135,7 +144,17 @@ urf_device_refresh_private (UrfDevice *device,
 }
 
 /**
- * urf_device_set_object_path_sync
+ * urf_device_set_object_path_sync:
+ * @device: a #UrfDevice instance
+ * @object_path: the UrfDevice object path
+ * @cancellable: a #GCancellable or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Set the object path of the object and fill up the intial properties.
+ *
+ * Return value: #TRUE for success, else #FALSE and @error is used
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_device_set_object_path_sync (UrfDevice    *device,
@@ -190,7 +209,14 @@ out:
 }
 
 /**
- * urf_device_get_object_path
+ * urf_device_get_object_path:
+ * @device: a #UrfDevice instance
+ *
+ * Get the object path for the device.
+ *
+ * Return value: the object path, or %NULL
+ *
+ * Since: 0.2.0
  **/
 const char *
 urf_device_get_object_path (UrfDevice *device)
@@ -269,6 +295,9 @@ urf_device_set_property (GObject      *object,
 	}
 }
 
+/**
+ * urf_device_finalize:
+ **/
 static void
 urf_device_finalize (GObject *object)
 {
@@ -284,6 +313,10 @@ urf_device_finalize (GObject *object)
 	G_OBJECT_CLASS(urf_device_parent_class)->finalize(object);
 }
 
+/**
+ * urf_device_class_init:
+ * @klass: The UrfDeviceClass
+ **/
 static void
 urf_device_class_init(UrfDeviceClass *klass)
 {
@@ -340,6 +373,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	g_object_class_install_property (object_class, PROP_DEVICE_NAME, pspec);
 }
 
+/**
+ * urf_device_init:
+ * @client: This class instance
+ **/
 static void
 urf_device_init (UrfDevice *device)
 {
@@ -355,9 +392,10 @@ urf_device_init (UrfDevice *device)
  *
  * Return value: a new UrfDevice object.
  *
+ * Since: 0.2.0
  **/
 UrfDevice *
-urf_device_new ()
+urf_device_new (void)
 {
 	UrfDevice *device;
 	device = URF_DEVICE (g_object_new (URF_TYPE_DEVICE, NULL));

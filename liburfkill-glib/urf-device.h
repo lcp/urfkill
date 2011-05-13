@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#if !defined (__URFKILL_H_INSIDE__) && !defined (URF_COMPILATION)
+#error "Only <urfkill.h> can be included directly."
+#endif
+
 #ifndef __URF_DEVICE_H
 #define __URF_DEVICE_H
 
@@ -53,11 +57,14 @@ typedef struct
 /* general */
 GType			 urf_device_get_type			(void);
 UrfDevice		*urf_device_new				(void);
+
+/* sync versions */
 gboolean		 urf_device_set_object_path_sync	(UrfDevice	*device,
 								 const char	*object_path,
 								 GCancellable	*cancellable,
 								 GError		**error);
 
+/* accessors */
 const char		*urf_device_get_object_path		(UrfDevice	*device);
 
 G_END_DECLS

@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#if !defined (__URFKILL_H_INSIDE__) && !defined (URF_COMPILATION)
+#error "Only <urfkill.h> can be included directly."
+#endif
+
 #ifndef __URF_CLIENT_H
 #define __URF_CLIENT_H
 
@@ -79,7 +83,7 @@ gboolean	 urf_client_enable_key_control		(UrfClient	*client,
 							 const gboolean	 enable,
 							 GError		**error);
 
-/* specific */
+/* specific type */
 gboolean	 urf_client_set_wlan_block		(UrfClient	*client,
 							 const gboolean  block);
 gboolean	 urf_client_set_bluetooth_block		(UrfClient	*client,

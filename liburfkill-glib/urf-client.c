@@ -19,6 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/**
+ * SECTION:urf-client
+ * @short_description: Main client object for accessing the urfkill daemon
+ *
+ * A helper GObject to use for accessing urfkill information, and to be
+ * notified when it is changed.
+ *
+ * See also: #UrfDevice
+ */
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -65,7 +75,7 @@ static gpointer urf_client_object = NULL;
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
 /**
- * urf_client_find_device
+ * urf_client_find_device:
  **/
 static UrfDevice *
 urf_client_find_device (UrfClient   *client,
@@ -89,6 +99,13 @@ urf_client_find_device (UrfClient   *client,
 
 /**
  * urf_client_get_devices:
+ * @client: a #UrfClient instance
+ *
+ * Get a copy of the device objects.
+ *
+ * Return value: (transfer full): an array of #UrfDevice objects, free with g_ptr_array_unref()
+ *
+ * Since: 0.2.0
  **/
 GPtrArray *
 urf_client_get_devices (UrfClient *client)
@@ -99,7 +116,18 @@ urf_client_get_devices (UrfClient *client)
 }
 
 /**
- * urf_client_block
+ * urf_client_set_block
+ * @client: a #UrfClient instance
+ * @type: the type name of the devices
+ * @block: %TRUE to block the devices or %FALSE to unblock
+ * @cancellable: a #GCancellable or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Block or unblock the devices belonging to a specific type.
+ *
+ * Return value: #TRUE for success, else #FALSE and @error is used
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_set_block (UrfClient      *client,
@@ -139,7 +167,18 @@ out:
 }
 
 /**
- * urf_client_block_idx
+ * urf_client_set_block_idx
+ * @client: a #UrfClient instance
+ * @index: the index of the device
+ * @block: %TRUE to block the device or %FALSE to unblock
+ * @cancellable: a #GCancellable or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Block or unblock the device by a specific index
+ *
+ * Return value: #TRUE for success, else #FALSE and @error is used
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_set_block_idx (UrfClient      *client,
@@ -179,7 +218,15 @@ out:
 }
 
 /**
- * urf_client_key_control_enabled
+ * urf_client_key_control_enabled:
+ * @client: a #UrfClient instance
+ * @error: a #GError, or %NULL
+ *
+ * Get whether the rfkill key contorl is enabled or not.
+ *
+ * Return value: #TRUE if the key control is enabled, else #FALSE.
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_key_control_enabled (UrfClient *client,
@@ -214,7 +261,16 @@ out:
 }
 
 /**
- * urf_client_enable_key_control
+ * urf_client_enable_key_control:
+ * @client: a #UrfClient instance
+ * @enable: %TRUE to the enable key control or %FALSE to disable
+ * @error: a #GError, or %NULL
+ *
+ * Enable or disable the rfkill key control of the daemon.
+ *
+ * Return value: #TRUE for success, else #FALSE and @error is used
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_enable_key_control (UrfClient      *client,
@@ -251,7 +307,15 @@ out:
 }
 
 /**
- * urf_client_set_wlan_block
+ * urf_client_set_wlan_block:
+ * @client: a #UrfClient instance
+ * @block: %TRUE to block the WLAN devices or %FALSE to unblock
+ *
+ * Block or unblock the WLAN devices.
+ *
+ * Return value: #TRUE for success, else #FALSE
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_set_wlan_block (UrfClient     *client,
@@ -262,7 +326,15 @@ urf_client_set_wlan_block (UrfClient     *client,
 }
 
 /**
- * urf_client_set_bluetooth_block
+ * urf_client_set_bluetooth_block:
+ * @client: a #UrfClient instance
+ * @block: %TRUE to block the bluetooth devices or %FALSE to unblock
+ *
+ * Block or unblock the bluetooth devices.
+ *
+ * Return value: #TRUE for success, else #FALSE
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_set_bluetooth_block (UrfClient     *client,
@@ -274,6 +346,14 @@ urf_client_set_bluetooth_block (UrfClient     *client,
 
 /**
  * urf_client_set_wwan_block
+ * @client: a #UrfClient instance
+ * @block: %TRUE to block the WWAN devices or %FALSE to unblock
+ *
+ * Block or unblock the WWAN devices.
+ *
+ * Return value: #TRUE for success, else #FALSE
+ *
+ * Since: 0.2.0
  **/
 gboolean
 urf_client_set_wwan_block (UrfClient     *client,
@@ -284,7 +364,7 @@ urf_client_set_wwan_block (UrfClient     *client,
 }
 
 /**
- * urf_client_add
+ * urf_client_add:
  **/
 static UrfDevice *
 urf_client_add (UrfClient  *client,
@@ -413,10 +493,10 @@ urf_client_get_devices_private (UrfClient *client,
 	}
 }
 
-/*
+/**
  * urf_client_class_init:
  * @klass: The UrfClientClass
- */
+ **/
 static void
 urf_client_class_init (UrfClientClass *klass)
 {
@@ -449,10 +529,10 @@ urf_client_class_init (UrfClientClass *klass)
 	g_type_class_add_private (klass, sizeof (UrfClientPrivate));
 }
 
-/*
+/**
  * urf_client_init:
  * @client: This class instance
- */
+ **/
 static void
 urf_client_init (UrfClient *client)
 {
@@ -514,9 +594,9 @@ out:
 	return;
 }
 
-/*
+/**
  * urf_client_dispose:
- */
+ **/
 static void
 urf_client_dispose (GObject *object)
 {
