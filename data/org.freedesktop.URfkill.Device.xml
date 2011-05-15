@@ -17,6 +17,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    The index of the rfkill device
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -26,6 +27,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    The type of the rfkill device which defined in /usr/include/linux/rfkill.h
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -35,6 +37,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    The name of the rfkill device
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -44,6 +47,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    Whether the soft block of the device is blocked or not
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -53,6 +57,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    Whether the hard block of the device is blocked or not
           </doc:para>
         </doc:description>
       </doc:doc>

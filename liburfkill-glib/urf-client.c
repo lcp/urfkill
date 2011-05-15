@@ -268,10 +268,10 @@ out:
 /**
  * urf_client_enable_key_control:
  * @client: a #UrfClient instance
- * @enable: %TRUE to the enable key control or %FALSE to disable
+ * @enable: %TRUE to the enable key control or %FALSE to disable it
  * @error: a #GError, or %NULL
  *
- * Enable or disable the rfkill key control of the daemon.
+ * Enable or disable the rfkill key handling function in the daemon.
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *

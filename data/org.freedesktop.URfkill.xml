@@ -17,20 +17,26 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="type" direction="in">
         <doc:doc><doc:summary>
+	  The type of devices to be blocked/unblocked
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="block" direction="in">
         <doc:doc><doc:summary>
+	  TRUE to block the devices, FALSE to unblock
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="ret" direction="out">
         <doc:doc><doc:summary>
+	  TRUE for success, otherwise FALSE
         </doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
+	    Note: Only soft block can be changed. Hard block is controlled
+	          by BIOS or the hardware and there is no way to change the
+		  status of hard block through kernel functions.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -42,20 +48,26 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="u" name="index" direction="in">
         <doc:doc><doc:summary>
+	  The index of the device to be blocked/unblocked
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="block" direction="in">
         <doc:doc><doc:summary>
+	  TRUE to block the device, FALSE to unblock
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="ret" direction="out">
         <doc:doc><doc:summary>
+	  TRUE for success, otherwise FALSE
         </doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
+	    Note: Only soft block can be changed. Hard block is controlled
+	          by BIOS or the hardware and there is no way to change the
+		  status of hard block through kernel functions.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -67,6 +79,7 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="ao" name="array" direction="out">
         <doc:doc><doc:summary>
+	  An array of the object pathes for the devices
         </doc:summary></doc:doc>
       </arg>
 
@@ -84,6 +97,7 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="b" name="ret" direction="out">
         <doc:doc><doc:summary>
+	  TRUE if the keycontrol is enabled, otherwise FALSE
         </doc:summary></doc:doc>
       </arg>
 
@@ -101,10 +115,12 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="b" name="enable" direction="in">
         <doc:doc><doc:summary>
+	  TRUE to enable the rfkill key control, or FALSE to disable it
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="ret" direction="out">
         <doc:doc><doc:summary>
+	  TRUE for success, otherwise FALSE
         </doc:summary></doc:doc>
       </arg>
 
@@ -121,6 +137,7 @@
     <signal name="DeviceAdded">
       <arg type="o" name="device" direction="out">
         <doc:doc><doc:summary>
+	  The object path for the device that was added
         </doc:summary></doc:doc>
       </arg>
 
@@ -137,6 +154,7 @@
     <signal name="DeviceRemoved">
       <arg type="o" name="device" direction="out">
         <doc:doc><doc:summary>
+	  The object path for the device that was removed
         </doc:summary></doc:doc>
       </arg>
 
@@ -153,14 +171,17 @@
     <signal name="DeviceChanged">
       <arg type="o" name="device" direction="out">
         <doc:doc><doc:summary>
+	  The object path for the device that was changed
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="soft"   direction="out">
         <doc:doc><doc:summary>
+	  The status of the soft block of the device after the change
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="hard"   direction="out">
         <doc:doc><doc:summary>
+	  The status of the hard block of the device after the change
         </doc:summary></doc:doc>
       </arg>
 
@@ -178,6 +199,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+	    The version the running daemon. e.g. 0.2.0
           </doc:para>
         </doc:description>
       </doc:doc>
