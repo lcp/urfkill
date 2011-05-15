@@ -382,6 +382,23 @@ match_platform_vendor (const char *name) {
 	return FALSE;
 }
 
+static UrfDevice *
+urf_killswitch_find_device (UrfKillswitch *killswitch,
+			    guint          index)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
+	GList *item;
+
+	for (item = priv->devices; item != NULL; item = item->next) {
+		device = (UrfDevice *)item->data;
+		if (urf_device_get_index (device) == index)
+			return device;
+	}
+
+	return NULL;
+}
+
 /**
  * update_killswitch:
  **/
@@ -393,28 +410,27 @@ update_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
-	GList *l;
 	guint type;
 	gboolean old_soft, old_hard;
 	gboolean changed = FALSE;
 
-	for (l = priv->devices; l != NULL; l = l->next) {
-		device = (UrfDevice *)l->data;
-		if (urf_device_get_index (device) == index) {
-			old_soft = urf_device_get_soft (device);
-			old_hard = urf_device_get_hard (device);
-			if (old_soft != soft || old_hard != hard) {
-				g_object_set (device,
-					      "soft", soft,
-					      "hard", hard,
-					      NULL);
-				changed = TRUE;
-			}
-			break;
-		}
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device == NULL) {
+		g_warning ("No device with index %u in the list", index);
+		return;
 	}
 
-	if (changed != FALSE) {
+	old_soft = urf_device_get_soft (device);
+	old_hard = urf_device_get_hard (device);
+	if (old_soft != soft || old_hard != hard) {
+		g_object_set (device,
+			      "soft", soft,
+			      "hard", hard,
+			      NULL);
+		changed = TRUE;
+	}
+
+	if (changed == TRUE) {
 		g_debug ("updating killswitch status %d to soft %d hard %d",
 			 index, soft, hard);
 		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, index);
@@ -444,26 +460,25 @@ remove_killswitch (UrfKillswitch *killswitch,
 	gboolean pivot_changed = FALSE;
 	char *object_path = NULL;
 
-	for (l = priv->devices; l != NULL; l = l->next) {
-		device = (UrfDevice *)l->data;
-		if (urf_device_get_index (device) == index) {
-
-			type = urf_device_get_rf_type (device);
-			priv->devices = g_list_remove (priv->devices, device);
-			object_path = g_strdup (urf_device_get_object_path(device));
-
-			name = urf_device_get_name (device);
-			g_debug ("removing killswitch idx %d %s", index, name);
-
-			if (priv->type_pivot[type] == device) {
-				priv->type_pivot[type] = NULL;
-				pivot_changed = TRUE;
-			}
-
-			g_object_unref (device);
-			break;
-		}
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device == NULL) {
+		g_warning ("No device with index %u in the list", index);
+		return;
 	}
+
+	priv->devices = g_list_remove (priv->devices, device);
+	type = urf_device_get_rf_type (device);
+	object_path = g_strdup (urf_device_get_object_path(device));
+
+	name = urf_device_get_name (device);
+	g_debug ("removing killswitch idx %d %s", index, name);
+
+	if (priv->type_pivot[type] == device) {
+		priv->type_pivot[type] = NULL;
+		pivot_changed = TRUE;
+	}
+
+	g_object_unref (device);
 
 	/* Find the next pivot */
 	if (pivot_changed) {
@@ -479,8 +494,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 		}
 	}
 	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_REMOVED], 0, object_path);
-	if (object_path != NULL)
-		g_free (object_path);
+	g_free (object_path);
 }
 
 /**
@@ -497,6 +511,12 @@ add_killswitch (UrfKillswitch *killswitch,
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
 	const char *name;
+
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device != NULL) {
+		g_warning ("device with index %u already in the list", index);
+		return;
+	}
 
 	g_debug ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 
