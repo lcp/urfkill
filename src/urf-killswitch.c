@@ -122,31 +122,45 @@ type_to_string (unsigned int type)
 }
 
 /**
- * urf_killswitch_set_state:
+ * urf_killswitch_find_device:
+ **/
+static UrfDevice *
+urf_killswitch_find_device (UrfKillswitch *killswitch,
+			    guint          index)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
+	GList *item;
+
+	for (item = priv->devices; item != NULL; item = item->next) {
+		device = (UrfDevice *)item->data;
+		if (urf_device_get_index (device) == index)
+			return device;
+	}
+
+	return NULL;
+}
+
+/**
+ * urf_killswitch_set_block:
  **/
 gboolean
-urf_killswitch_set_state (UrfKillswitch  *killswitch,
-			  guint           type,
-			  KillswitchState state)
+urf_killswitch_set_block (UrfKillswitch  *killswitch,
+			  const guint     type,
+			  const gboolean  block)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	struct rfkill_event event;
 	ssize_t len;
 
-	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
 	memset (&event, 0, sizeof(event));
 	event.op = RFKILL_OP_CHANGE_ALL;
 	event.type = type;
-	if (state == KILLSWITCH_STATE_SOFT_BLOCKED)
-		event.soft = 1;
-	else if (state == KILLSWITCH_STATE_UNBLOCKED)
-		event.soft = 0;
-	else
-		g_assert_not_reached ();
+	event.soft = block;
 
-	g_debug ("Set %s to %s", type_to_string (type), state_to_string (state));
+	g_debug ("Set %s to %s", type_to_string (type), block?"block":"unblock");
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -157,46 +171,31 @@ urf_killswitch_set_state (UrfKillswitch  *killswitch,
 }
 
 /**
- * urf_killswitch_set_state_idx:
+ * urf_killswitch_set_block_idx:
  **/
 gboolean
-urf_killswitch_set_state_idx (UrfKillswitch  *killswitch,
-			      guint           index,
-			      KillswitchState state)
+urf_killswitch_set_block_idx (UrfKillswitch  *killswitch,
+			      const guint     index,
+			      const gboolean  block)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
 	struct rfkill_event event;
 	ssize_t len;
-	GList *l;
 	gboolean found = FALSE;
 
-	g_return_val_if_fail (state != KILLSWITCH_STATE_HARD_BLOCKED, FALSE);
-
-	for (l = priv->devices; l; l = l->next) {
-		device = (UrfDevice *)l->data;
-		if (urf_device_get_index (device) == index) {
-			found = TRUE;
-			break;
-		}
-	}
-
-	if (!found) {
-		g_warning ("Index not found: %u", index);
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device == NULL) {
+		g_warning ("Block index: No device with index %u", index);
 		return FALSE;
 	}
 
 	memset (&event, 0, sizeof(event));
 	event.op = RFKILL_OP_CHANGE;
 	event.idx = index;
-	if (state == KILLSWITCH_STATE_SOFT_BLOCKED)
-		event.soft = 1;
-	else if (state == KILLSWITCH_STATE_UNBLOCKED)
-		event.soft = 0;
-	else
-		g_assert_not_reached ();
+	event.soft = block;
 
-	g_debug ("Set device %u to %s", index, state_to_string (state));
+	g_debug ("Set device %u to %s", index, block?"block":"unblock");
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -382,23 +381,6 @@ match_platform_vendor (const char *name) {
 	return FALSE;
 }
 
-static UrfDevice *
-urf_killswitch_find_device (UrfKillswitch *killswitch,
-			    guint          index)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	GList *item;
-
-	for (item = priv->devices; item != NULL; item = item->next) {
-		device = (UrfDevice *)item->data;
-		if (urf_device_get_index (device) == index)
-			return device;
-	}
-
-	return NULL;
-}
-
 /**
  * update_killswitch:
  **/
@@ -437,10 +419,10 @@ update_killswitch (UrfKillswitch *killswitch,
 
 		if (priv->force_sync) {
 			/* Sync soft and hard blocks */
-			if (hard == 1 && soft == 0)
-				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_SOFT_BLOCKED);
-			else if (hard != old_hard && hard == 0)
-				urf_killswitch_set_state_idx (killswitch, index, KILLSWITCH_STATE_UNBLOCKED);
+			if (hard == TRUE && soft == FALSE)
+				urf_killswitch_set_block_idx (killswitch, index, TRUE);
+			else if (hard != old_hard && hard == FALSE)
+				urf_killswitch_set_block_idx (killswitch, index, FALSE);
 		}
 	}
 }
@@ -533,8 +515,7 @@ add_killswitch (UrfKillswitch *killswitch,
 	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_ADDED], 0,
 		       urf_device_get_object_path (device));
 	if (priv->force_sync && priv->type_pivot[type] != device) {
-		int state = event_to_state (soft, hard);
-		urf_killswitch_set_state_idx (killswitch, index, state);
+		urf_killswitch_set_block_idx (killswitch, index, soft);
 	}
 }
 

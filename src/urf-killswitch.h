@@ -77,12 +77,12 @@ gboolean		 urf_killswitch_has_devices		(UrfKillswitch	*killswitch);
 GList			*urf_killswitch_get_devices		(UrfKillswitch	*killswitch);
 UrfDevice		*urf_killswitch_get_device		(UrfKillswitch  *killswitch,
 								 const guint	 index);
-gboolean		 urf_killswitch_set_state		(UrfKillswitch	*killswitch,
-								 guint		 type,
-								 KillswitchState state);
-gboolean		 urf_killswitch_set_state_idx		(UrfKillswitch	*killswitch,
-								 guint		 index,
-								 KillswitchState state);
+gboolean		 urf_killswitch_set_block		(UrfKillswitch	*killswitch,
+								 const guint	 type,
+								 const gboolean	 block);
+gboolean		 urf_killswitch_set_block_idx		(UrfKillswitch	*killswitch,
+								 const guint	 index,
+								 const gboolean	 block);
 KillswitchState		 urf_killswitch_get_state		(UrfKillswitch	*killswitch,
 								 guint 		 type);
 KillswitchState		 urf_killswitch_get_state_idx		(UrfKillswitch	*killswitch,
