@@ -43,10 +43,17 @@ G_BEGIN_DECLS
 
 typedef struct UrfDevicePrivate UrfDevicePrivate;
 
+/**
+ * UrfDevice:
+ *
+ * The UrfDevice struct contains only private fields
+ * and should not be directly accessed.
+ */
 typedef struct
 {
-	 GObject		 parent;
-	 UrfDevicePrivate	*priv;
+	/*< private >*/
+	GObject			 parent;
+	UrfDevicePrivate	*priv;
 } UrfDevice;
 
 typedef struct

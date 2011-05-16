@@ -44,10 +44,17 @@ G_BEGIN_DECLS
 
 typedef struct UrfClientPrivate UrfClientPrivate;
 
+/**
+ * UrfClient:
+ *
+ * The UrfClient struct contains only private fields
+ * and should not be directly accessed.
+ */
 typedef struct
 {
-	 GObject		 parent;
-	 UrfClientPrivate	*priv;
+	/*< private >*/
+	GObject			 parent;
+	UrfClientPrivate	*priv;
 } UrfClient;
 
 typedef struct

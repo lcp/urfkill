@@ -22,10 +22,10 @@
 /**
  * SECTION:urf-device
  * @short_description: Client object for accessing information about rfkill devices
+ * @title: UrfDevice
+ * @see_also: #UrfClient
  *
  * A helper GObject for accessing rfkill devices
- *
- * See also: #UrfClient
  */
 
 #include "config.h"
@@ -40,11 +40,6 @@
 #define URF_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
 					URF_TYPE_DEVICE, UrfDevicePrivate))
 
-/**
- * UrfDevicePrivate:
- *
- * Private #UrfDevice data
- **/
 struct UrfDevicePrivate
 {
 	DBusGConnection *bus;
@@ -146,7 +141,7 @@ urf_device_refresh_private (UrfDevice *device,
 /**
  * urf_device_set_object_path_sync:
  * @device: a #UrfDevice instance
- * @object_path: the UrfDevice object path
+ * @object_path: the #UrfDevice object path
  * @cancellable: a #GCancellable or %NULL
  * @error: a #GError, or %NULL
  *

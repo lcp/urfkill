@@ -22,11 +22,11 @@
 /**
  * SECTION:urf-client
  * @short_description: Main client object for accessing the urfkill daemon
+ * @title: UrfClient
+ * @see_also: #UrfDevice
  *
  * A helper GObject to use for accessing urfkill information, and to be
  * notified when it is changed.
- *
- * See also: #UrfDevice
  */
 
 #include "config.h"
@@ -46,11 +46,6 @@ static void	urf_client_finalize	(GObject	*object);
 
 #define URF_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URF_TYPE_CLIENT, UrfClientPrivate))
 
-/**
- * UrfClientPrivate:
- *
- * Private #UrfClient data
- **/
 struct UrfClientPrivate
 {
 	DBusGConnection	*bus;
@@ -599,7 +594,7 @@ urf_client_class_init (UrfClientClass *klass)
 	/**
 	 * UrfClient:daemon-version:
 	 *
-	 * The daemon version.
+	 * The running daemon version.
 	 *
 	 * Since: 0.2.0
 	 **/
@@ -797,7 +792,7 @@ urf_client_finalize (GObject *object)
  *
  * Creates a new #UrfClient object.
  *
- * Return value: a new UrfClient object.
+ * Return value: a new #UrfClient object.
  *
  **/
 UrfClient *
