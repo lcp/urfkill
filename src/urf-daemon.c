@@ -125,7 +125,8 @@ urf_daemon_input_event_cb (UrfInput *input,
 	UrfDaemon *daemon = URF_DAEMON (data);
 	UrfDaemonPrivate *priv = daemon->priv;
 	UrfKillswitch *killswitch = priv->killswitch;
-	gint type, state;
+	gint type;
+	gboolean block = FALSE;
 
 	if (!priv->key_control)
 		return;
@@ -152,15 +153,13 @@ urf_daemon_input_event_cb (UrfInput *input,
 			return;
 	}
 
-	state = urf_killswitch_get_state (killswitch, type);
-
-	switch (state) {
+	switch (urf_killswitch_get_state (killswitch, type)) {
 		case KILLSWITCH_STATE_UNBLOCKED:
 		case KILLSWITCH_STATE_HARD_BLOCKED:
-			state = KILLSWITCH_STATE_SOFT_BLOCKED;
+			block = TRUE;
 			break;
 		case KILLSWITCH_STATE_SOFT_BLOCKED:
-			state = KILLSWITCH_STATE_UNBLOCKED;
+			block = FALSE;
 			break;
 		case KILLSWITCH_STATE_NO_ADAPTER:
 		default:
@@ -170,7 +169,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	if (priv->master_key)
 		type = urf_killswitch_rf_type (killswitch, "ALL");
 
-	urf_killswitch_set_state (killswitch, type, state);
+	urf_killswitch_set_block (killswitch, type, block);
 }
 
 /**
@@ -217,7 +216,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
-	int type, state;
+	int type;
 	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_devices (priv->killswitch))
@@ -234,12 +233,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.block", context))
 		goto out;
 
-	if (block)
-		state = KILLSWITCH_STATE_SOFT_BLOCKED;
-	else
-		state = KILLSWITCH_STATE_UNBLOCKED;
-
-	ret = urf_killswitch_set_state (priv->killswitch, type, state);
+	ret = urf_killswitch_set_block (priv->killswitch, type, block);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
@@ -260,7 +254,6 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
-	int state;
 	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_devices (priv->killswitch))
@@ -273,12 +266,7 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.blockidx", context))
 		goto out;
 
-	if (block)
-		state = KILLSWITCH_STATE_SOFT_BLOCKED;
-	else
-		state = KILLSWITCH_STATE_UNBLOCKED;
-
-	ret = urf_killswitch_set_state_idx (priv->killswitch, index, state);
+	ret = urf_killswitch_set_block_idx (priv->killswitch, index, block);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
