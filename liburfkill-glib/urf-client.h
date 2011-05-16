@@ -49,7 +49,7 @@ typedef struct UrfClientPrivate UrfClientPrivate;
  *
  * The UrfClient struct contains only private fields
  * and should not be directly accessed.
- */
+ **/
 typedef struct
 {
 	/*< private >*/

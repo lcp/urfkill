@@ -124,6 +124,8 @@ urf_client_get_devices (UrfClient *client)
  * @error: a #GError, or %NULL
  *
  * Block or unblock the devices belonging to a specific type.
+ * The type name is case insensitive and can be "ALL", "WLAN", "BLUETOOTH",
+ * "UWB", "WIMAX", "WWAN", "GPS", or "FM".
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
@@ -174,7 +176,7 @@ out:
  * @cancellable: a #GCancellable or %NULL
  * @error: a #GError, or %NULL
  *
- * Block or unblock the device by a specific index
+ * Block or unblock the device by a specific index.
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
@@ -602,7 +604,7 @@ urf_client_class_init (UrfClientClass *klass)
 					 PROP_DAEMON_VERSION,
 					 g_param_spec_string ("daemon-version",
 							      "Daemon version",
-							      NULL,
+							      "The running daemon version",
 							      NULL,
 							      G_PARAM_READABLE));
 

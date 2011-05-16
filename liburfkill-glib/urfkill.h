@@ -19,16 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/**
- * SECTION:urfkill
- * @short_description: Client objects for accessing urfkill
- *
- * These objects allow client programs to trivially get details about
- * the rfkill devices on the system.
- *
- * See also: #UrfClient, #UrfDevice
- */
-
 #ifndef __URFKILL_H__
 #define __URFKILL_H__
 
