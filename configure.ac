@@ -203,6 +203,9 @@ AC_CONFIG_FILES([
 Makefile
 data/Makefile
 data/urfkill-glib.pc
+docs/Makefile
+docs/version.xml
+docs/dbus/Makefile
 src/Makefile
 liburfkill-glib/Makefile
 liburfkill-glib/urf-version.h
@@ -213,3 +216,30 @@ tests/Makefile
 ])
 AC_OUTPUT
 
+dnl ==========================================================================
+echo "
+                 urfkill $VERSION
+             =========================
+
+        prefix:                     ${prefix}
+        libdir:                     ${libdir}
+        libexecdir:                 ${libexecdir}
+        bindir:                     ${bindir}
+        sbindir:                    ${sbindir}
+        datadir:                    ${datadir}
+        sysconfdir:                 ${sysconfdir}
+        localstatedir:              ${localstatedir}
+        docdir:                     ${docdir}
+
+        compiler:                   ${CC}
+        cflags:                     ${CFLAGS}
+        cppflags:                   ${CPPFLAGS}
+        xsltproc:                   ${XSLTPROC}
+
+        Backend:                    ${with_backend}
+        libimobiledevice support:   ${have_idevice}
+        Maintainer mode:            ${USE_MAINTAINER_MODE}
+        Building api docs:          ${enable_gtk_doc}
+        Building man pages:         ${enable_man_pages}
+        Building unit tests:        ${enable_tests}
+"
