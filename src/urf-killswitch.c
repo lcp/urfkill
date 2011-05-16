@@ -343,11 +343,9 @@ urf_killswitch_get_device (UrfKillswitch *killswitch,
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
-	for (item = priv->devices; item; item = g_list_next (item)) {
-		device = (UrfDevice *)item->data;
-		if (urf_device_get_index (device) == index)
-			return URF_DEVICE (g_object_ref (device));
-	}
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device)
+		return URF_DEVICE (g_object_ref (device));
 
 	return NULL;
 }
