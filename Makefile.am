@@ -4,6 +4,8 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = liburfkill-glib src data policy docs profile tests po
 
+DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc
+
 # Creating ChangeLog from git log (taken from cairo/Makefile.am):
 ChangeLog: $(srcdir)/ChangeLog
 

@@ -8,6 +8,7 @@ m4_define([urf_version],
 
 AC_PREREQ(2.63)
 AC_INIT([urfkill],[urf_version],[glin@novell.com],[urfkill])
+AM_INIT_AUTOMAKE([-Wno-portability])
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE([1.9 tar-ustar dist-bzip2])
 AC_CONFIG_HEADERS([config.h])
@@ -24,6 +25,8 @@ AC_SUBST(VERSION)
 AC_SUBST(URF_MAJOR_VERSION)
 AC_SUBST(URF_MINOR_VERSION)
 AC_SUBST(URF_MICRO_VERSION)
+AC_SUBST([API_VERSION],[$URF_MAJOR_VERSION.$URF_MINOR_VERSION])
+AC_SUBST([API_VERSION_AM],[$URF_MAJOR_VERSION\_$URF_MINOR_VERSION])
 
 # libtool versioning - this applies to liburfkill-glib
 #
@@ -173,14 +176,15 @@ if test x$has_new_polkit = xno; then
 			  polkit-backend-1 \
 			  polkit-gobject-1 >= 0.91)
 else
-	AC_DEFINE(USE_SECURITY_POLKIT_NEW, 1, [if we should use PolicyKit's new API])
+	AC_DEFINE(USE_SECURITY_POLKIT_NEW, 1, [if we should use PolicyKit new API])
 fi
-
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.16.1])
 PKG_CHECK_MODULES(LIBUDEV, [libudev >= 147])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
+
+GOBJECT_INTROSPECTION_CHECK([0.6.7])
 
 dnl ---------------------------------------------------------------------------
 dnl - Build self tests
@@ -217,29 +221,29 @@ tests/Makefile
 AC_OUTPUT
 
 dnl ==========================================================================
-echo "
-                 urfkill $VERSION
-             =========================
-
-        prefix:                     ${prefix}
-        libdir:                     ${libdir}
-        libexecdir:                 ${libexecdir}
-        bindir:                     ${bindir}
-        sbindir:                    ${sbindir}
-        datadir:                    ${datadir}
-        sysconfdir:                 ${sysconfdir}
-        localstatedir:              ${localstatedir}
-        docdir:                     ${docdir}
-
-        compiler:                   ${CC}
-        cflags:                     ${CFLAGS}
-        cppflags:                   ${CPPFLAGS}
-        xsltproc:                   ${XSLTPROC}
-
-        Backend:                    ${with_backend}
-        libimobiledevice support:   ${have_idevice}
-        Maintainer mode:            ${USE_MAINTAINER_MODE}
-        Building api docs:          ${enable_gtk_doc}
-        Building man pages:         ${enable_man_pages}
-        Building unit tests:        ${enable_tests}
-"
+echo ""
+echo "                 urfkill $VERSION"
+echo "             ========================"
+echo ""
+echo "        prefix:                     ${prefix}"
+echo "        libdir:                     ${libdir}"
+echo "        libexecdir:                 ${libexecdir}"
+echo "        bindir:                     ${bindir}"
+echo "        sbindir:                    ${sbindir}"
+echo "        datadir:                    ${datadir}"
+echo "        sysconfdir:                 ${sysconfdir}"
+echo "        localstatedir:              ${localstatedir}"
+echo "        docdir:                     ${docdir}"
+echo ""
+echo "        compiler:                   ${CC}"
+echo "        cflags:                     ${CFLAGS}"
+echo "        cppflags:                   ${CPPFLAGS}"
+echo "        xsltproc:                   ${XSLTPROC}"
+echo ""
+echo "        Backend:                    ${with_backend}"
+echo "        libimobiledevice support:   ${have_idevice}"
+echo "        Maintainer mode:            ${USE_MAINTAINER_MODE}"
+echo "        Building api docs:          ${enable_gtk_doc}"
+echo "        Building man pages:         ${enable_man_pages}"
+echo "        Building unit tests:        ${enable_tests}"
+echo "        Building introspection:     ${enable_introspection}"
