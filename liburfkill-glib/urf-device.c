@@ -341,7 +341,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 * UrfDevice:type:
 	 *
 	 * The type of the rfkill device is defined in &lt;linux/rfkill.h&gt;
-	 * as the following types:
+	 * and would be one of the following values:
 	 * RFKILL_TYPE_ALL, RFKILL_TYPE_WLAN, RFKILL_TYPE_BLUETOOTH,
 	 * RFKILL_TYPE_UWB, RFKILL_TYPE_WIMAX, RFKILL_TYPE_WWAN,
 	 * RFKILL_TYPE_GPS, and RFKILL_TYPE_FM.
