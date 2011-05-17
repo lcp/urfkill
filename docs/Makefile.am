@@ -18,10 +18,12 @@ SCAN_OPTIONS=--ignore-headers=config.h
 DOC_SOURCE_DIR=../liburfkill-glib
 
 # Used for dependencies
-HFILE_GLOB=
-#$(top_srcdir)/policy/*.h
-CFILE_GLOB=
-#$(top_srcdir)/policy/*.c
+HFILE_GLOB=							\
+	$(top_srcdir)/liburfkill-glib/*.h			\
+	$(NULL)
+CFILE_GLOB=							\
+	$(top_srcdir)/liburfkill-glib/*.h			\
+	$(NULL)
 
 # Headers to ignore
 IGNORE_HFILES=							\
@@ -63,7 +65,7 @@ content_files =  			    			\
 HTML_IMAGES = 							\
 	$(NULL)
 
-# Extra options to supply to gtkdoc-fixref
+# Extra options to supply to gtkdoc-fixxref
 FIXXREF_OPTIONS=
 
 MAINTAINERCLEANFILES =						\

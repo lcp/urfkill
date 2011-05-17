@@ -66,7 +66,7 @@ AC_PATH_PROG([XSLTPROC], [xsltproc])
 fi
 AM_CONDITIONAL(MAN_PAGES_ENABLED, test x$enable_man_pages = xyes)
 
-GTK_DOC_CHECK([1.9])
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
 # udev rules go in /lib, not /usr/lib
 if test "$prefix" = "/usr" -o "$prefix" = "/usr/local" ; then
