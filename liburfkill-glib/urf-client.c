@@ -75,6 +75,34 @@ static gpointer urf_client_object = NULL;
 
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
+static const char *
+type_to_string (guint type)
+{
+	switch (type) {
+	case RFKILL_TYPE_ALL:
+		return "ALL";
+	case RFKILL_TYPE_WLAN:
+		return "WLAN";
+	case RFKILL_TYPE_BLUETOOTH:
+		return "BLUETOOTH";
+	case RFKILL_TYPE_UWB:
+		return "UWB";
+	case RFKILL_TYPE_WIMAX:
+		return "WIMAX";
+	case RFKILL_TYPE_WWAN:
+		return "WWMAN";
+	case RFKILL_TYPE_GPS:
+		return "GPS";
+	case RFKILL_TYPE_FM:
+		return "FM";
+	default:
+		g_warning ("No such type");
+		break;;
+	}
+
+	return NULL;
+}
+
 /**
  * urf_client_find_device:
  **/
@@ -119,14 +147,17 @@ urf_client_get_devices (UrfClient *client)
 /**
  * urf_client_set_block:
  * @client: a #UrfClient instance
- * @type: the type name of the devices
+ * @type: the type of the devices
  * @block: %TRUE to block the devices or %FALSE to unblock
  * @cancellable: a #GCancellable or %NULL
  * @error: a #GError, or %NULL
  *
  * Block or unblock the devices belonging to a specific type.
- * The type name is case insensitive and can be "ALL", "WLAN", "BLUETOOTH",
- * "UWB", "WIMAX", "WWAN", "GPS", or "FM".
+ * The type is defined in &lt;linux/rfkill.h&gt;.
+ * It can be one of the following values:
+ * RFKILL_TYPE_ALL, RFKILL_TYPE_WLAN, RFKILL_TYPE_BLUETOOTH,
+ * RFKILL_TYPE_UWB, RFKILL_TYPE_WIMAX, RFKILL_TYPE_WWAN,
+ * RFKILL_TYPE_GPS, or RFKILL_TYPE_FM.
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
@@ -134,19 +165,24 @@ urf_client_get_devices (UrfClient *client)
  **/
 gboolean
 urf_client_set_block (UrfClient      *client,
-		      const char     *type,
+		      const guint     type,
 		      const gboolean  block,
 		      GCancellable   *cancellable,
 		      GError         **error)
 {
-	gboolean ret, status;
+	gboolean ret, status = FALSE;
+	const char *type_name;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
+	type_name = type_to_string (type);
+	if (type_name == NULL)
+		return FALSE;
+
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
-				 G_TYPE_STRING, type,
+				 G_TYPE_STRING, type_name,
 				 G_TYPE_BOOLEAN, block,
 				 G_TYPE_INVALID,
 				 G_TYPE_BOOLEAN, &status,
@@ -314,7 +350,8 @@ out:
  * @client: a #UrfClient instance
  * @block: %TRUE to block the WLAN devices or %FALSE to unblock
  *
- * Block or unblock the WLAN devices.
+ * Block or unblock the WLAN devices. This is a convenient function
+ * and the underlying function is #urf_client_set_block.
  *
  * Return value: #TRUE for success, else #FALSE
  *
@@ -324,8 +361,7 @@ gboolean
 urf_client_set_wlan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "WLAN", block, NULL, NULL);
+	return urf_client_set_block (client, RFKILL_TYPE_WLAN, block, NULL, NULL);
 }
 
 /**
@@ -333,7 +369,8 @@ urf_client_set_wlan_block (UrfClient     *client,
  * @client: a #UrfClient instance
  * @block: %TRUE to block the bluetooth devices or %FALSE to unblock
  *
- * Block or unblock the bluetooth devices.
+ * Block or unblock the bluetooth devices. This is a convenient function
+ * and the underlying function is #urf_client_set_block.
  *
  * Return value: #TRUE for success, else #FALSE
  *
@@ -343,8 +380,7 @@ gboolean
 urf_client_set_bluetooth_block (UrfClient     *client,
 				const gboolean block)
 {
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "BLUETOOTH", block, NULL, NULL);
+	return urf_client_set_block (client, RFKILL_TYPE_BLUETOOTH, block, NULL, NULL);
 }
 
 /**
@@ -352,7 +388,8 @@ urf_client_set_bluetooth_block (UrfClient     *client,
  * @client: a #UrfClient instance
  * @block: %TRUE to block the WWAN devices or %FALSE to unblock
  *
- * Block or unblock the WWAN devices.
+ * Block or unblock the wireless WAN devices. This is a convenient function
+ * and the underlying function is #urf_client_set_block.
  *
  * Return value: #TRUE for success, else #FALSE
  *
@@ -362,8 +399,7 @@ gboolean
 urf_client_set_wwan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	return urf_client_set_block (client, "WWAN", block, NULL, NULL);
+	return urf_client_set_block (client, RFKILL_TYPE_WWAN, block, NULL, NULL);
 }
 
 /**
