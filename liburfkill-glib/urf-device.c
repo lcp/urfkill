@@ -326,6 +326,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	/**
 	 * UrfDevice:index:
+	 *
+	 * The index of the rfkill device assigned by the kernel rfkill subsystem
+	 *
+	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("index",
 				   "Index", "The index of the rfkill device",
@@ -335,6 +339,14 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	/**
 	 * UrfDevice:type:
+	 *
+	 * The type of the rfkill device is defined in &lt;linux/rfkill.h&gt;
+	 * as the following types:
+	 * RFKILL_TYPE_ALL, RFKILL_TYPE_WLAN, RFKILL_TYPE_BLUETOOTH,
+	 * RFKILL_TYPE_UWB, RFKILL_TYPE_WIMAX, RFKILL_TYPE_WWAN,
+	 * RFKILL_TYPE_GPS, and RFKILL_TYPE_FM.
+	 *
+	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("type",
 				   "Type", "The type of the rfkill device",
@@ -344,6 +356,11 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	/**
 	 * UrfDevice:soft:
+	 *
+	 * This property indicates whether the soft block of the rfkill device
+	 * is on or not.
+	 *
+	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("soft",
 				   "Soft Block", "If the soft block is on",
@@ -353,6 +370,11 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	/**
 	 * UrfDevice:hard:
+	 *
+	 * This property indicates whether the hard block of the rfkill device
+	 * is on or not.
+	 *
+	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("hard",
 				   "Hard Block", "If the hard block is on",
@@ -362,6 +384,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	/**
 	 * UrfDevice:name:
+	 *
+	 * The name of the rfkill device defined by the driver
+	 *
+	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_string ("name",
 				     "Name", "The name of the rfkill device",
@@ -386,7 +412,7 @@ urf_device_init (UrfDevice *device)
  *
  * Creates a new #UrfDevice object.
  *
- * Return value: a new UrfDevice object.
+ * Return value: a new #UrfDevice object.
  *
  * Since: 0.2.0
  **/

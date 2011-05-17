@@ -41,15 +41,16 @@ G_BEGIN_DECLS
 #define URF_DEVICE_ERROR	(urf_device_error_quark ())
 #define URF_DEVICE_TYPE_ERROR	(urf_device_error_get_type ())
 
+typedef struct _UrfDevice UrfDevice;
+typedef struct _UrfDeviceClass UrfDeviceClass;
+typedef struct _UrfDevicePrivate UrfDevicePrivate;
+
 /**
  * UrfDevice:
  *
  * The UrfDevice struct contains only private fields
  * and should not be directly accessed.
  */
-typedef struct _UrfDevice UrfDevice;
-typedef struct _UrfDevicePrivate UrfDevicePrivate;
-
 struct _UrfDevice
 {
 	/*< private >*/
@@ -62,12 +63,11 @@ struct _UrfDevice
  *
  * Class structure for #UrfDevice
  **/
-
-typedef struct
+struct _UrfDeviceClass
 {
 	/*< private>*/
 	GObjectClass		 parent_class;
-} UrfDeviceClass;
+};
 
 /* general */
 GType			 urf_device_get_type			(void);
