@@ -49,8 +49,12 @@ gtk-doc.make
 *.swp
 tags
 NEWS.new
-*.txt
 .anjuta
 *.cache
 *.anjuta
-
+docs/urfkill-decl-list.txt
+docs/urfkill-decl.txt
+docs/urfkill-overrides.txt
+docs/urfkill-undeclared.txt
+docs/urfkill-undocumented.txt
+docs/urfkill-unused.txt
