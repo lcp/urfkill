@@ -23,6 +23,7 @@
  * SECTION:urf-device
  * @short_description: Client object for accessing information about rfkill devices
  * @title: UrfDevice
+ * @include: urfkill.h
  * @see_also: #UrfClient
  *
  * A helper GObject for accessing rfkill devices
@@ -40,7 +41,7 @@
 #define URF_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
 					URF_TYPE_DEVICE, UrfDevicePrivate))
 
-struct UrfDevicePrivate
+struct _UrfDevicePrivate
 {
 	DBusGConnection *bus;
 	DBusGProxy      *proxy_props;

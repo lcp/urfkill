@@ -22,22 +22,22 @@
 #ifndef __URF_VERSION_H
 #define __URF_VERSION_H
 
-/**
- * URF_CHECK_VERSION:
+/*
+ * URF_CHECK_VERSION
  *
  * The compile-time major version
  */
 #define URF_MAJOR_VERSION				(@URF_MAJOR_VERSION@)
 
-/**
- * URF_CHECK_MINOR:
+/*
+ * URF_CHECK_MINOR
  *
  * The compile-time minor version
  */
 #define URF_MINOR_VERSION				(@URF_MINOR_VERSION@)
 
-/**
- * URF_MICRO_VERSION:
+/*
+ * URF_MICRO_VERSION
  *
  * The compile-time micro version
  */

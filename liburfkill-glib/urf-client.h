@@ -42,7 +42,9 @@ G_BEGIN_DECLS
 #define URF_CLIENT_ERROR		(urf_client_error_quark ())
 #define URF_CLIENT_TYPE_ERROR		(urf_client_error_get_type ())
 
-typedef struct UrfClientPrivate UrfClientPrivate;
+typedef struct _UrfClient UrfClient;
+typedef struct _UrfClientClass UrfClientClass;
+typedef struct _UrfClientPrivate UrfClientPrivate;
 
 /**
  * UrfClient:
@@ -50,15 +52,21 @@ typedef struct UrfClientPrivate UrfClientPrivate;
  * The UrfClient struct contains only private fields
  * and should not be directly accessed.
  **/
-typedef struct
+struct _UrfClient
 {
 	/*< private >*/
 	GObject			 parent;
 	UrfClientPrivate	*priv;
-} UrfClient;
+};
 
-typedef struct
+/**
+ * UrfClientClass:
+ *
+ * Class structure for #UrfClient
+ **/
+struct _UrfClientClass
 {
+	/*< private >*/
 	GObjectClass		 parent_class;
 	void			(*device_added)		(UrfClient	*client,
 							 UrfDevice	*device);
@@ -66,7 +74,7 @@ typedef struct
 							 UrfDevice	*device);
 	void			(*device_changed)	(UrfClient	*client,
 							 UrfDevice	*device);
-} UrfClientClass;
+};
 
 /* general */
 GType		 urf_client_get_type			(void);

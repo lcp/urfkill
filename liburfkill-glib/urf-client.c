@@ -23,6 +23,7 @@
  * SECTION:urf-client
  * @short_description: Main client object for accessing the urfkill daemon
  * @title: UrfClient
+ * @include: urfkill.h
  * @see_also: #UrfDevice
  *
  * A helper GObject to use for accessing urfkill information, and to be
@@ -46,7 +47,7 @@ static void	urf_client_finalize	(GObject	*object);
 
 #define URF_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), URF_TYPE_CLIENT, UrfClientPrivate))
 
-struct UrfClientPrivate
+struct _UrfClientPrivate
 {
 	DBusGConnection	*bus;
 	DBusGProxy	*proxy;
@@ -614,7 +615,7 @@ urf_client_class_init (UrfClientClass *klass)
 	 * @client: the #UrfClient instance that emitted the signa
 	 * @device: the #UrfDevice that was added.
 	 *
-	 * The ::device-added signal is emitted when a rfkill device is added.
+	 * The device-added signal is emitted when a rfkill device is added.
 	 *
 	 * Since 0.2.0
 	 **/
@@ -630,7 +631,7 @@ urf_client_class_init (UrfClientClass *klass)
 	 * @client: the #UrfClient instance that emitted the signa
 	 * @device: the #UrfDevice that was removed.
 	 *
-	 * The ::device-removed signal is emitted when a rfkill device is removed.
+	 * The device-removed signal is emitted when a rfkill device is removed.
 	 *
 	 * Since 0.2.0
 	 **/
@@ -646,7 +647,7 @@ urf_client_class_init (UrfClientClass *klass)
 	 * @client: the #UrfClient instance that emitted the signa
 	 * @device: the #UrfDevice that was changed.
 	 *
-	 * The ::device-changed signal is emitted when a rfkill device is changed.
+	 * The device-changed signal is emitted when a rfkill device is changed.
 	 *
 	 * Since 0.2.0
 	 **/
