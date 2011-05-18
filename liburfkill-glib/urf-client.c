@@ -75,34 +75,6 @@ static gpointer urf_client_object = NULL;
 
 G_DEFINE_TYPE (UrfClient, urf_client, G_TYPE_OBJECT)
 
-static const char *
-type_to_string (guint type)
-{
-	switch (type) {
-	case RFKILL_TYPE_ALL:
-		return "ALL";
-	case RFKILL_TYPE_WLAN:
-		return "WLAN";
-	case RFKILL_TYPE_BLUETOOTH:
-		return "BLUETOOTH";
-	case RFKILL_TYPE_UWB:
-		return "UWB";
-	case RFKILL_TYPE_WIMAX:
-		return "WIMAX";
-	case RFKILL_TYPE_WWAN:
-		return "WWMAN";
-	case RFKILL_TYPE_GPS:
-		return "GPS";
-	case RFKILL_TYPE_FM:
-		return "FM";
-	default:
-		g_warning ("No such type");
-		break;;
-	}
-
-	return NULL;
-}
-
 /**
  * urf_client_find_device:
  **/
@@ -175,18 +147,14 @@ urf_client_set_block (UrfClient      *client,
 		      GError         **error)
 {
 	gboolean ret, status = FALSE;
-	const char *type_name;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	type_name = type_to_string (type);
-	if (type_name == NULL)
-		return FALSE;
+	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
-				 G_TYPE_STRING, type_name,
+				 G_TYPE_UINT, type,
 				 G_TYPE_BOOLEAN, block,
 				 G_TYPE_INVALID,
 				 G_TYPE_BOOLEAN, &status,

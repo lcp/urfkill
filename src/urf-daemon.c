@@ -31,6 +31,7 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <linux/input.h>
+#include <linux/rfkill.h>
 
 #include "urf-polkit.h"
 #include "urf-daemon.h"
@@ -133,20 +134,20 @@ urf_daemon_input_event_cb (UrfInput *input,
 
 	switch (code) {
 		case KEY_WLAN:
-			type = urf_killswitch_rf_type (killswitch, "WLAN");
+			type = RFKILL_TYPE_WLAN;
 			break;
 		case KEY_BLUETOOTH:
-			type = urf_killswitch_rf_type (killswitch, "BLUETOOTH");
+			type = RFKILL_TYPE_BLUETOOTH;
 			break;
 		case KEY_UWB:
-			type = urf_killswitch_rf_type (killswitch, "UWB");
+			type = RFKILL_TYPE_UWB;
 			break;
 		case KEY_WIMAX:
-			type = urf_killswitch_rf_type (killswitch, "WIMAX");
+			type = RFKILL_TYPE_WIMAX;
 			break;
 #ifdef KEY_RFKILL
 		case KEY_RFKILL:
-			type = urf_killswitch_rf_type (killswitch, "ALL");
+			type = RFKILL_TYPE_ALL;
 			break;
 #endif
 		default:
@@ -167,7 +168,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	}
 
 	if (priv->master_key)
-		type = urf_killswitch_rf_type (killswitch, "ALL");
+		type = RFKILL_TYPE_ALL;
 
 	urf_killswitch_set_block (killswitch, type, block);
 }
@@ -210,20 +211,15 @@ out:
  **/
 gboolean
 urf_daemon_block (UrfDaemon             *daemon,
-		  const char            *type_name,
+		  const guint            type,
 		  const gboolean         block,
 		  DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
-	int type;
 	gboolean ret = FALSE;
 
 	if (!urf_killswitch_has_devices (priv->killswitch))
-		goto out;
-
-	type = urf_killswitch_rf_type (priv->killswitch, type_name);
-	if (type < 0)
 		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);

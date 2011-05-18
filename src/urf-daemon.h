@@ -68,7 +68,7 @@ UrfDaemon	*urf_daemon_new			(UrfConfig		*config);
 
 gboolean	 urf_daemon_startup		(UrfDaemon		*daemon);
 gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
-						 const char		*type_name,
+						 const guint		 type,
 						 const gboolean		 block,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_block_idx		(UrfDaemon		*daemon,

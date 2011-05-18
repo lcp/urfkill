@@ -38,7 +38,7 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <method name="Block">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="s" name="type" direction="in">
+      <arg type="u" name="type" direction="in">
         <doc:doc><doc:summary>
 	  The type of devices to be blocked/unblocked
         </doc:summary></doc:doc>
@@ -58,11 +58,34 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
         <doc:description>
           <doc:para>
             Block or unblock the devices belonging to the type.
-            The type name could be
-            "ALL", "WLAN", "BLUETOOTH", "UWB", "WIMAX", "WWAN", "GPS", or "FM".
-            The strings are case insensitive and will be converted to the
-            corresponding type number in urfkilld.
+            The type is defined as the followings:
           </doc:para>
+          <doc:list>
+            <doc:item>
+              <doc:term>0</doc:term><doc:definition>All</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>1</doc:term><doc:definition>WLAN</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>2</doc:term><doc:definition>Bluetooth</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>3</doc:term><doc:definition>UWB</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>4</doc:term><doc:definition>WIMAX</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>5</doc:term><doc:definition>WWAN</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>6</doc:term><doc:definition>GPS</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>7</doc:term><doc:definition>FM</doc:definition>
+            </doc:item>
+          </doc:list>
           <doc:para>
             Note1: This method is restricted to the current session user.
           </doc:para>
