@@ -71,8 +71,34 @@ method return sender=:1.164 -> dest=:1.169 reply_serial=2
       <doc:doc>
         <doc:description>
           <doc:para>
-	    The type of the rfkill device which is defined in &lt;linux/rfkill.h&gt;
+	    The type of the rfkill device
           </doc:para>
+          <doc:list>
+            <doc:item>
+              <doc:term>0</doc:term><doc:definition>All</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>1</doc:term><doc:definition>WLAN</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>2</doc:term><doc:definition>Bluetooth</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>3</doc:term><doc:definition>UWB</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>4</doc:term><doc:definition>WIMAX</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>5</doc:term><doc:definition>WWAN</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>6</doc:term><doc:definition>GPS</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>7</doc:term><doc:definition>FM</doc:definition>
+            </doc:item>
+          </doc:list>
         </doc:description>
       </doc:doc>
     </property>
