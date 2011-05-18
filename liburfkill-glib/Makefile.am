@@ -67,13 +67,13 @@ introspection_sources =						\
 	$(liburfkill_glib_la_SOURCES)				\
 	$(liburfkill_glib_include_HEADERS)
 
-Urfkill-@API_VERSION@.gir: liburfkill-glib.la
-Urfkill_@API_VERSION_AM@_gir_INCLUDES = GObject-2.0 Gio-2.0
-Urfkill_@API_VERSION_AM@_gir_CFLAGS = $(INCLUDES)
-Urfkill_@API_VERSION_AM@_gir_LIBS = liburfkill-glib.la
-Urfkill_@API_VERSION_AM@_gir_FILES = $(introspection_sources)
-Urfkill_@API_VERSION_AM@_gir_SCANNERFLAGS = --identifier-prefix=Urf --warn-all
-INTROSPECTION_GIRS += Urfkill-@API_VERSION@.gir
+Urfkill-@GIR_VERSION@.gir: liburfkill-glib.la
+Urfkill_@GIR_VERSION_AM@_gir_INCLUDES = GObject-2.0 Gio-2.0
+Urfkill_@GIR_VERSION_AM@_gir_CFLAGS = $(INCLUDES)
+Urfkill_@GIR_VERSION_AM@_gir_LIBS = liburfkill-glib.la
+Urfkill_@GIR_VERSION_AM@_gir_FILES = $(introspection_sources)
+Urfkill_@GIR_VERSION_AM@_gir_SCANNERFLAGS = --identifier-prefix=Urf --warn-all
+INTROSPECTION_GIRS += Urfkill-@GIR_VERSION@.gir
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = $(INTROSPECTION_GIRS)
