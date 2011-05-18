@@ -7,6 +7,50 @@
     <doc:doc>
       <doc:description>
         <doc:para>
+          Objects implementing this interface are usually discovered through
+          the <doc:tt>org.freedesktop.URfkill</doc:tt> interface on
+          the <doc:tt>/org/freedesktop/URfkill</doc:tt> object on
+          the D-Bus system bus service with the well-known
+          name <doc:tt>org.freedesktop.URfkill</doc:tt> using
+          the
+          <doc:ref type="method" to="Rfkill.EnumerateDevices">EnumerateDevices</doc:ref>
+          method.
+        </doc:para>
+        <doc:para>
+          <doc:example language="shell" title="simple example">
+            <doc:code>
+$ dbus-send --print-reply \
+            --system \
+            --dest=org.freedesktop.URfkill \
+            /org/freedesktop/URfkill/devices/0 \
+            org.freedesktop.DBus.Properties.GetAll \
+            string:org.freedesktop.URfkill.Device
+
+method return sender=:1.164 -> dest=:1.169 reply_serial=2
+   array [
+      dict entry(
+         string "index"
+         variant             uint32 0
+      )
+      dict entry(
+         string "type"
+         variant             uint32 2
+      )
+      dict entry(
+         string "name"
+         variant             string "tpacpi_bluetooth_sw"
+      )
+      dict entry(
+         string "soft"
+         variant             boolean true
+      )
+      dict entry(
+         string "hard"
+         variant             boolean true
+      )
+   ]
+            </doc:code>
+          </doc:example>
         </doc:para>
       </doc:description>
     </doc:doc>
@@ -27,7 +71,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-	    The type of the rfkill device which defined in /usr/include/linux/rfkill.h
+	    The type of the rfkill device which is defined in &lt;linux/rfkill.h&gt;
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -47,7 +91,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-	    Whether the soft block of the device is blocked or not
+	    Whether the soft block of the device is on or not
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -57,7 +101,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-	    Whether the hard block of the device is blocked or not
+	    Whether the hard block of the device is on or not
           </doc:para>
         </doc:description>
       </doc:doc>

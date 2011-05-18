@@ -7,6 +7,29 @@
     <doc:doc>
       <doc:description>
         <doc:para>
+          The urfkill service is available via the system message
+          bus. To access the service, use
+          the <doc:tt>org.freedesktop.URfkill</doc:tt> interface on
+          the <doc:tt>/org/freedesktop/URfkill</doc:tt> object on
+          the D-Bus system bus service with the well-known
+          name <doc:tt>org.freedesktop.URfkill</doc:tt>.
+        </doc:para>
+        <doc:para>
+          <doc:example language="shell" title="simple example">
+            <doc:code>
+$ dbus-send --print-reply \
+            --system \
+            --dest=org.freedesktop.URfkill \
+            /org/freedesktop/URfkill \
+            org.freedesktop.URfkill.EnumerateDevices
+
+method return sender=:1.164 -> dest=:1.167 reply_serial=2
+   array [
+      object path "/org/freedesktop/URfkill/devices/0"
+      object path "/org/freedesktop/URfkill/devices/1"
+   ]
+            </doc:code>
+          </doc:example>
         </doc:para>
       </doc:description>
     </doc:doc>
@@ -34,9 +57,19 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-	    Note: Only soft block can be changed. Hard block is controlled
-	          by BIOS or the hardware and there is no way to change the
-		  status of hard block through kernel functions.
+            Block or unblock the devices belonging to the type.
+            The type name could be
+            "ALL", "WLAN", "BLUETOOTH", "UWB", "WIMAX", "WWAN", "GPS", or "FM".
+            The strings are case insensitive and will be converted to the
+            corresponding type number in urfkilld.
+          </doc:para>
+          <doc:para>
+            Note1: This method is restricted to the current session user.
+          </doc:para>
+          <doc:para>
+	    Note2: This method only changes soft block. Hard block is controlled
+	           by BIOS or the hardware and there is no way to change the
+		   state of hard block through kernel functions.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -65,9 +98,15 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-	    Note: Only soft block can be changed. Hard block is controlled
-	          by BIOS or the hardware and there is no way to change the
-		  status of hard block through kernel functions.
+            Block or unblock the device by the index.
+          </doc:para>
+          <doc:para>
+            Note1: This method is restricted to the current session user.
+          </doc:para>
+          <doc:para>
+	    Note2: This method only changes soft block. Hard block is controlled
+	           by BIOS or the hardware and there is no way to change the
+		   state of hard block through kernel functions.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -86,6 +125,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+            Enumerate all rfkill objects on the system.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -97,13 +137,14 @@
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="b" name="ret" direction="out">
         <doc:doc><doc:summary>
-	  TRUE if the keycontrol is enabled, otherwise FALSE
+	  TRUE if the key control is enabled, otherwise FALSE
         </doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
+            Get whether the rfkill key contorl is enabled or not.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -127,6 +168,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+            Enable or disable the rfkill key handling function in the daemon.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -144,6 +186,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+            Emitted when a device is added.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -161,6 +204,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
+            Emitted when a device is removed.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -176,18 +220,19 @@
       </arg>
       <arg type="b" name="soft"   direction="out">
         <doc:doc><doc:summary>
-	  The status of the soft block of the device after the change
+	  The state of the soft block of the device after the change
         </doc:summary></doc:doc>
       </arg>
       <arg type="b" name="hard"   direction="out">
         <doc:doc><doc:summary>
-	  The status of the hard block of the device after the change
+	  The state of the hard block of the device after the change
         </doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
+            Emitted when a device is changed.
           </doc:para>
         </doc:description>
       </doc:doc>
