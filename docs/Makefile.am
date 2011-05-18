@@ -1,5 +1,5 @@
 
-SUBDIRS = dbus
+SUBDIRS = dbus man
 
 NULL =
 

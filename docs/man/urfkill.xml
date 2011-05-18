@@ -1,0 +1,57 @@
+<refentry id="urfkill.7">
+  <refentryinfo>
+    <title>urfkill</title>
+    <date>May 2011</date>
+    <productname>urfkill</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>urfkill</refentrytitle>
+    <manvolnum>7</manvolnum>
+    <refmiscinfo class="version"></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>urfkill</refname>
+    <refpurpose>RFKill Switches Management</refpurpose>
+  </refnamediv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      urfkill provides an interface to enumerate rfkill switches
+      on the system and control system-wide rfkill switches management.
+      Any application can access the <emphasis>org.freedesktop.URfkill</emphasis>
+      service on the system message bus. Some operations (such as setting
+      soft block on the device) is restricted using PolicyKit.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by Gary Ching-Pang Lin <email>glin@novell.com</email>
+      and with a lot of help from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution or the
+      DeviceKit mailing list,
+      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/devkit-devel"/>
+      on how to subscribe.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>PolicyKit</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>urfkilld</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+    </para>
+  </refsect1>
+</refentry>

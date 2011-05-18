@@ -210,6 +210,7 @@ data/urfkill-glib.pc
 docs/Makefile
 docs/version.xml
 docs/dbus/Makefile
+docs/man/Makefile
 src/Makefile
 liburfkill-glib/Makefile
 liburfkill-glib/urf-version.h

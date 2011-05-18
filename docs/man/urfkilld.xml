@@ -1,0 +1,81 @@
+<refentry id="urfkilld.8">
+  <refentryinfo>
+    <title>urfkilld</title>
+    <date>May 2011</date>
+    <productname>urfkilld</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>urfkillrd</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="version"></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>urfkilld</refname>
+    <refpurpose>urfkill Daemon</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>urfkilld</command>
+      <arg><option>--help</option></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      <emphasis><refentrytitle>urfkilld</refentrytitle></emphasis> provides
+      the <emphasis>org.freedesktop.URfkill</emphasis> service on the
+      system message bus. Users or administrators should never need to
+      start this daemon as it will be automatically started by
+      <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+      whenever an application calls into the <emphasis>org.freedesktop.URfkill</emphasis>
+      service.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>
+            Show help options.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by Gary Ching-Pang Lin <email>glin@novell.com</email> with
+      a lot of help from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution or the
+      DeviceKit mailing list,
+      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/devkit-devel"/>
+      on how to subscribe.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>urfkill</refentrytitle><manvolnum>7</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+    </para>
+  </refsect1>
+</refentry>
