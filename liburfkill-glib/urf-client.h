@@ -28,7 +28,6 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
-#include <linux/rfkill.h>
 
 #include "urf-device.h"
 
@@ -84,7 +83,7 @@ UrfClient	*urf_client_new				(void);
 /* generic */
 GPtrArray	*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
-							 const guint	 type,
+							 UrfDeviceType	 type,
 							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);

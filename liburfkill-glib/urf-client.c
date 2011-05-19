@@ -125,15 +125,14 @@ urf_client_get_devices (UrfClient *client)
  * @error: a #GError, or %NULL
  *
  * Block or unblock the devices belonging to the type.
- * The type is defined in &lt;linux/rfkill.h&gt;.
- * It can be one of the following values:
- * RFKILL_TYPE_ALL, RFKILL_TYPE_WLAN, RFKILL_TYPE_BLUETOOTH,
- * RFKILL_TYPE_UWB, RFKILL_TYPE_WIMAX, RFKILL_TYPE_WWAN,
- * RFKILL_TYPE_GPS, or RFKILL_TYPE_FM.
  *
- * Note: This function only changes soft block. Hard block is controlled
- *       by BIOS or the hardware and there is no way to change the
- *       state of hard block through kernel functions.
+ * <note>
+ *   <para>
+ *     This function only changes soft block. Hard block is controlled
+ *     by BIOS or the hardware and there is no way to change the
+ *     state of hard block through kernel functions.
+ *   </para>
+ * </note>
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
@@ -141,7 +140,7 @@ urf_client_get_devices (UrfClient *client)
  **/
 gboolean
 urf_client_set_block (UrfClient      *client,
-		      const guint     type,
+		      UrfDeviceType   type,
 		      const gboolean  block,
 		      GCancellable   *cancellable,
 		      GError         **error)
@@ -151,7 +150,7 @@ urf_client_set_block (UrfClient      *client,
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
+	g_return_val_if_fail (type < NUM_URFDEVICE_TYPES, FALSE);
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
 				 G_TYPE_UINT, type,
@@ -187,9 +186,13 @@ out:
  *
  * Block or unblock the device by the index.
  *
- * Note: This function only changes soft block. Hard block is controlled
- *       by BIOS or the hardware and there is no way to change the
- *       state of hard block through kernel functions.
+ * <note>
+ *   <para>
+ *     This function only changes soft block. Hard block is controlled
+ *     by BIOS or the hardware and there is no way to change the
+ *     state of hard block through kernel functions.
+ *   </para>
+ * </note>
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
@@ -337,7 +340,7 @@ gboolean
 urf_client_set_wlan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	return urf_client_set_block (client, RFKILL_TYPE_WLAN, block, NULL, NULL);
+	return urf_client_set_block (client, URFDEVICE_TYPE_WLAN, block, NULL, NULL);
 }
 
 /**
@@ -356,7 +359,7 @@ gboolean
 urf_client_set_bluetooth_block (UrfClient     *client,
 				const gboolean block)
 {
-	return urf_client_set_block (client, RFKILL_TYPE_BLUETOOTH, block, NULL, NULL);
+	return urf_client_set_block (client, URFDEVICE_TYPE_BLUETOOTH, block, NULL, NULL);
 }
 
 /**
@@ -375,7 +378,7 @@ gboolean
 urf_client_set_wwan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	return urf_client_set_block (client, RFKILL_TYPE_WWAN, block, NULL, NULL);
+	return urf_client_set_block (client, URFDEVICE_TYPE_WWAN, block, NULL, NULL);
 }
 
 /**

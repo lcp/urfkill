@@ -340,17 +340,13 @@ urf_device_class_init(UrfDeviceClass *klass)
 	/**
 	 * UrfDevice:type:
 	 *
-	 * The type of the rfkill device is defined in &lt;linux/rfkill.h&gt;
-	 * and would be one of the following values:
-	 * RFKILL_TYPE_ALL, RFKILL_TYPE_WLAN, RFKILL_TYPE_BLUETOOTH,
-	 * RFKILL_TYPE_UWB, RFKILL_TYPE_WIMAX, RFKILL_TYPE_WWAN,
-	 * RFKILL_TYPE_GPS, and RFKILL_TYPE_FM.
+	 * The type of the rfkill device. See #UrfDeviceType.
 	 *
 	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("type",
 				   "Type", "The type of the rfkill device",
-				   0, NUM_RFKILL_TYPES-1, 0,
+				   0, NUM_URFDEVICE_TYPES-1, 0,
 				   G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 

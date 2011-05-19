@@ -25,6 +25,8 @@ URF_CLIENT_GET_CLASS
 
 <SECTION>
 <FILE>urf-device</FILE>
+<TITLE>UrfDevice</TITLE>
+UrfDeviceType
 UrfDevice
 UrfDeviceClass
 urf_device_new
