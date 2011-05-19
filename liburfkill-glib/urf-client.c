@@ -486,11 +486,49 @@ urf_client_get_daemon_version (UrfClient *client)
 	return client->priv->daemon_version;
 }
 
-static const char *
+static char *
 get_current_session (void)
 {
-	/* TODO query consolekit for the current session id */
-	return "/org/freedesktop/ConsoleKit/Session1";
+	DBusGConnection *connection;
+	DBusGProxy *proxy;
+	char *session_id;
+	GError *error = NULL;
+	gboolean ret;
+
+	connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (error != NULL) {
+		g_warning ("Failed to get bus: %s", error->message);
+		g_error_free (error);
+		return NULL;
+	}
+
+	proxy = dbus_g_proxy_new_for_name (connection,
+					   "org.freedesktop.ConsoleKit",
+					   "/org/freedesktop/ConsoleKit/Manager",
+					   "org.freedesktop.ConsoleKit.Manager");
+
+	ret = dbus_g_proxy_call (proxy, "GetCurrentSession", &error,
+				 G_TYPE_INVALID,
+				 DBUS_TYPE_G_OBJECT_PATH, &session_id,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* DBus might time out, which is okay */
+		if (g_error_matches (error, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
+			g_debug ("DBUS timed out, but recovering");
+			goto out;
+		}
+
+		/* an actual error */
+		g_warning ("Couldn't sent GetCurrentSession: %s", error->message);
+		g_error_free (error);
+		return NULL;
+	}
+
+out:
+	if (error != NULL)
+		g_error_free (error);
+
+	return g_strdup (session_id);
 }
 
 /**
@@ -776,7 +814,7 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->session_id = (char *) get_current_session ();
+	client->priv->session_id = get_current_session ();
 
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
