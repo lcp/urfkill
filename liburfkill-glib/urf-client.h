@@ -94,8 +94,10 @@ gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
 							 GError		**error);
 gboolean	 urf_client_key_control_enabled		(UrfClient	*client,
 							 GError		**error);
-gboolean	 urf_client_enable_key_control		(UrfClient	*client,
-							 const gboolean	 enable,
+guint		 urf_client_inhibit			(UrfClient	*client,
+							 GError		**error);
+void		 urf_client_uninhibit			(UrfClient	*client,
+							 const guint	 cookie,
 							 GError		**error);
 
 /* specific type */

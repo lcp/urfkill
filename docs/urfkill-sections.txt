@@ -8,7 +8,8 @@ urf_client_get_devices
 urf_client_set_block
 urf_client_set_block_idx
 urf_client_key_control_enabled
-urf_client_enable_key_control
+urf_client_inhibit
+urf_client_uninhibit
 urf_client_set_wlan_block
 urf_client_set_bluetooth_block
 urf_client_set_wwan_block

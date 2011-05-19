@@ -55,6 +55,7 @@ struct _UrfClientPrivate
 	GPtrArray	*devices;
 	char		*daemon_version;
 	gboolean	 have_properties;
+	char		*session_id;
 };
 
 enum {
@@ -279,32 +280,33 @@ out:
 }
 
 /**
- * urf_client_enable_key_control:
+ * urf_client_inhibit:
  * @client: a #UrfClient instance
- * @enable: %TRUE to the enable key control or %FALSE to disable it
  * @error: a #GError, or %NULL
  *
- * Enable or disable the rfkill key handling function in the daemon.
+ * Inhibit the rfkill key handling function for this session.
  *
- * Return value: #TRUE for success, else #FALSE and @error is used
+ * Return value: the cookie
  *
  * Since: 0.2.0
  **/
-gboolean
-urf_client_enable_key_control (UrfClient      *client,
-			       const gboolean  enable,
-			       GError         **error)
+guint
+urf_client_inhibit (UrfClient *client,
+		    GError    **error)
 {
-	gboolean ret, status;
 	GError *error_local = NULL;
+	gboolean ret;
+	guint cookie;
 
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	/* TODO Fill the GError */
+	g_return_val_if_fail (URF_IS_CLIENT (client), 0);
+	g_return_val_if_fail (client->priv->proxy != NULL, 0);
+	g_return_val_if_fail (client->priv->session_id != NULL, 0);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "EnableKeyControl", &error_local,
-				 G_TYPE_BOOLEAN, enable,
+	ret = dbus_g_proxy_call (client->priv->proxy, "Inhibit", &error_local,
+				 G_TYPE_STRING, client->priv->session_id,
 				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_UINT, &cookie,
 				 G_TYPE_INVALID);
 	if (!ret) {
 		/* DBus might time out, which is okay */
@@ -316,13 +318,54 @@ urf_client_enable_key_control (UrfClient      *client,
 		/* an actual error */
 		g_warning ("Couldn't sent ENABLEKEYCONTROL: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
 	}
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
-	return status;
+	return cookie;
 }
+
+/**
+ * urf_client_uninhibit:
+ * @client: a #UrfClient instance
+ * @cookie: the cookie
+ * @error: a #GError, or %NULL
+ *
+ * Cancel a previous call to #urf_client_inhibit identified by the cookie.
+ *
+ * Since: 0.2.0
+ **/
+void
+urf_client_uninhibit (UrfClient   *client,
+		      const guint  cookie,
+		      GError      **error)
+{
+	GError *error_local = NULL;
+	gboolean ret;
+
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "Uninhibit", &error_local,
+				 G_TYPE_UINT, cookie,
+				 G_TYPE_INVALID,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		/* DBus might time out, which is okay */
+		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
+			g_debug ("DBUS timed out, but recovering");
+			goto out;
+		}
+
+		/* an actual error */
+		g_warning ("Couldn't sent ENABLEKEYCONTROL: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+	}
+out:
+	if (error_local != NULL)
+		g_error_free (error_local);
+}
+
 
 /**
  * urf_client_set_wlan_block:
@@ -441,6 +484,13 @@ urf_client_get_daemon_version (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 	urf_client_get_properties_sync (client, NULL, NULL);
 	return client->priv->daemon_version;
+}
+
+static const char *
+get_current_session (void)
+{
+	/* TODO query consolekit for the current session id */
+	return "/org/freedesktop/ConsoleKit/Session1";
 }
 
 /**
@@ -726,6 +776,8 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
+	client->priv->session_id = (char *) get_current_session ();
+
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
 					   G_TYPE_NONE,
@@ -801,6 +853,7 @@ urf_client_finalize (GObject *object)
 	client = URF_CLIENT (object);
 
 	g_free (client->priv->daemon_version);
+	g_free (client->priv->session_id);
 
 	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
 }
