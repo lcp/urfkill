@@ -316,7 +316,7 @@ urf_client_inhibit (UrfClient *client,
 		}
 
 		/* an actual error */
-		g_warning ("Couldn't sent ENABLEKEYCONTROL: %s", error_local->message);
+		g_warning ("Couldn't sent INHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 	}
 out:
@@ -358,7 +358,7 @@ urf_client_uninhibit (UrfClient   *client,
 		}
 
 		/* an actual error */
-		g_warning ("Couldn't sent ENABLEKEYCONTROL: %s", error_local->message);
+		g_warning ("Couldn't sent UNINHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 	}
 out:
