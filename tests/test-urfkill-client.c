@@ -88,24 +88,6 @@ main ()
 
 	sleep (2);
 
-	status = urf_client_enable_key_control (client, FALSE, NULL);
-	if (!status)
-		printf ("failed to disable key control\n");
-	else {
-		status = urf_client_key_control_enabled (client, NULL);
-		printf ("Key control is %s\n", status?"on":"off");
-	}
-
-	sleep (2);
-
-	status = urf_client_enable_key_control (client, TRUE, NULL);
-	if (!status)
-		printf ("failed to enable key control\n");
-	else {
-		status = urf_client_key_control_enabled (client, NULL);
-		printf ("Key control is %s\n", status?"on":"off");
-	}
-
 	devices = urf_client_get_devices (client);
 
 	for (i = 0; i<devices->len; i++) {
