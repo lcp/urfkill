@@ -70,9 +70,16 @@ struct UrfDaemonPrivate
 	UrfInput	*input;
 	gboolean	 key_control;
 	gboolean	 master_key;
+	GList		*inhibitors;
 };
 
+typedef struct {
+	guint		 cookie;
+	char		*session_id;
+} UrfInhibitor;
+
 static void urf_daemon_dispose (GObject *object);
+static void urf_daemon_finalize (GObject *object);
 
 G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 
@@ -129,7 +136,8 @@ urf_daemon_input_event_cb (UrfInput *input,
 	gint type;
 	gboolean block = FALSE;
 
-	if (!priv->key_control)
+	/* TODO check the inhibitor sid and the currently active sid */
+	if (!priv->key_control || priv->inhibitors)
 		return;
 
 	switch (code) {
@@ -316,36 +324,73 @@ urf_daemon_key_control_enabled (UrfDaemon             *daemon,
 	return TRUE;
 }
 
+static guint
+generate_unique_cookie (UrfDaemon *daemon)
+{
+	/* TODO search all inhibitors and generate a unique cookie */
+	return g_random_int_range (1, G_MAXUINT);
+}
+
 /**
- * urf_daemon_enable_key_control:
+ * urf_daemon_inhibit:
  **/
 gboolean
-urf_daemon_enable_key_control (UrfDaemon             *daemon,
-			       const gboolean         enable,
-			       DBusGMethodInvocation *context)
+urf_daemon_inhibit (UrfDaemon             *daemon,
+		    const char            *sid,
+		    DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
-	PolkitSubject *subject = NULL;
-	gboolean ret = FALSE;
+	UrfInhibitor *inhibitor;
+	guint cookie = 0;
 
-	subject = urf_polkit_get_subject (priv->polkit, context);
-	if (subject == NULL)
-		goto out;
+	/* TODO validate the sid */
+	if (sid == NULL) {
+		GError *new_error;
 
-	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.enablekeycontrol", context))
-		goto out;
+		new_error = g_error_new (URF_DAEMON_ERROR,
+					 URF_DAEMON_ERROR_GENERAL,
+					 "Invalid Session ID");
+		g_debug ("Unable to Inhibit: %s", new_error->message);
+		dbus_g_method_return_error (context, new_error);
+		g_error_free (new_error);
+		return FALSE;
+	}
 
-	priv->key_control = enable;
-	ret = TRUE;
+	inhibitor = g_new0 (UrfInhibitor, 1);
+	inhibitor->cookie = generate_unique_cookie (daemon);
+	inhibitor->session_id = g_strdup (sid);
 
-	g_debug ("Key Control is %s", enable?"enabled":"disabled");
-out:
-	if (subject != NULL)
-		g_object_unref (subject);
+	priv->inhibitors = g_list_append (priv->inhibitors, inhibitor);
 
-	dbus_g_method_return (context, ret);
+	dbus_g_method_return (context, cookie);
 
-	return ret;
+	return TRUE;
+}
+
+/**
+ * urf_daemon_uninhibit:
+ **/
+gboolean
+urf_daemon_uninhibit (UrfDaemon             *daemon,
+		      const guint            cookie,
+		      DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = daemon->priv;
+	UrfInhibitor *inhibitor;
+	GList *item;
+
+	for (item = priv->inhibitors; item; item = item->next) {
+		inhibitor = (UrfInhibitor *)item->data;
+		if (inhibitor->cookie != cookie)
+			continue;
+
+		priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
+		g_free (inhibitor->session_id);
+		g_free (inhibitor);
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 /**
@@ -415,6 +460,7 @@ static void
 urf_daemon_init (UrfDaemon *daemon)
 {
 	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
+	daemon->priv->inhibitors = NULL;
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
@@ -509,6 +555,7 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->dispose = urf_daemon_dispose;
+	object_class->finalize = urf_daemon_finalize;
 	object_class->get_property = urf_daemon_get_property;
 	object_class->set_property = urf_daemon_set_property;
 
@@ -585,6 +632,24 @@ urf_daemon_dispose (GObject *object)
 	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
+}
+
+/**
+ * urf_daemon_finalize:
+ **/
+
+static void
+urf_daemon_finalize (GObject *object)
+{
+	UrfDaemon *daemon = URF_DAEMON (object);
+	UrfDaemonPrivate *priv = daemon->priv;
+
+	if (priv->inhibitors) {
+		g_list_free_full (priv->inhibitors, g_free);
+		priv->inhibitors = NULL;
+	}
+
+	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
 }
 
 /**

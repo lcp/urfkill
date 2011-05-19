@@ -93,7 +93,7 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
           </doc:para>
         </doc:description>
         <doc:permission>
-          This method is restricted to the currently active session user.
+          This method is restricted to the active session user.
         </doc:permission>
       </doc:doc>
     </method>
@@ -167,7 +167,7 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
       <doc:doc>
         <doc:description>
           <doc:para>
-            Get whether the rfkill key contorl is enabled or not.
+            Get whether the rfkill key handling function is enabled or not.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -175,23 +175,43 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <!-- ************************************************************ -->
 
-    <method name="EnableKeyControl">
+    <method name="Inhibit">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="b" name="enable" direction="in">
+      <arg type="s" name="sid" direction="in">
         <doc:doc><doc:summary>
-	  TRUE to enable the rfkill key control, or FALSE to disable it
+	  The session id of the client
         </doc:summary></doc:doc>
       </arg>
-      <arg type="b" name="ret" direction="out">
+      <arg type="u" name="inhibit_cookie" direction="out">
         <doc:doc><doc:summary>
-	  TRUE for success, otherwise FALSE
+	  The cookie
         </doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
-            Enable or disable the rfkill key handling function in the daemon.
+            Inhibit the rfkill key handling function for the session.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="Uninhibit">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="u" name="inhibit_cookie" direction="in">
+        <doc:doc><doc:summary>
+	  The cookie
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Cancel a previous call to <doc:ref type="method" to="org.freedesktop.URfkill.Inhibit">Inhibit()</doc:ref>
+            identified by the cookie.
           </doc:para>
         </doc:description>
       </doc:doc>

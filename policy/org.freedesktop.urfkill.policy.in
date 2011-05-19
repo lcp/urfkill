@@ -35,14 +35,4 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.urfkill.enablekeycontrol">
-    <_description>Enable/disable the key control feature in urfkilld</_description>
-    <_message>Authentication is required to enable/disable key control</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>yes</allow_active>
-    </defaults>
-  </action>
-
 </policyconfig>

@@ -79,8 +79,11 @@ gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_key_control_enabled	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
-gboolean	 urf_daemon_enable_key_control	(UrfDaemon		*daemon,
-						 const gboolean		 enable,
+gboolean	 urf_daemon_inhibit		(UrfDaemon		*daemon,
+						 const char		*sid,
+						 DBusGMethodInvocation  *context);
+gboolean	 urf_daemon_uninhibit		(UrfDaemon		*daemon,
+						 const guint		 cookie,
 						 DBusGMethodInvocation  *context);
 
 G_END_DECLS
