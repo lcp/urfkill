@@ -58,7 +58,7 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
         <doc:description>
           <doc:para>
             Block or unblock the devices belonging to the type.
-            The type is defined as the followings:
+            The types are defined as the followings:
           </doc:para>
           <doc:list>
             <doc:item>
@@ -87,14 +87,14 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
             </doc:item>
           </doc:list>
           <doc:para>
-            Note1: This method is restricted to the current session user.
-          </doc:para>
-          <doc:para>
-	    Note2: This method only changes soft block. Hard block is controlled
-	           by BIOS or the hardware and there is no way to change the
-		   state of hard block through kernel functions.
+	    Note: This method only changes soft block. Hard block is controlled
+	          by BIOS or the hardware and there is no way to change the
+		  state of hard block through kernel functions.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          This method is restricted to the currently active session user.
+        </doc:permission>
       </doc:doc>
     </method>
 
@@ -124,14 +124,14 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
             Block or unblock the device by the index.
           </doc:para>
           <doc:para>
-            Note1: This method is restricted to the current session user.
-          </doc:para>
-          <doc:para>
-	    Note2: This method only changes soft block. Hard block is controlled
-	           by BIOS or the hardware and there is no way to change the
-		   state of hard block through kernel functions.
+	    Note: This method only changes soft block. Hard block is controlled
+	          by BIOS or the hardware and there is no way to change the
+		  state of hard block through kernel functions.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          This method is restricted to the currently active session user.
+        </doc:permission>
       </doc:doc>
     </method>
 

@@ -431,18 +431,6 @@ urf_daemon_init (UrfDaemon *daemon)
 }
 
 /**
- * urf_daemon_error_quark:
- **/
-GQuark
-urf_daemon_error_quark (void)
-{
-	static GQuark ret = 0;
-	if (ret == 0)
-		ret = g_quark_from_static_string ("urf_daemon_error");
-	return ret;
-}
-
-/**
  * urf_daemon_get_property:
  **/
 static void
@@ -477,6 +465,18 @@ urf_daemon_set_property (GObject      *object,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * urf_daemon_error_quark:
+ **/
+GQuark
+urf_daemon_error_quark (void)
+{
+	static GQuark ret = 0;
+	if (ret == 0)
+		ret = g_quark_from_static_string ("urf_daemon_error");
+	return ret;
 }
 
 #define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
