@@ -242,10 +242,10 @@ urf_device_get_property (GObject    *object,
 		g_value_set_uint (value, priv->type);
 		break;
 	case PROP_DEVICE_SOFT:
-		g_value_set_uint (value, priv->soft);
+		g_value_set_boolean (value, priv->soft);
 		break;
 	case PROP_DEVICE_HARD:
-		g_value_set_uint (value, priv->hard);
+		g_value_set_boolean (value, priv->hard);
 		break;
 	case PROP_DEVICE_NAME:
 		g_value_set_string (value, priv->name);
@@ -269,21 +269,11 @@ urf_device_set_property (GObject      *object,
 	UrfDevicePrivate *priv = device->priv;
 
 	switch (prop_id) {
-	case PROP_DEVICE_INDEX:
-		priv->index = g_value_get_uint (value);
-		break;
-	case PROP_DEVICE_TYPE:
-		priv->type = g_value_get_uint (value);
-		break;
 	case PROP_DEVICE_SOFT:
-		priv->soft = g_value_get_uint (value);
+		priv->soft = g_value_get_boolean (value);
 		break;
 	case PROP_DEVICE_HARD:
-		priv->hard = g_value_get_uint (value);
-		break;
-	case PROP_DEVICE_NAME:
-		g_free (priv->name);
-		priv->name = g_value_dup_string (value);
+		priv->hard = g_value_get_boolean (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -334,7 +324,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	pspec = g_param_spec_uint ("index",
 				   "Index", "The index of the rfkill device",
 				   0, G_MAXUINT, 0,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_INDEX, pspec);
 
 	/**
@@ -347,7 +337,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	pspec = g_param_spec_uint ("type",
 				   "Type", "The type of the rfkill device",
 				   0, NUM_URFDEVICE_TYPES-1, 0,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 
 	/**
@@ -358,10 +348,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 *
 	 * Since: 0.2.0
 	 */
-	pspec = g_param_spec_uint ("soft",
-				   "Soft Block", "If the soft block is on",
-				   0, 1, 1,
-				   G_PARAM_READWRITE);
+	pspec = g_param_spec_boolean ("soft",
+				      "Soft Block", "If the soft block is on",
+				      FALSE,
+				      G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_SOFT, pspec);
 
 	/**
@@ -372,10 +362,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 *
 	 * Since: 0.2.0
 	 */
-	pspec = g_param_spec_uint ("hard",
-				   "Hard Block", "If the hard block is on",
-				   0, 1, 1,
-				   G_PARAM_READWRITE);
+	pspec = g_param_spec_boolean ("hard",
+				      "Hard Block", "If the hard block is on",
+				      FALSE,
+				      G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_HARD, pspec);
 
 	/**
@@ -387,7 +377,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 */
 	pspec = g_param_spec_string ("name",
 				     "Name", "The name of the rfkill device",
-				     NULL, G_PARAM_READWRITE);
+				     NULL, G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_NAME, pspec);
 }
 
