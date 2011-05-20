@@ -520,15 +520,21 @@ get_current_session (void)
 
 		/* an actual error */
 		g_warning ("Couldn't sent GetCurrentSession: %s", error->message);
-		g_error_free (error);
-		return NULL;
+		session_id = NULL;
+		goto out;
 	}
+
+	session_id = g_strdup (session_id);
 
 out:
 	if (error != NULL)
 		g_error_free (error);
+	if (connection != NULL)
+		dbus_g_connection_unref (connection);
+	if (proxy != NULL)
+		g_object_unref (proxy);
 
-	return g_strdup (session_id);
+	return session_id;
 }
 
 /**
