@@ -160,13 +160,6 @@ urf_client_set_block (UrfClient      *client,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
 		g_warning ("Couldn't sent BLOCK: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
@@ -219,13 +212,6 @@ urf_client_set_block_idx (UrfClient      *client,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
 		g_warning ("Couldn't sent BLOCKIDX: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
@@ -262,13 +248,6 @@ urf_client_key_control_enabled (UrfClient *client,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
 		g_warning ("Couldn't sent KEYCONTROLENABLED: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
@@ -309,13 +288,6 @@ urf_client_inhibit (UrfClient *client,
 				 G_TYPE_UINT, &cookie,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
 		g_warning ("Couldn't sent INHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 	}
@@ -493,13 +465,6 @@ get_current_session (void)
 				 DBUS_TYPE_G_OBJECT_PATH, &session_id,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
 		g_warning ("Couldn't sent GetCurrentSession: %s", error->message);
 		session_id = NULL;
 		goto out;
@@ -629,7 +594,6 @@ urf_client_get_devices_private (UrfClient *client,
 				 g_type_array, &devices,
 				 G_TYPE_INVALID);
 	if (!ret) {
-		/* an actual error */
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		g_error_free (error_local);
 		return;
