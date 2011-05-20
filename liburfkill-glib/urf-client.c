@@ -164,7 +164,6 @@ urf_client_set_block (UrfClient      *client,
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
-out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return status;
@@ -216,7 +215,6 @@ urf_client_set_block_idx (UrfClient      *client,
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
-out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return status;
@@ -252,7 +250,6 @@ urf_client_key_control_enabled (UrfClient *client,
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
-out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return status;
@@ -291,7 +288,6 @@ urf_client_inhibit (UrfClient *client,
 		g_warning ("Couldn't sent INHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 	}
-out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return cookie;
