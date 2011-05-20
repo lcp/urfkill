@@ -53,6 +53,10 @@ urfkilld_SOURCES =						\
 	urf-polkit.c						\
 	urf-utils.h						\
 	urf-utils.c						\
+	urf-consolekit.h					\
+	urf-consolekit.c					\
+	urf-seat.h						\
+	urf-seat.c						\
 	urf-daemon.h						\
 	urf-daemon.c						\
 	urf-main.c						\
