@@ -97,8 +97,7 @@ gboolean	 urf_client_key_control_enabled		(UrfClient	*client,
 guint		 urf_client_inhibit			(UrfClient	*client,
 							 GError		**error);
 void		 urf_client_uninhibit			(UrfClient	*client,
-							 const guint	 cookie,
-							 GError		**error);
+							 const guint	 cookie);
 
 /* specific type */
 gboolean	 urf_client_set_wlan_block		(UrfClient	*client,

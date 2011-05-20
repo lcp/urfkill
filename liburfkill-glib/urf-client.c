@@ -329,7 +329,6 @@ out:
  * urf_client_uninhibit:
  * @client: a #UrfClient instance
  * @cookie: the cookie
- * @error: a #GError, or %NULL
  *
  * Cancel a previous call to #urf_client_inhibit identified by the cookie.
  *
@@ -337,33 +336,15 @@ out:
  **/
 void
 urf_client_uninhibit (UrfClient   *client,
-		      const guint  cookie,
-		      GError      **error)
+		      const guint  cookie)
 {
-	GError *error_local = NULL;
-	gboolean ret;
-
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "Uninhibit", &error_local,
-				 G_TYPE_UINT, cookie,
-				 G_TYPE_INVALID,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		/* DBus might time out, which is okay */
-		if (g_error_matches (error_local, DBUS_GERROR, DBUS_GERROR_NO_REPLY)) {
-			g_debug ("DBUS timed out, but recovering");
-			goto out;
-		}
-
-		/* an actual error */
-		g_warning ("Couldn't sent UNINHIBIT: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-	}
-out:
-	if (error_local != NULL)
-		g_error_free (error_local);
+	dbus_g_proxy_call_no_reply (client->priv->proxy, "Uninhibit",
+				    G_TYPE_UINT, cookie,
+				    G_TYPE_INVALID,
+				    G_TYPE_INVALID);
 }
 
 
