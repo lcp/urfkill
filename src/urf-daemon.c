@@ -337,20 +337,27 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	guint cookie = 0;
+	GError *error = NULL;
 
 	if (verify_session_id (ssid)) {
-		GError *new_error;
-
-		new_error = g_error_new (URF_DAEMON_ERROR,
-					 URF_DAEMON_ERROR_GENERAL,
-					 "Invalid Session ID");
-		g_debug ("Unable to Inhibit: %s", new_error->message);
-		dbus_g_method_return_error (context, new_error);
-		g_error_free (new_error);
+		error = g_error_new (URF_DAEMON_ERROR,
+				     URF_DAEMON_ERROR_GENERAL,
+				     "Invalid Session ID");
+		g_debug ("Unable to Inhibit: %s", error->message);
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
 		return FALSE;
 	}
 
 	cookie = urf_consolekit_inhibit (priv->consolekit, ssid);
+	if (cookie < 0) {
+		error = g_error_new (URF_DAEMON_ERROR,
+				     URF_DAEMON_ERROR_GENERAL,
+				     "Already inhibited");
+		dbus_g_method_return_error (context, error);
+		g_error_free (error);
+		return FALSE;
+	}
 
 	dbus_g_method_return (context, cookie);
 
