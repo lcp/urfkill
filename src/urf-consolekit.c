@@ -399,8 +399,6 @@ urf_consolekit_dispose (GObject *object)
 	G_OBJECT_CLASS (urf_consolekit_parent_class)->dispose (object);
 }
 
-
-
 /**
  * urf_consolekit_finalize:
  **/
