@@ -272,7 +272,7 @@ urf_consolekit_seat_added_cb (DBusGProxy    *proxy,
 	}
 
 	urf_consolekit_add_seat (consolekit, object_path);
-	g_debug ("Added seat: %s", object_path);
+	g_debug ("Monitor seat: %s", object_path);
 }
 
 /**
