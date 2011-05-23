@@ -80,9 +80,9 @@ gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,
 gboolean	 urf_daemon_key_control_enabled	(UrfDaemon		*daemon,
 						 DBusGMethodInvocation  *context);
 gboolean	 urf_daemon_inhibit		(UrfDaemon		*daemon,
-						 const char		*sid,
+						 const char		*ssid,
 						 DBusGMethodInvocation  *context);
-gboolean	 urf_daemon_uninhibit		(UrfDaemon		*daemon,
+void		 urf_daemon_uninhibit		(UrfDaemon		*daemon,
 						 const guint		 cookie,
 						 DBusGMethodInvocation  *context);
 

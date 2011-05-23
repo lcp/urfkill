@@ -177,7 +177,7 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <method name="Inhibit">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="s" name="sid" direction="in">
+      <arg type="s" name="ssid" direction="in">
         <doc:doc><doc:summary>
 	  The session id of the client
         </doc:summary></doc:doc>

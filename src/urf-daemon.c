@@ -39,6 +39,7 @@
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
+#include "urf-consolekit.h"
 
 #include "urf-daemon-glue.h"
 #include "urf-marshal.h"
@@ -68,15 +69,10 @@ struct UrfDaemonPrivate
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
+	UrfConsolekit	*consolekit;
 	gboolean	 key_control;
 	gboolean	 master_key;
-	GList		*inhibitors;
 };
-
-typedef struct {
-	guint		 cookie;
-	char		*session_id;
-} UrfInhibitor;
 
 static void urf_daemon_dispose (GObject *object);
 static void urf_daemon_finalize (GObject *object);
@@ -136,8 +132,8 @@ urf_daemon_input_event_cb (UrfInput *input,
 	gint type;
 	gboolean block = FALSE;
 
-	/* TODO check the inhibitor sid and the currently active sid */
-	if (!priv->key_control || priv->inhibitors)
+	if (!priv->key_control ||
+	    urf_consolekit_is_inhibited (priv->consolekit))
 		return;
 
 	switch (code) {
@@ -208,6 +204,13 @@ urf_daemon_startup (UrfDaemon *daemon)
 	ret = urf_input_startup (priv->input);
 	if (!ret) {
 		g_warning ("failed to setup input device monitor");
+		goto out;
+	}
+
+	/* start up consolekit checker */
+	ret = urf_consolekit_startup (priv->consolekit);
+	if (!ret) {
+		g_warning ("failed to setup consolekit session checker");
 		goto out;
 	}
 out:
@@ -324,27 +327,18 @@ urf_daemon_key_control_enabled (UrfDaemon             *daemon,
 	return TRUE;
 }
 
-static guint
-generate_unique_cookie (UrfDaemon *daemon)
-{
-	/* TODO search all inhibitors and generate a unique cookie */
-	return g_random_int_range (1, G_MAXUINT);
-}
-
 /**
  * urf_daemon_inhibit:
  **/
 gboolean
 urf_daemon_inhibit (UrfDaemon             *daemon,
-		    const char            *sid,
+		    const char            *ssid,
 		    DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
-	UrfInhibitor *inhibitor;
 	guint cookie = 0;
 
-	/* TODO validate the sid */
-	if (sid == NULL) {
+	if (verify_session_id (ssid)) {
 		GError *new_error;
 
 		new_error = g_error_new (URF_DAEMON_ERROR,
@@ -356,11 +350,7 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 		return FALSE;
 	}
 
-	inhibitor = g_new0 (UrfInhibitor, 1);
-	inhibitor->cookie = generate_unique_cookie (daemon);
-	inhibitor->session_id = g_strdup (sid);
-
-	priv->inhibitors = g_list_append (priv->inhibitors, inhibitor);
+	cookie = urf_consolekit_inhibit (priv->consolekit, ssid);
 
 	dbus_g_method_return (context, cookie);
 
@@ -370,27 +360,12 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 /**
  * urf_daemon_uninhibit:
  **/
-gboolean
+void
 urf_daemon_uninhibit (UrfDaemon             *daemon,
 		      const guint            cookie,
 		      DBusGMethodInvocation *context)
 {
-	UrfDaemonPrivate *priv = daemon->priv;
-	UrfInhibitor *inhibitor;
-	GList *item;
-
-	for (item = priv->inhibitors; item; item = item->next) {
-		inhibitor = (UrfInhibitor *)item->data;
-		if (inhibitor->cookie != cookie)
-			continue;
-
-		priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
-		g_free (inhibitor->session_id);
-		g_free (inhibitor);
-		return TRUE;
-	}
-
-	return FALSE;
+	urf_consolekit_uninhibit (daemon->priv->consolekit, cookie);
 }
 
 /**
@@ -460,7 +435,6 @@ static void
 urf_daemon_init (UrfDaemon *daemon)
 {
 	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
-	daemon->priv->inhibitors = NULL;
 	daemon->priv->polkit = urf_polkit_new ();
 
 	daemon->priv->killswitch = urf_killswitch_new ();
@@ -474,6 +448,8 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf_key_pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
+
+	daemon->priv->consolekit = urf_consolekit_new ();
 }
 
 /**
@@ -631,6 +607,11 @@ urf_daemon_dispose (GObject *object)
 		priv->killswitch = NULL;
 	}
 
+	if (priv->consolekit) {
+		g_object_unref (priv->consolekit);
+		priv->consolekit = NULL;
+	}
+
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
 }
 
@@ -643,11 +624,6 @@ urf_daemon_finalize (GObject *object)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
-
-	if (priv->inhibitors) {
-		g_list_free_full (priv->inhibitors, g_free);
-		priv->inhibitors = NULL;
-	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
 }
