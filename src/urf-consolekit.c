@@ -299,15 +299,17 @@ static gboolean
 urf_consolekit_get_seats (UrfConsolekit *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
+	GType g_type_array;
 	GPtrArray *seats = NULL;
 	GError *error = NULL;
 	const char *object_path;
 	gboolean ret;
 	int i;
 
+	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
 	ret = dbus_g_proxy_call (priv->proxy, "GetSeats", &error,
 				 G_TYPE_INVALID,
-				 DBUS_TYPE_G_OBJECT_ARRAY, &seats,
+				 g_type_array, &seats,
 				 G_TYPE_INVALID);
 
 	if (!ret) {
