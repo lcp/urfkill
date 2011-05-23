@@ -135,6 +135,7 @@ urf_consolekit_seat_active_changed (UrfSeat    *seat,
 	UrfConsolekit *consolekit = URF_CONSOLEKIT (data);
 
 	consolekit->priv->inhibit = is_inhibited (consolekit);
+	g_debug ("Active Session changed: %s", session_id);
 }
 
 /**
@@ -155,6 +156,7 @@ urf_consolekit_seat_session_removed (UrfSeat    *seat,
 
 	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
 	g_free (inhibitor);
+	g_debug ("Session removed: %s", session_id);
 }
 
 static gint
@@ -193,6 +195,7 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 	priv->inhibitors = g_list_prepend (priv->inhibitors, inhibitor);
 
 	consolekit->priv->inhibit = is_inhibited (consolekit);
+	g_debug ("Inhibit: %s", session_id);
 
 	return inhibitor->cookie;
 }
@@ -216,6 +219,8 @@ urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
 
 	consolekit->priv->inhibit = is_inhibited (consolekit);
+
+	g_debug ("Uninhibit: %s", inhibitor->session_id);
 
 	g_free (inhibitor);
 }
@@ -263,6 +268,7 @@ urf_consolekit_seat_added_cb (DBusGProxy    *proxy,
 	}
 
 	urf_consolekit_add_seat (consolekit, object_path);
+	g_debug ("Added seat: %s", object_path);
 }
 
 /**
@@ -283,6 +289,7 @@ urf_consolekit_seat_removed_cb (DBusGProxy    *proxy,
 	priv->seats = g_list_remove (priv->seats, seat);
 
 	g_object_unref (seat);
+	g_debug ("Removed seat: %s", object_path);
 }
 
 /**
@@ -319,6 +326,7 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 	for (i = 0; i < seats->len; i++) {
 		object_path = (const char *) g_ptr_array_index (seats, i);
 		urf_consolekit_add_seat (consolekit, object_path);
+		g_debug ("Added seat: %s", object_path);
 	}
 
 	return TRUE;
