@@ -57,7 +57,7 @@ UrfConsolekit		*urf_consolekit_new		(void);
 gboolean		 urf_consolekit_startup		(UrfConsolekit	*consolekit);
 
 gboolean		 urf_consolekit_is_inhibited	(UrfConsolekit	*consolekit);
-gint			 urf_consolekit_inhibit		(UrfConsolekit	*consolekit,
+guint			 urf_consolekit_inhibit		(UrfConsolekit	*consolekit,
 							 const char	*session_id);
 void			 urf_consolekit_uninhibit	(UrfConsolekit	*consolekit,
 							 const guint	 cookie);

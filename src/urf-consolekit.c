@@ -28,7 +28,7 @@
 #include "urf-consolekit.h"
 
 typedef struct {
-	gint		 cookie;
+	guint		 cookie;
 	char		*session_id;
 } UrfInhibitor;
 
@@ -163,11 +163,11 @@ urf_consolekit_seat_session_removed (UrfSeat       *seat,
 	g_debug ("Session removed: %s", session_id);
 }
 
-static gint
+static guint
 generate_unique_cookie (UrfConsolekit *consolekit)
 {
 	UrfInhibitor *inhibitor;
-	gint cookie;
+	guint cookie;
 
 	do {
 		cookie = g_random_int_range (1, G_MAXINT);
@@ -180,7 +180,7 @@ generate_unique_cookie (UrfConsolekit *consolekit)
 /**
  * urf_consolekit_inhibit:
  **/
-gint
+guint
 urf_consolekit_inhibit (UrfConsolekit *consolekit,
 			const char    *session_id)
 {
@@ -189,7 +189,7 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 
 	if (find_inhibitor_by_sid (consolekit, session_id)) {
 		g_debug ("Already inhibited: %s", session_id);
-		return -1;
+		return 0;
 	}
 
 	inhibitor = g_new0 (UrfInhibitor, 1);

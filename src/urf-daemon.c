@@ -350,7 +350,7 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 	}
 
 	cookie = urf_consolekit_inhibit (priv->consolekit, ssid);
-	if (cookie < 0) {
+	if (cookie == 0) {
 		error = g_error_new (URF_DAEMON_ERROR,
 				     URF_DAEMON_ERROR_GENERAL,
 				     "Already inhibited");
