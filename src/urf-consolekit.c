@@ -107,16 +107,17 @@ find_inhibitor_by_cookie (UrfConsolekit *consolekit,
 }
 
 static gboolean
-match_active_session (UrfConsolekit *consolekit,
-		      const char    *session_id)
+is_inhibited (UrfConsolekit *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfSeat *seat;
+	const char *active_id;
 	GList *item;
 
 	for (item = priv->seats; item; item = item->next) {
 		seat = URF_SEAT (item->data);
-		if (g_strcmp0 (urf_seat_get_active (seat), session_id) == 0)
+		active_id = urf_seat_get_active (seat);
+		if (find_inhibitor_by_sid (consolekit, active_id))
 			return TRUE;
 	}
 
@@ -132,14 +133,8 @@ urf_consolekit_seat_active_changed (UrfSeat    *seat,
 				    gpointer   *data)
 {
 	UrfConsolekit *consolekit = URF_CONSOLEKIT (data);
-	UrfInhibitor *inhibitor;
 
-	/* FIXME Assume that there is only one seat */
-	inhibitor = find_inhibitor_by_sid (consolekit, session_id);
-	if (inhibitor != NULL)
-		consolekit->priv->inhibit = TRUE;
-	else
-		consolekit->priv->inhibit = FALSE;
+	consolekit->priv->inhibit = is_inhibited (consolekit);
 }
 
 /**
@@ -197,8 +192,7 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 
 	priv->inhibitors = g_list_prepend (priv->inhibitors, inhibitor);
 
-	if (match_active_session (consolekit, session_id))
-		priv->inhibit = TRUE;
+	consolekit->priv->inhibit = is_inhibited (consolekit);
 
 	return inhibitor->cookie;
 }
@@ -221,8 +215,7 @@ urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 
 	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
 
-	if (match_active_session (consolekit, inhibitor->session_id))
-		priv->inhibit = FALSE;
+	consolekit->priv->inhibit = is_inhibited (consolekit);
 
 	g_free (inhibitor);
 }
