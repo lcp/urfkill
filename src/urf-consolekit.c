@@ -124,6 +124,13 @@ is_inhibited (UrfConsolekit *consolekit)
 	return FALSE;
 }
 
+static void
+free_inhibitor (UrfInhibitor *inhibitor)
+{
+	g_free (inhibitor->session_id);
+	g_free (inhibitor);
+}
+
 /**
  * urf_consolekit_seat_active_changed:
  **/
@@ -155,7 +162,7 @@ urf_consolekit_seat_session_removed (UrfSeat    *seat,
 		return;
 
 	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
-	g_free (inhibitor);
+	free_inhibitor (inhibitor);
 	g_debug ("Session removed: %s", session_id);
 }
 
@@ -222,7 +229,7 @@ urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 
 	g_debug ("Uninhibit: %s", inhibitor->session_id);
 
-	g_free (inhibitor);
+	free_inhibitor (inhibitor);
 }
 
 /**
@@ -407,8 +414,10 @@ urf_consolekit_finalize (GObject *object)
 
 	if (consolekit->priv->seats)
 		g_list_free_full (consolekit->priv->seats, g_object_unref);
-	if (consolekit->priv->inhibitors)
-		g_list_free_full (consolekit->priv->seats, g_free);
+	if (consolekit->priv->inhibitors) {
+		g_list_free_full (consolekit->priv->seats,
+				  (GDestroyNotify)free_inhibitor);
+	}
 
 	G_OBJECT_CLASS (urf_consolekit_parent_class)->finalize (object);
 }
