@@ -28,6 +28,9 @@ get_rfkill_name_by_index (guint index)
 	return content;
 }
 
+/**
+ * get_dmi_info:
+ **/
 DmiInfo *
 get_dmi_info ()
 {
@@ -90,6 +93,9 @@ get_dmi_info ()
 	return info;
 }
 
+/**
+ * dmi_info_free:
+ **/
 void
 dmi_info_free (DmiInfo *info)
 {
@@ -100,4 +106,13 @@ dmi_info_free (DmiInfo *info)
 	g_free (info->product_name);
 	g_free (info->product_version);
 	g_free (info);
+}
+
+/**
+ * validate_session_id:
+ **/
+gboolean
+verify_session_id (const char *session_id)
+{
+	return g_str_has_prefix (session_id, CK_SESSION_PREFIX);
 }
