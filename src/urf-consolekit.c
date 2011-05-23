@@ -135,12 +135,10 @@ free_inhibitor (UrfInhibitor *inhibitor)
  * urf_consolekit_seat_active_changed:
  **/
 static void
-urf_consolekit_seat_active_changed (UrfSeat    *seat,
-				    const char *session_id,
-				    gpointer   *data)
+urf_consolekit_seat_active_changed (UrfSeat       *seat,
+				    const char    *session_id,
+				    UrfConsolekit *consolekit)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (data);
-
 	consolekit->priv->inhibit = is_inhibited (consolekit);
 	g_debug ("Active Session changed: %s", session_id);
 }
@@ -149,11 +147,10 @@ urf_consolekit_seat_active_changed (UrfSeat    *seat,
  * urf_consolekit_seat_active_changed:
  **/
 static void
-urf_consolekit_seat_session_removed (UrfSeat    *seat,
-				     const char *session_id,
-				     gpointer   *data)
+urf_consolekit_seat_session_removed (UrfSeat       *seat,
+				     const char    *session_id,
+				     UrfConsolekit *consolekit)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (data);
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfInhibitor *inhibitor;
 
