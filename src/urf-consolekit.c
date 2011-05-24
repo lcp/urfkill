@@ -118,6 +118,9 @@ find_inhibitor_by_cookie (UrfConsolekit *consolekit,
 	UrfInhibitor *inhibitor;
 	GList *item;
 
+	if (cookie == 0)
+		return NULL;
+
 	for (item = priv->inhibitors; item; item = item->next) {
 		inhibitor = (UrfInhibitor *)item->data;
 		if (inhibitor->cookie == cookie)
@@ -252,9 +255,14 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 		return inhibitor->cookie;
 
 	inhibitor = g_new0 (UrfInhibitor, 1);
+	inhibitor->session_id = get_session_id (consolekit, bus_name);
+	if (session_id == NULL) {
+		g_free (inhibitor);
+		return 0;
+	}
+
 	inhibitor->reason = g_strdup (reason);
 	inhibitor->bus_name = g_strdup (bus_name);
-	inhibitor->session_id = get_session_id (consolekit, bus_name);
 	inhibitor->cookie = generate_unique_cookie (consolekit);
 
 	priv->inhibitors = g_list_prepend (priv->inhibitors, inhibitor);
