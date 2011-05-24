@@ -65,7 +65,6 @@ struct UrfDaemonPrivate
 {
 	UrfConfig	*config;
 	DBusGConnection	*connection;
-	DBusGProxy	*proxy;
 	UrfPolkit	*polkit;
 	UrfKillswitch   *killswitch;
 	UrfInput	*input;
@@ -75,7 +74,6 @@ struct UrfDaemonPrivate
 };
 
 static void urf_daemon_dispose (GObject *object);
-static void urf_daemon_finalize (GObject *object);
 
 G_DEFINE_TYPE (UrfDaemon, urf_daemon, G_TYPE_OBJECT)
 
@@ -100,12 +98,6 @@ urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
 		}
 		goto out;
 	}
-
-	/* connect to DBUS */
-	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
-						 DBUS_SERVICE_DBUS,
-						 DBUS_PATH_DBUS,
-						 DBUS_INTERFACE_DBUS);
 
 	/* register GObject */
 	dbus_g_connection_register_g_object (priv->connection,
@@ -464,22 +456,6 @@ urf_daemon_get_property (GObject    *object,
 }
 
 /**
- * urf_daemon_set_property:
- **/
-static void
-urf_daemon_set_property (GObject      *object,
-			 guint         prop_id,
-			 const GValue *value,
-			 GParamSpec   *pspec)
-{
-	switch (prop_id) {
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-		break;
-	}
-}
-
-/**
  * urf_daemon_error_quark:
  **/
 GQuark
@@ -503,8 +479,6 @@ urf_daemon_error_get_type (void)
 	if (etype == 0) {
 		static const GEnumValue values[] = {
 			ENUM_ENTRY (URF_DAEMON_ERROR_GENERAL, "GeneralError"),
-			ENUM_ENTRY (URF_DAEMON_ERROR_NOT_SUPPORTED, "NotSupported"),
-			ENUM_ENTRY (URF_DAEMON_ERROR_NO_SUCH_DEVICE, "NoSuchDevice"),
 			{ 0, 0, 0 }
 		};
 		g_assert (URF_DAEMON_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -521,9 +495,7 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->dispose = urf_daemon_dispose;
-	object_class->finalize = urf_daemon_finalize;
 	object_class->get_property = urf_daemon_get_property;
-	object_class->set_property = urf_daemon_set_property;
 
 	g_type_class_add_private (klass, sizeof (UrfDaemonPrivate));
 
@@ -577,11 +549,6 @@ urf_daemon_dispose (GObject *object)
 		priv->config = NULL;
 	}
 
-	if (priv->proxy) {
-		g_object_unref (priv->proxy);
-		priv->proxy = NULL;
-	}
-
 	if (priv->connection) {
 		dbus_g_connection_unref (priv->connection);
 		priv->connection = NULL;
@@ -603,19 +570,6 @@ urf_daemon_dispose (GObject *object)
 	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
-}
-
-/**
- * urf_daemon_finalize:
- **/
-
-static void
-urf_daemon_finalize (GObject *object)
-{
-	UrfDaemon *daemon = URF_DAEMON (object);
-	UrfDaemonPrivate *priv = daemon->priv;
-
-	G_OBJECT_CLASS (urf_daemon_parent_class)->finalize (object);
 }
 
 /**
