@@ -590,6 +590,38 @@ urf_client_get_property (GObject    *object,
 }
 
 /**
+ * urf_client_error_quark:
+ **/
+GQuark
+urf_client_error_quark (void)
+{
+	static GQuark ret = 0;
+	if (ret == 0)
+		ret = g_quark_from_static_string ("urf_client_error");
+	return ret;
+}
+
+#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
+/**
+ * urf_client_error_get_type:
+ **/
+GType
+urf_client_error_get_type (void)
+{
+	static GType etype = 0;
+
+	if (etype == 0) {
+		static const GEnumValue values[] = {
+			ENUM_ENTRY (URF_CLIENT_ERROR_GENERAL, "GeneralError"),
+			{ 0, 0, 0 }
+		};
+		g_assert (URF_CLIENT_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
+		etype = g_enum_register_static ("UrfClientError", values);
+	}
+	return etype;
+}
+
+/**
  * urf_client_class_init:
  * @klass: The UrfClientClass
  **/

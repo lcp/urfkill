@@ -76,9 +76,17 @@ struct _UrfClientClass
 							 UrfDevice	*device);
 };
 
+typedef enum
+{
+	URF_CLIENT_ERROR_GENERAL,
+	URF_CLIENT_NUM_ERRORS
+} UrfClientError;
+
 /* general */
 GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
+GQuark		 urf_daemon_error_quark			(void);
+GType		 urf_daemon_error_get_type		(void);
 
 /* generic */
 GPtrArray	*urf_client_get_devices			(UrfClient	*client);
