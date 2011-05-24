@@ -95,6 +95,7 @@ gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
 gboolean	 urf_client_key_control_enabled		(UrfClient	*client,
 							 GError		**error);
 guint		 urf_client_inhibit			(UrfClient	*client,
+							 const char	*reason,
 							 GError		**error);
 void		 urf_client_uninhibit			(UrfClient	*client,
 							 const guint	 cookie);

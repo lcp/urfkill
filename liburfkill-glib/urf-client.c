@@ -55,7 +55,6 @@ struct _UrfClientPrivate
 	GPtrArray	*devices;
 	char		*daemon_version;
 	gboolean	 have_properties;
-	char		*session_id;
 };
 
 enum {
@@ -262,32 +261,35 @@ urf_client_key_control_enabled (UrfClient *client,
  *
  * Inhibit the rfkill key handling function for this session.
  *
- * Return value: the cookie
+ * Return value: the cookie and @error is used
  *
  * Since: 0.2.0
  **/
 guint
-urf_client_inhibit (UrfClient *client,
-		    GError    **error)
+urf_client_inhibit (UrfClient  *client,
+		    const char *reason,
+		    GError     **error)
 {
 	GError *error_local = NULL;
 	gboolean ret;
-	guint cookie;
+	guint cookie = 0;
 
-	/* TODO Fill the GError */
-	g_return_val_if_fail (URF_IS_CLIENT (client), 0);
-	g_return_val_if_fail (client->priv->proxy != NULL, 0);
-	g_return_val_if_fail (client->priv->session_id != NULL, 0);
+	if (!URF_IS_CLIENT (client) || client->priv->proxy == NULL) {
+		g_warning ("Not a vaild UrfClient instance");
+		goto out;
+	}
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Inhibit", &error_local,
-				 G_TYPE_STRING, client->priv->session_id,
+				 G_TYPE_STRING, reason,
 				 G_TYPE_INVALID,
 				 G_TYPE_UINT, &cookie,
 				 G_TYPE_INVALID);
 	if (!ret) {
 		g_warning ("Couldn't sent INHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
+		goto out;
 	}
+out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return cookie;
@@ -433,50 +435,6 @@ urf_client_get_daemon_version (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 	urf_client_get_properties_sync (client, NULL, NULL);
 	return client->priv->daemon_version;
-}
-
-static char *
-get_current_session (void)
-{
-	DBusGConnection *connection;
-	DBusGProxy *proxy;
-	char *session_id;
-	GError *error = NULL;
-	gboolean ret;
-
-	connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-	if (error != NULL) {
-		g_warning ("Failed to get bus: %s", error->message);
-		g_error_free (error);
-		return NULL;
-	}
-
-	proxy = dbus_g_proxy_new_for_name (connection,
-					   "org.freedesktop.ConsoleKit",
-					   "/org/freedesktop/ConsoleKit/Manager",
-					   "org.freedesktop.ConsoleKit.Manager");
-
-	ret = dbus_g_proxy_call (proxy, "GetCurrentSession", &error,
-				 G_TYPE_INVALID,
-				 DBUS_TYPE_G_OBJECT_PATH, &session_id,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		g_warning ("Couldn't sent GetCurrentSession: %s", error->message);
-		session_id = NULL;
-		goto out;
-	}
-
-	session_id = g_strdup (session_id);
-
-out:
-	if (error != NULL)
-		g_error_free (error);
-	if (connection != NULL)
-		dbus_g_connection_unref (connection);
-	if (proxy != NULL)
-		g_object_unref (proxy);
-
-	return session_id;
 }
 
 /**
@@ -761,8 +719,6 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->session_id = get_current_session ();
-
 	/* connect signals */
 	dbus_g_object_register_marshaller (urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
 					   G_TYPE_NONE,
@@ -838,7 +794,6 @@ urf_client_finalize (GObject *object)
 	client = URF_CLIENT (object);
 
 	g_free (client->priv->daemon_version);
-	g_free (client->priv->session_id);
 
 	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
 }
