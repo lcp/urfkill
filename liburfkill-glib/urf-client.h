@@ -85,8 +85,8 @@ typedef enum
 /* general */
 GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
-GQuark		 urf_daemon_error_quark			(void);
-GType		 urf_daemon_error_get_type		(void);
+GQuark		 urf_client_error_quark			(void);
+GType		 urf_client_error_get_type		(void);
 
 /* generic */
 GPtrArray	*urf_client_get_devices			(UrfClient	*client);
