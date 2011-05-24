@@ -257,6 +257,7 @@ urf_client_key_control_enabled (UrfClient *client,
 /**
  * urf_client_inhibit:
  * @client: a #UrfClient instance
+ * @reason: the reason to inhibit the key control
  * @error: a #GError, or %NULL
  *
  * Inhibit the rfkill key handling function for this session.
