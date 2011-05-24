@@ -256,7 +256,7 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 
 	inhibitor = g_new0 (UrfInhibitor, 1);
 	inhibitor->session_id = get_session_id (consolekit, bus_name);
-	if (session_id == NULL) {
+	if (inhibitor->session_id == NULL) {
 		g_free (inhibitor);
 		return 0;
 	}
