@@ -275,7 +275,11 @@ urf_client_inhibit (UrfClient  *client,
 	guint cookie = 0;
 
 	if (!URF_IS_CLIENT (client) || client->priv->proxy == NULL) {
-		g_warning ("Not a vaild UrfClient instance");
+		error_local = g_error_new (URF_CLIENT_ERROR,
+					   URF_CLIENT_ERROR_GENERAL,
+					   "Not a vaild UrfClient instance");
+		g_warning ("Inhibit: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
 		goto out;
 	}
 
