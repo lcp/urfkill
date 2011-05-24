@@ -177,9 +177,9 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <method name="Inhibit">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="s" name="ssid" direction="in">
+      <arg type="s" name="reason" direction="in">
         <doc:doc><doc:summary>
-	  The session id of the client
+	  The reason to inhibit the key control
         </doc:summary></doc:doc>
       </arg>
       <arg type="u" name="inhibit_cookie" direction="out">

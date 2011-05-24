@@ -332,33 +332,16 @@ urf_daemon_key_control_enabled (UrfDaemon             *daemon,
  **/
 gboolean
 urf_daemon_inhibit (UrfDaemon             *daemon,
-		    const char            *ssid,
+		    const char            *reason,
 		    DBusGMethodInvocation *context)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
+	char *bus_name;
 	guint cookie = 0;
 	GError *error = NULL;
 
-	if (verify_session_id (ssid)) {
-		error = g_error_new (URF_DAEMON_ERROR,
-				     URF_DAEMON_ERROR_GENERAL,
-				     "Invalid Session ID");
-		g_debug ("Unable to Inhibit: %s", error->message);
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-		return FALSE;
-	}
-
-	cookie = urf_consolekit_inhibit (priv->consolekit, ssid);
-	if (cookie == 0) {
-		error = g_error_new (URF_DAEMON_ERROR,
-				     URF_DAEMON_ERROR_GENERAL,
-				     "Already inhibited");
-		dbus_g_method_return_error (context, error);
-		g_error_free (error);
-		return FALSE;
-	}
-
+	bus_name = dbus_g_method_get_sender (context);
+	cookie = urf_consolekit_inhibit (priv->consolekit, bus_name, reason);
 	dbus_g_method_return (context, cookie);
 
 	return TRUE;
