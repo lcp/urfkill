@@ -23,6 +23,7 @@
 #endif
 
 #include <glib.h>
+#include <string.h>
 #include <dbus/dbus-glib.h>
 
 #include "urf-consolekit.h"
@@ -30,11 +31,14 @@
 typedef struct {
 	guint		 cookie;
 	char		*session_id;
+	char		*bus_name;
+	char		*reason;
 } UrfInhibitor;
 
 struct UrfConsolekitPrivate {
 	DBusGConnection	*connection;
 	DBusGProxy	*proxy;
+	DBusGProxy	*bus_proxy;
 	GList		*seats;
 	GList		*inhibitors;
 	gboolean	 inhibit;
@@ -91,6 +95,22 @@ find_inhibitor_by_sid (UrfConsolekit *consolekit,
 }
 
 static UrfInhibitor *
+find_inhibitor_by_bus_name (UrfConsolekit *consolekit,
+			    const char    *bus_name)
+{
+	UrfConsolekitPrivate *priv = consolekit->priv;
+	UrfInhibitor *inhibitor;
+	GList *item;
+
+	for (item = priv->inhibitors; item; item = item->next) {
+		inhibitor = (UrfInhibitor *)item->data;
+		if (g_strcmp0 (inhibitor->bus_name, bus_name) == 0)
+			return inhibitor;
+	}
+	return NULL;
+}
+
+static UrfInhibitor *
 find_inhibitor_by_cookie (UrfConsolekit *consolekit,
 			  const guint    cookie)
 {
@@ -128,6 +148,8 @@ static void
 free_inhibitor (UrfInhibitor *inhibitor)
 {
 	g_free (inhibitor->session_id);
+	g_free (inhibitor->bus_name);
+	g_free (inhibitor->reason);
 	g_free (inhibitor);
 }
 
@@ -163,6 +185,43 @@ urf_consolekit_seat_session_removed (UrfSeat       *seat,
 	g_debug ("Session removed: %s", session_id);
 }
 
+static char *
+get_session_id (UrfConsolekit *consolekit,
+		const char    *bus_name)
+{
+	UrfConsolekitPrivate *priv = consolekit->priv;
+	pid_t calling_pid;
+	char *session_id = NULL;
+	GError *error;
+
+        error = NULL;
+	if (!dbus_g_proxy_call (priv->bus_proxy, "GetConnectionUnixProcessID", &error,
+				G_TYPE_STRING, bus_name,
+				G_TYPE_INVALID,
+				G_TYPE_UINT, &calling_pid,
+				G_TYPE_INVALID)) {
+		g_warning("GetConnectionUnixProcessID() failed: %s", error->message);
+		g_error_free (error);
+		goto out;
+	}
+
+        error = NULL;
+	if (!dbus_g_proxy_call (priv->proxy, "GetSessionForUnixProcess", &error,
+				G_TYPE_UINT, calling_pid,
+				G_TYPE_INVALID,
+				DBUS_TYPE_G_OBJECT_PATH, &session_id,
+				G_TYPE_INVALID)) {
+		g_warning ("Couldn't sent GetSessionForUnixProcess: %s", error->message);
+		g_error_free (error);
+		session_id = NULL;
+		goto out;
+	}
+
+	session_id = g_strdup (session_id);
+out:
+	return session_id;
+}
+
 static guint
 generate_unique_cookie (UrfConsolekit *consolekit)
 {
@@ -182,26 +241,40 @@ generate_unique_cookie (UrfConsolekit *consolekit)
  **/
 guint
 urf_consolekit_inhibit (UrfConsolekit *consolekit,
-			const char    *session_id)
+			const char    *bus_name,
+			const char    *reason)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfInhibitor *inhibitor;
 
-	if (find_inhibitor_by_sid (consolekit, session_id)) {
-		g_debug ("Already inhibited: %s", session_id);
-		return 0;
-	}
+	inhibitor = find_inhibitor_by_bus_name (consolekit, bus_name);
+	if (inhibitor)
+		return inhibitor->cookie;
 
 	inhibitor = g_new0 (UrfInhibitor, 1);
-	inhibitor->session_id = g_strdup (session_id);
+	inhibitor->reason = g_strdup (reason);
+	inhibitor->bus_name = g_strdup (bus_name);
+	inhibitor->session_id = get_session_id (consolekit, bus_name);
 	inhibitor->cookie = generate_unique_cookie (consolekit);
 
 	priv->inhibitors = g_list_prepend (priv->inhibitors, inhibitor);
 
 	consolekit->priv->inhibit = is_inhibited (consolekit);
-	g_debug ("Inhibit: %s", session_id);
+	g_debug ("Inhibit: %s for %s", bus_name, reason);
 
 	return inhibitor->cookie;
+}
+
+static void
+remove_inhibitor (UrfConsolekit *consolekit,
+		  UrfInhibitor  *inhibitor)
+{
+	UrfConsolekitPrivate *priv = consolekit->priv;
+
+	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
+	consolekit->priv->inhibit = is_inhibited (consolekit);
+	g_debug ("Remove inhibitor: %s", inhibitor->bus_name);
+	free_inhibitor (inhibitor);
 }
 
 /**
@@ -211,7 +284,6 @@ void
 urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 			  const guint    cookie)
 {
-	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfInhibitor *inhibitor;
 
 	inhibitor = find_inhibitor_by_cookie (consolekit, cookie);
@@ -219,14 +291,7 @@ urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 		g_debug ("Cookie outdated");
 		return;
 	}
-
-	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
-
-	consolekit->priv->inhibit = is_inhibited (consolekit);
-
-	g_debug ("Uninhibit: %s", inhibitor->session_id);
-
-	free_inhibitor (inhibitor);
+	remove_inhibitor (consolekit, inhibitor);
 }
 
 /**
@@ -297,6 +362,29 @@ urf_consolekit_seat_removed_cb (DBusGProxy    *proxy,
 }
 
 /**
+ * urf_consolekit_bus_owner_changed_cb:
+ **/
+static void
+urf_consolekit_bus_owner_changed_cb (DBusGProxy    *bus_proxy,
+				     const char    *name,
+				     const char    *old_owner,
+				     const char    *new_owner,
+				     UrfConsolekit *consolekit)
+{
+	UrfConsolekitPrivate *priv = consolekit->priv;
+	UrfInhibitor *inhibitor;
+
+	if (strlen (new_owner) == 0 &&
+	    strlen (old_owner) > 0) {
+		/* A process disconnected from the bus */
+		inhibitor = find_inhibitor_by_bus_name (consolekit, old_owner);
+		if (inhibitor == NULL)
+			return;
+		remove_inhibitor (consolekit, inhibitor);
+	}
+}
+
+/**
  * urf_consolekit_get_seats:
  **/
 static gboolean
@@ -357,6 +445,11 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 						 "org.freedesktop.ConsoleKit",
 						 "/org/freedesktop/ConsoleKit/Manager",
 						 "org.freedesktop.ConsoleKit.Manager");
+
+	priv->bus_proxy = dbus_g_proxy_new_for_name (priv->connection,
+						     DBUS_SERVICE_DBUS,
+						     DBUS_PATH_DBUS,
+						     DBUS_INTERFACE_DBUS);
 	/* Get seats */
 	ret = urf_consolekit_get_seats (consolekit);
 	if (!ret)
@@ -370,11 +463,19 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 
+	dbus_g_proxy_add_signal (priv->bus_proxy, "NameOwnerChanged",
+				 G_TYPE_STRING,
+				 G_TYPE_STRING,
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
 	/* callbacks */
 	dbus_g_proxy_connect_signal (priv->proxy, "SeatAdded",
 				     G_CALLBACK (urf_consolekit_seat_added_cb), consolekit, NULL);
 	dbus_g_proxy_connect_signal (priv->proxy, "SeatRemoved",
 				     G_CALLBACK (urf_consolekit_seat_removed_cb), consolekit, NULL);
+
+	dbus_g_proxy_connect_signal (priv->bus_proxy, "NameOwnerChanged",
+				     G_CALLBACK (urf_consolekit_bus_owner_changed_cb), consolekit, NULL);
 
 	return TRUE;
 }
@@ -394,6 +495,10 @@ urf_consolekit_dispose (GObject *object)
 	if (consolekit->priv->proxy) {
 		g_object_unref (consolekit->priv->proxy);
 		consolekit->priv->proxy = NULL;
+	}
+	if (consolekit->priv->bus_proxy) {
+		g_object_unref (consolekit->priv->bus_proxy);
+		consolekit->priv->bus_proxy = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_consolekit_parent_class)->dispose (object);
@@ -441,6 +546,9 @@ urf_consolekit_init (UrfConsolekit *consolekit)
 	consolekit->priv->seats = NULL;
 	consolekit->priv->inhibitors = NULL;
 	consolekit->priv->inhibit = FALSE;
+	consolekit->priv->connection = NULL;
+	consolekit->priv->proxy = NULL;
+	consolekit->priv->bus_proxy = NULL;
 }
 
 /**
