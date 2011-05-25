@@ -46,13 +46,13 @@ enum
                                 URF_TYPE_DEVICE, UrfDevicePrivate))
 
 struct UrfDevicePrivate {
-	guint            index;
-	guint            type;
-	char            *name;
-	gboolean         soft;
-	gboolean         hard;
+	guint		 index;
+	guint		 type;
+	char		*name;
+	gboolean	 soft;
+	gboolean	 hard;
 	char		*object_path;
-	DBusGConnection *connection;
+	DBusGConnection	*connection;
 };
 
 G_DEFINE_TYPE(UrfDevice, urf_device, G_TYPE_OBJECT)
@@ -361,8 +361,8 @@ urf_device_register_device (UrfDevice *device)
  * urf_device_new:
  */
 UrfDevice *
-urf_device_new (guint index,
-		guint type,
+urf_device_new (guint    index,
+		guint    type,
 		gboolean soft,
 		gboolean hard)
 {
