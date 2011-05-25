@@ -54,6 +54,7 @@ struct _UrfClientPrivate
 	DBusGProxy	*prop_proxy;
 	GPtrArray	*devices;
 	char		*daemon_version;
+	gboolean	 key_control;
 	gboolean	 have_properties;
 };
 
@@ -67,6 +68,7 @@ enum {
 enum {
 	PROP_0,
 	PROP_DAEMON_VERSION,
+	PROP_KEY_CONTROL,
 	PROP_LAST
 };
 
@@ -211,41 +213,6 @@ urf_client_set_block_idx (UrfClient      *client,
 				 G_TYPE_INVALID);
 	if (!ret) {
 		g_warning ("Couldn't sent BLOCKIDX: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
-	}
-	if (error_local != NULL)
-		g_error_free (error_local);
-	return status;
-}
-
-/**
- * urf_client_key_control_enabled:
- * @client: a #UrfClient instance
- * @error: a #GError, or %NULL
- *
- * Get whether the rfkill key contorl is enabled or not.
- *
- * Return value: #TRUE if the key control is enabled, else #FALSE.
- *
- * Since: 0.2.0
- **/
-gboolean
-urf_client_key_control_enabled (UrfClient *client,
-				GError    **error)
-{
-	gboolean ret, status;
-	GError *error_local = NULL;
-
-	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-
-	ret = dbus_g_proxy_call (client->priv->proxy, "KeyControlEnabled", &error_local,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		g_warning ("Couldn't sent KEYCONTROLENABLED: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		status = FALSE;
 	}
@@ -416,6 +383,13 @@ urf_client_get_properties_sync (UrfClient    *client,
 	}
 	client->priv->daemon_version = g_strdup (g_value_get_string (value));
 
+	value = g_hash_table_lookup (props, "KeyControl");
+	if (value == NULL) {
+		g_warning ("No 'KeyControl' property");
+		goto out;
+	}
+	client->priv->key_control = g_value_get_boolean (value);
+
 	/* All done */
 	client->priv->have_properties = TRUE;
 out:
@@ -440,6 +414,17 @@ urf_client_get_daemon_version (UrfClient *client)
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 	urf_client_get_properties_sync (client, NULL, NULL);
 	return client->priv->daemon_version;
+}
+
+/**
+ * urf_client_get_key_control:
+ **/
+static gboolean
+urf_client_get_key_control (UrfClient *client)
+{
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	urf_client_get_properties_sync (client, NULL, NULL);
+	return client->priv->key_control;
 }
 
 /**
@@ -586,7 +571,10 @@ urf_client_get_property (GObject    *object,
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
-		g_value_set_string (value, client->priv->daemon_version);
+		g_value_set_string (value, urf_client_get_daemon_version (client));
+		break;
+	case PROP_KEY_CONTROL:
+		g_value_set_boolean (value, urf_client_get_key_control (client));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -654,6 +642,21 @@ urf_client_class_init (UrfClientClass *klass)
 							      NULL,
 							      G_PARAM_READABLE));
 
+	/**
+	 * UrfClient:key-control:
+	 *
+	 * Whether the key control in the daemon is enabled or not
+	 *
+	 * Since: 0.2.0
+	 **/
+	g_object_class_install_property (object_class,
+					 PROP_KEY_CONTROL,
+					 g_param_spec_boolean ("key-control",
+							       "Key Control",
+							       "The key control state",
+							       FALSE,
+							       G_PARAM_READABLE));
+
 	/* install signals */
 	/**
 	 * UrfClient::device-added:
@@ -717,6 +720,7 @@ urf_client_init (UrfClient *client)
 
 	client->priv = URF_CLIENT_GET_PRIVATE (client);
 	client->priv->daemon_version = NULL;
+	client->priv->key_control = FALSE;
 	client->priv->have_properties = FALSE;
 
 	/* get on the bus */
