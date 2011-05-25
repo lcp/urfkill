@@ -230,6 +230,8 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfInhibitor *inhibitor;
 
+	g_return_val_if_fail (priv->proxy != NULL, 0);
+
 	inhibitor = find_inhibitor_by_bus_name (consolekit, bus_name);
 	if (inhibitor)
 		return inhibitor->cookie;
@@ -258,6 +260,8 @@ remove_inhibitor (UrfConsolekit *consolekit,
 		  UrfInhibitor  *inhibitor)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
+
+	g_return_if_fail (priv->proxy != NULL);
 
 	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
 	consolekit->priv->inhibit = is_inhibited (consolekit);
