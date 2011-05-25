@@ -282,29 +282,25 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv;
 	UrfDevice *device;
-	GList *l;
+	int state = KILLSWITCH_STATE_NO_ADAPTER;
 	gboolean soft, hard;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), KILLSWITCH_STATE_NO_ADAPTER);
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
 
 	priv = killswitch->priv;
 
 	if (priv->devices == NULL)
-		return KILLSWITCH_STATE_NO_ADAPTER;
+		return state;
 
-	for (l = priv->devices ; l ; l = l->next) {
-		device = (UrfDevice *)l->data;
-		if (urf_device_get_index (device) == index) {
-			int state;
-			soft = urf_device_get_soft (device);
-			hard = urf_device_get_hard (device);
-			state = event_to_state (soft, hard);
-			g_debug ("killswitch %d is %s", index, state_to_string (state));
-			return state;
-		}
+	device = urf_killswitch_find_device (killswitch, index);
+	if (device) {
+		soft = urf_device_get_soft (device);
+		hard = urf_device_get_hard (device);
+		state = event_to_state (soft, hard);
+		g_debug ("killswitch %d is %s", index, state_to_string (state));
 	}
 
-	return KILLSWITCH_STATE_NO_ADAPTER;
+	return state;
 }
 
 /**
