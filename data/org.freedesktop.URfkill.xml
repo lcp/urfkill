@@ -156,25 +156,6 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <!-- ************************************************************ -->
 
-    <method name="KeyControlEnabled">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg type="b" name="ret" direction="out">
-        <doc:doc><doc:summary>
-	  TRUE if the key control is enabled, otherwise FALSE
-        </doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Get whether the rfkill key handling function is enabled or not.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
     <method name="Inhibit">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="reason" direction="in">
@@ -288,6 +269,16 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
         <doc:description>
           <doc:para>
 	    The version the running daemon. e.g. 0.2.0
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <property name="KeyControl" type="b" access="read">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+	    Whether the key control is enabled or not
           </doc:para>
         </doc:description>
       </doc:doc>

@@ -48,6 +48,7 @@ enum
 {
 	PROP_0,
 	PROP_DAEMON_VERSION,
+	PROP_KEY_CONTROL,
 	PROP_LAST
 };
 
@@ -306,20 +307,6 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 }
 
 /**
- * urf_daemon_key_control:
- **/
-gboolean
-urf_daemon_key_control_enabled (UrfDaemon             *daemon,
-				DBusGMethodInvocation *context)
-{
-	UrfDaemonPrivate *priv = daemon->priv;
-
-	dbus_g_method_return (context, priv->key_control);
-
-	return TRUE;
-}
-
-/**
  * urf_daemon_inhibit:
  **/
 gboolean
@@ -449,6 +436,9 @@ urf_daemon_get_property (GObject    *object,
 	case PROP_DAEMON_VERSION:
 		g_value_set_string (value, PACKAGE_VERSION);
 		break;
+	case PROP_KEY_CONTROL:
+		g_value_set_boolean (value, daemon->priv->key_control);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -530,6 +520,14 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 							      "The version of the running daemon",
 							      NULL,
 							      G_PARAM_READABLE));
+
+	g_object_class_install_property (object_class,
+					 PROP_KEY_CONTROL,
+					 g_param_spec_boolean ("key-control",
+							       "Key Control",
+							       "Whether the key control is enabled",
+							       FALSE,
+							       G_PARAM_READABLE));
 
 	dbus_g_object_type_install_info (URF_TYPE_DAEMON, &dbus_glib_urf_daemon_object_info);
 	dbus_g_error_domain_register (URF_DAEMON_ERROR, NULL, URF_DAEMON_TYPE_ERROR);
