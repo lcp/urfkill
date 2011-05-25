@@ -86,6 +86,9 @@ main ()
 	g_object_get (client, "key-control", &status, NULL);
 	printf ("Key control is %s\n", status?"on":"off");
 
+	status = urf_client_is_inhibited (client, NULL);
+	printf ("Key control is %s\n", status?"inhibitied":"uninhibited");
+
 	sleep (2);
 
 	devices = urf_client_get_devices (client);

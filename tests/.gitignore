@@ -1,6 +1,7 @@
 test-urfkill-client
 enumerate-devices
 catch-signal
+inhibit-keycontrol
 .deps
 .libs
 *.o
