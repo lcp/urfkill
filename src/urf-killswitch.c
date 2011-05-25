@@ -420,6 +420,28 @@ update_killswitch (UrfKillswitch *killswitch,
 	}
 }
 
+static void
+assign_new_pivot (UrfKillswitch *killswitch,
+		  const guint    type)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfDevice *device;
+	const char *name;
+	GList *item;
+
+	for (item = priv->devices; item != NULL; item = item->next) {
+		device = (UrfDevice *)item->data;
+		name = urf_device_get_name (device);
+		if (urf_device_get_rf_type (device) == type &&
+		    (priv->type_pivot[type] == NULL ||
+		     match_platform_vendor (name))) {
+			priv->type_pivot[type] = device;
+			g_debug ("assign killswitch idx %d %s as a pivot",
+				 urf_device_get_index (device), name);
+		}
+	}
+}
+
 /**
  * remove_killswitch:
  **/
@@ -429,7 +451,6 @@ remove_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
-	GList *l;
 	guint type;
 	const char *name;
 	gboolean pivot_changed = FALSE;
@@ -457,16 +478,7 @@ remove_killswitch (UrfKillswitch *killswitch,
 
 	/* Find the next pivot */
 	if (pivot_changed) {
-		for (l = priv->devices; l != NULL; l = l->next) {
-			device = (UrfDevice *)l->data;
-			name = urf_device_get_name (device);
-			if (urf_device_get_rf_type (device) == type &&
-			    (priv->type_pivot[type] == NULL || match_platform_vendor (name))) {
-				priv->type_pivot[type] = device;
-				g_debug ("assign killswitch idx %d %s as a pivot",
-					 urf_device_get_index (device), name);
-			}
-		}
+		assign_new_pivot (killswitch, type);
 	}
 	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_REMOVED], 0, object_path);
 	g_free (object_path);
