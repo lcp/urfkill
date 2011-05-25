@@ -130,38 +130,38 @@ urf_daemon_input_event_cb (UrfInput *input,
 		return;
 
 	switch (code) {
-		case KEY_WLAN:
-			type = RFKILL_TYPE_WLAN;
-			break;
-		case KEY_BLUETOOTH:
-			type = RFKILL_TYPE_BLUETOOTH;
-			break;
-		case KEY_UWB:
-			type = RFKILL_TYPE_UWB;
-			break;
-		case KEY_WIMAX:
-			type = RFKILL_TYPE_WIMAX;
-			break;
+	case KEY_WLAN:
+		type = RFKILL_TYPE_WLAN;
+		break;
+	case KEY_BLUETOOTH:
+		type = RFKILL_TYPE_BLUETOOTH;
+		break;
+	case KEY_UWB:
+		type = RFKILL_TYPE_UWB;
+		break;
+	case KEY_WIMAX:
+		type = RFKILL_TYPE_WIMAX;
+		break;
 #ifdef KEY_RFKILL
-		case KEY_RFKILL:
-			type = RFKILL_TYPE_ALL;
-			break;
+	case KEY_RFKILL:
+		type = RFKILL_TYPE_ALL;
+		break;
 #endif
-		default:
-			return;
+	default:
+		return;
 	}
 
 	switch (urf_killswitch_get_state (killswitch, type)) {
-		case KILLSWITCH_STATE_UNBLOCKED:
-		case KILLSWITCH_STATE_HARD_BLOCKED:
-			block = TRUE;
-			break;
-		case KILLSWITCH_STATE_SOFT_BLOCKED:
-			block = FALSE;
-			break;
-		case KILLSWITCH_STATE_NO_ADAPTER:
-		default:
-			return;
+	case KILLSWITCH_STATE_UNBLOCKED:
+	case KILLSWITCH_STATE_HARD_BLOCKED:
+		block = TRUE;
+		break;
+	case KILLSWITCH_STATE_SOFT_BLOCKED:
+		block = FALSE;
+		break;
+	case KILLSWITCH_STATE_NO_ADAPTER:
+	default:
+		return;
 	}
 
 	if (priv->master_key)

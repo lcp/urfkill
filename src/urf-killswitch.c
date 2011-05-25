@@ -221,17 +221,17 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 		soft = urf_device_get_soft (device);
 		hard = urf_device_get_hard (device);
 		switch (event_to_state (soft, hard)) {
-			case KILLSWITCH_STATE_UNBLOCKED:
-				if (state == KILLSWITCH_STATE_NO_ADAPTER)
-					state = KILLSWITCH_STATE_UNBLOCKED;
-				break;
-			case KILLSWITCH_STATE_SOFT_BLOCKED:
-				state = KILLSWITCH_STATE_SOFT_BLOCKED;
-				break;
-			case KILLSWITCH_STATE_HARD_BLOCKED:
-				return KILLSWITCH_STATE_HARD_BLOCKED;
-			default:
-				break;
+		case KILLSWITCH_STATE_UNBLOCKED:
+			if (state == KILLSWITCH_STATE_NO_ADAPTER)
+				state = KILLSWITCH_STATE_UNBLOCKED;
+			break;
+		case KILLSWITCH_STATE_SOFT_BLOCKED:
+			state = KILLSWITCH_STATE_SOFT_BLOCKED;
+			break;
+		case KILLSWITCH_STATE_HARD_BLOCKED:
+			return KILLSWITCH_STATE_HARD_BLOCKED;
+		default:
+			break;
 		}
 	}
 
