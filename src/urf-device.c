@@ -52,7 +52,6 @@ struct UrfDevicePrivate {
 	gboolean         soft;
 	gboolean         hard;
 	char		*object_path;
-	DBusGProxy      *proxy;
 	DBusGConnection *connection;
 };
 
@@ -227,11 +226,6 @@ urf_device_dispose (GObject *object)
 {
 	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (object);
 
-	if (priv->proxy) {
-		g_object_unref (priv->proxy);
-		priv->proxy = NULL;
-	}
-
 	if (priv->connection) {
 		dbus_g_connection_unref (priv->connection);
 		priv->connection = NULL;
@@ -265,7 +259,6 @@ urf_device_init (UrfDevice *device)
 	device->priv = URF_DEVICE_GET_PRIVATE (device);
 	device->priv->name = NULL;
 	device->priv->object_path = NULL;
-	device->priv->proxy = NULL;
 }
 
 /**
@@ -361,12 +354,6 @@ urf_device_register_device (UrfDevice *device)
 	priv->object_path = urf_device_compute_object_path (device);
 	dbus_g_connection_register_g_object (priv->connection,
 					     priv->object_path, G_OBJECT (device));
-	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
-						 DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-	if (priv->proxy == NULL) {
-		g_warning ("proxy invalid");
-		ret = FALSE;
-	}
 	return ret;
 }
 
