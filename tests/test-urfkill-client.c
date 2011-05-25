@@ -83,7 +83,7 @@ main ()
 	status = urf_client_set_wlan_block (client, FALSE);
 	printf ("Status of unblock: %d\n", status);
 
-	status = urf_client_key_control_enabled (client, NULL);
+	g_object_get (client, "key-control", &status, NULL);
 	printf ("Key control is %s\n", status?"on":"off");
 
 	sleep (2);
