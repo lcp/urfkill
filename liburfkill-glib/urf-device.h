@@ -63,8 +63,6 @@ typedef enum {
 #define URF_IS_DEVICE(o)	(G_TYPE_CHECK_INSTANCE_TYPE ((o), URF_TYPE_DEVICE))
 #define URF_IS_DEVICE_CLASS(k)	(G_TYPE_CHECK_CLASS_TYPE ((k), URF_TYPE_DEVICE))
 #define URF_DEVICE_GET_CLASS(o)	(G_TYPE_INSTANCE_GET_CLASS ((o), URF_TYPE_DEVICE, UrfDeviceClass))
-#define URF_DEVICE_ERROR	(urf_device_error_quark ())
-#define URF_DEVICE_TYPE_ERROR	(urf_device_error_get_type ())
 
 typedef struct _UrfDevice UrfDevice;
 typedef struct _UrfDeviceClass UrfDeviceClass;
