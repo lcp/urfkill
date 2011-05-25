@@ -222,6 +222,42 @@ urf_client_set_block_idx (UrfClient      *client,
 }
 
 /**
+ * urf_client_is_inhibited:
+ * @client: a #UrfClient instance
+ * @error: a #GError, or %NULL
+ *
+ * Get whether the key control is inhibited or not,
+ *
+ * Return value: #TRUE if the key control is inhibited
+ *
+ * Since: 0.2.0
+ **/
+gboolean
+urf_client_is_inhibited (UrfClient *client,
+			 GError    **error)
+{
+	gboolean ret, is_inhibited;
+	GError *error_local = NULL;
+
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+
+	ret = dbus_g_proxy_call (client->priv->proxy, "IsInhibited", &error_local,
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &is_inhibited,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		g_warning ("Couldn't sent IsInhibited: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		is_inhibited = FALSE;
+	}
+	if (error_local != NULL)
+		g_error_free (error_local);
+	return is_inhibited;
+
+}
+
+/**
  * urf_client_inhibit:
  * @client: a #UrfClient instance
  * @reason: the reason to inhibit the key control

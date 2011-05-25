@@ -100,6 +100,8 @@ gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
 							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 urf_client_is_inhibited		(UrfClient	*client,
+							 GError		**error);
 guint		 urf_client_inhibit			(UrfClient	*client,
 							 const char	*reason,
 							 GError		**error);
