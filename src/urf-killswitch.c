@@ -334,7 +334,6 @@ urf_killswitch_get_device (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
-	GList *item;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
 
