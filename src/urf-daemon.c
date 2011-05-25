@@ -125,8 +125,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	gint type;
 	gboolean block = FALSE;
 
-	if (!priv->key_control ||
-	    urf_consolekit_is_inhibited (priv->consolekit))
+	if (urf_consolekit_is_inhibited (priv->consolekit))
 		return;
 
 	switch (code) {
@@ -193,18 +192,20 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
-	/* start up input device monitor */
-	ret = urf_input_startup (priv->input);
-	if (!ret) {
-		g_warning ("failed to setup input device monitor");
-		goto out;
-	}
+	if (priv->key_control) {
+		/* start up input device monitor */
+		ret = urf_input_startup (priv->input);
+		if (!ret) {
+			g_warning ("failed to setup input device monitor");
+			goto out;
+		}
 
-	/* start up consolekit checker */
-	ret = urf_consolekit_startup (priv->consolekit);
-	if (!ret) {
-		g_warning ("failed to setup consolekit session checker");
-		goto out;
+		/* start up consolekit checker */
+		ret = urf_consolekit_startup (priv->consolekit);
+		if (!ret) {
+			g_warning ("failed to setup consolekit session checker");
+			goto out;
+		}
 	}
 out:
 	return ret;
