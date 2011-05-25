@@ -543,10 +543,7 @@ urf_client_device_changed_cb (DBusGProxy     *proxy,
 		return;
 	}
 
-	g_object_set (G_OBJECT (device),
-		      "soft", soft,
-		      "hard", hard,
-		      NULL);
+	urf_device_update_states (device, soft, hard);
 
 	g_signal_emit (client, signals [URF_CLIENT_DEVICE_CHANGED], 0, device);
 }

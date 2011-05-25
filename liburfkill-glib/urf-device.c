@@ -205,6 +205,27 @@ out:
 }
 
 /**
+ * urf_device_update_states:
+ * @device: a #UrfDevice instance
+ * @soft: the new state of soft block
+ * @hard: the new state of hard block
+ *
+ * Update the states of hard and soft blocks
+ *
+ * Since: 0.2.0
+ **/
+void
+urf_device_update_states (UrfDevice      *device,
+			  const gboolean  soft,
+			  const gboolean  hard)
+{
+	g_return_if_fail (URF_IS_DEVICE (device));
+
+	device->priv->soft = soft;
+	device->priv->hard = hard;
+}
+
+/**
  * urf_device_get_object_path:
  * @device: a #UrfDevice instance
  *
@@ -257,31 +278,6 @@ urf_device_get_property (GObject    *object,
 }
 
 /**
- * urf_device_set_property:
- **/
-static void
-urf_device_set_property (GObject      *object,
-			 guint         prop_id,
-			 const GValue *value,
-			 GParamSpec   *pspec)
-{
-	UrfDevice *device = URF_DEVICE (object);
-	UrfDevicePrivate *priv = device->priv;
-
-	switch (prop_id) {
-	case PROP_DEVICE_SOFT:
-		priv->soft = g_value_get_boolean (value);
-		break;
-	case PROP_DEVICE_HARD:
-		priv->hard = g_value_get_boolean (value);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-		break;
-	}
-}
-
-/**
  * urf_device_finalize:
  **/
 static void
@@ -310,7 +306,6 @@ urf_device_class_init(UrfDeviceClass *klass)
 	GParamSpec *pspec;
 
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
-	object_class->set_property = urf_device_set_property;
 	object_class->get_property = urf_device_get_property;
 	object_class->finalize = urf_device_finalize;
 
@@ -351,7 +346,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	pspec = g_param_spec_boolean ("soft",
 				      "Soft Block", "If the soft block is on",
 				      FALSE,
-				      G_PARAM_READWRITE);
+				      G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_SOFT, pspec);
 
 	/**
@@ -365,7 +360,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	pspec = g_param_spec_boolean ("hard",
 				      "Hard Block", "If the hard block is on",
 				      FALSE,
-				      G_PARAM_READWRITE);
+				      G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_HARD, pspec);
 
 	/**

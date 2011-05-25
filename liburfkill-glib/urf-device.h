@@ -101,6 +101,9 @@ gboolean		 urf_device_set_object_path_sync	(UrfDevice	*device,
 								 const char	*object_path,
 								 GCancellable	*cancellable,
 								 GError		**error);
+void			 urf_device_update_states		(UrfDevice	*device,
+								 const gboolean	 soft,
+								 const gboolean	 hard);
 
 /* accessors */
 const char		*urf_device_get_object_path		(UrfDevice	*device);
