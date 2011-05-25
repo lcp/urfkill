@@ -307,6 +307,21 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 }
 
 /**
+ * urf_daemon_is_inhibited:
+ **/
+gboolean
+urf_daemon_is_inhibited (UrfDaemon             *daemon,
+			 DBusGMethodInvocation *context)
+{
+	UrfDaemonPrivate *priv = daemon->priv;
+
+	dbus_g_method_return (context,
+			      urf_consolekit_is_inhibited (priv->consolekit));
+
+	return TRUE;
+}
+
+/**
  * urf_daemon_inhibit:
  **/
 gboolean

@@ -156,6 +156,25 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <!-- ************************************************************ -->
 
+    <method name="IsInhibited">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg type="b" name="is_inhibited" direction="out">
+        <doc:doc><doc:summary>
+	  TRUE if the key control is inhibited, otherwise FALSE
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Get whether the rfkill key handling function is inhibited or not.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="Inhibit">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg type="s" name="reason" direction="in">
