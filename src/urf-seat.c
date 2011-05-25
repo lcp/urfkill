@@ -30,7 +30,6 @@
 
 enum {
 	SIGNAL_ACTIVE_CHANGED,
-	SIGNAL_SESSION_REMOVED,
 	SIGNAL_LAST
 };
 
@@ -82,17 +81,6 @@ urf_seat_active_session_changed_cb (DBusGProxy *proxy,
 }
 
 /**
- * urf_seat_session_removed_cb:
- **/
-static void
-urf_seat_session_removed_cb (DBusGProxy *proxy,
-			     const char *session_id,
-			     UrfSeat    *seat)
-{
-	g_signal_emit (seat, signals[SIGNAL_SESSION_REMOVED], 0, session_id);
-}
-
-/**
  * urf_seat_object_path_sync:
  **/
 gboolean
@@ -134,16 +122,9 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 
-	dbus_g_proxy_add_signal (priv->proxy, "SessionRemoved",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-
 	/* callbacks */
 	dbus_g_proxy_connect_signal (priv->proxy, "ActiveSessionChanged",
 				     G_CALLBACK (urf_seat_active_session_changed_cb), seat, NULL);
-
-	dbus_g_proxy_connect_signal (priv->proxy, "SessionRemoved",
-				     G_CALLBACK (urf_seat_session_removed_cb), seat, NULL);
 
 	return TRUE;
 }
@@ -197,13 +178,6 @@ urf_seat_class_init (UrfSeatClass *klass)
 		g_signal_new ("active-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfSeatClass, active_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__STRING,
-			      G_TYPE_NONE, 1, G_TYPE_STRING);
-
-	signals[SIGNAL_SESSION_REMOVED] =
-		g_signal_new ("session-removed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfSeatClass, session_removed),
 			      NULL, NULL, g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 

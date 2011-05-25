@@ -168,26 +168,6 @@ urf_consolekit_seat_active_changed (UrfSeat       *seat,
 	g_debug ("Active Session changed: %s", session_id);
 }
 
-/**
- * urf_consolekit_seat_active_changed:
- **/
-static void
-urf_consolekit_seat_session_removed (UrfSeat       *seat,
-				     const char    *session_id,
-				     UrfConsolekit *consolekit)
-{
-	UrfConsolekitPrivate *priv = consolekit->priv;
-	UrfInhibitor *inhibitor;
-
-	inhibitor = find_inhibitor_by_sid (consolekit, session_id);
-	if (inhibitor == NULL)
-		return;
-
-	priv->inhibitors = g_list_remove (priv->inhibitors, inhibitor);
-	free_inhibitor (inhibitor);
-	g_debug ("Session removed: %s", session_id);
-}
-
 static char *
 get_session_id (UrfConsolekit *consolekit,
 		const char    *bus_name)
@@ -325,9 +305,6 @@ urf_consolekit_add_seat (UrfConsolekit *consolekit,
 	/* connect signal */
 	g_signal_connect (seat, "active-changed",
 			  G_CALLBACK (urf_consolekit_seat_active_changed),
-			  consolekit);
-	g_signal_connect (seat, "session_removed",
-			  G_CALLBACK (urf_consolekit_seat_session_removed),
 			  consolekit);
 }
 
