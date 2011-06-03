@@ -29,11 +29,10 @@ int
 main ()
 {
 	UrfClient *client = NULL;
-	UrfDevice *item;
+	UrfDevice *device;
 	char *daemon_version;
 	gboolean status;
-	GPtrArray *devices;
-	guint i;
+	GList *devices, *item;
 
 	g_type_init();
 
@@ -43,9 +42,9 @@ main ()
 
 	devices = urf_client_get_devices (client);
 
-	for (i = 0; i<devices->len; i++) {
-		item = (UrfDevice *)g_ptr_array_index (devices, i);
-		print_urf_device (item);
+	for (item = devices; item; item = item->next) {
+		device = (UrfDevice *)item->data;
+		print_urf_device (device);
 		printf ("\n");
 	}
 
