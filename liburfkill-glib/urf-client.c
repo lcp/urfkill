@@ -62,6 +62,7 @@ enum {
 	URF_CLIENT_DEVICE_ADDED,
 	URF_CLIENT_DEVICE_REMOVED,
 	URF_CLIENT_DEVICE_CHANGED,
+	URF_CLIENT_RF_KEY_PRESSED,
 	URF_CLIENT_LAST_SIGNAL
 };
 
@@ -551,6 +552,17 @@ urf_client_device_changed_cb (DBusGProxy     *proxy,
 }
 
 /**
+ * urf_client_rf_key_pressed_cb:
+ **/
+static void
+urf_client_rf_key_pressed_cb (DBusGProxy *proxy,
+			      const int   keycode,
+			      UrfClient  *client)
+{
+	g_signal_emit (client, signals [URF_CLIENT_RF_KEY_PRESSED], 0, keycode);
+}
+
+/**
  * urf_client_get_devices_private:
  **/
 static void
@@ -741,6 +753,22 @@ urf_client_class_init (UrfClientClass *klass)
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, URF_TYPE_DEVICE);
 
+	/**
+	 * UrfClient::rf-key-pressed:
+	 * @client: the #UrfClient instance that emitted the signa
+	 * @keycode: the keycode from the input device
+	 *
+	 * The rf-key-pressed signal is emitted when a rfkill key is pressed.
+	 *
+	 * Since 0.2.0
+	 **/
+        signals[URF_CLIENT_RF_KEY_PRESSED] =
+                g_signal_new ("rf-key-pressed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (UrfClientClass, rf_key_pressed),
+			      NULL, NULL, g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
+
 	g_type_class_add_private (klass, sizeof (UrfClientPrivate));
 }
 
@@ -810,6 +838,9 @@ urf_client_init (UrfClient *client)
 	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceChanged",
 				 G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
 				 G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (client->priv->proxy, "UrfkeyPressed",
+				 G_TYPE_INT,
+				 G_TYPE_INVALID);
 	/* callbacks */
 	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceAdded",
 				     G_CALLBACK (urf_client_device_added_cb), client, NULL);
@@ -817,6 +848,8 @@ urf_client_init (UrfClient *client)
 				     G_CALLBACK (urf_client_device_removed_cb), client, NULL);
 	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceChanged",
 				     G_CALLBACK (urf_client_device_changed_cb), client, NULL);
+	dbus_g_proxy_connect_signal (client->priv->proxy, "UrfkeyPressed",
+				     G_CALLBACK (urf_client_rf_key_pressed_cb), client, NULL);
 
 out:
 	return;

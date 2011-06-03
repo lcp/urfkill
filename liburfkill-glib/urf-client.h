@@ -74,6 +74,8 @@ struct _UrfClientClass
 							 UrfDevice	*device);
 	void			(*device_changed)	(UrfClient	*client,
 							 UrfDevice	*device);
+	void			(*rf_key_pressed)	(UrfClient	*client,
+							 const int	 keycode);
 };
 
 typedef enum
