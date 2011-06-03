@@ -54,6 +54,7 @@ function DeviceQuery () {
 DeviceQuery.prototype = {
   _init: function () {
     this._urfClient = new Urfkill.Client ();
+    this._devices = this._urfClient.get_devices ();
     this._urfClient.connect ("device-added", Lang.bind(this, this._device_added));
     this._urfClient.connect ("device-removed", Lang.bind(this, this._device_removed));
     this._urfClient.connect ("device-changed", Lang.bind(this, this._device_changed));
@@ -75,12 +76,20 @@ DeviceQuery.prototype = {
   },
 
   daemon_version : function () {
-    version = this._urfClient.get_daemon_version ();
-    print ("Daemon Version:", version);
+    return this._urfClient.get_daemon_version ();
+  },
+
+  enumerate_devices : function () {
+    for (i = 0; i < this._devices.length; i++) {
+      device = this._devices[i];
+      printDevice (device);
+      print ("\n");
+    }
   }
 }
 
 var query = new DeviceQuery ();
-query.daemon_version ();
+print ("Daemon Version:", query.daemon_version (), "\n");
+query.enumerate_devices ();
 
 Mainloop.run ('');
