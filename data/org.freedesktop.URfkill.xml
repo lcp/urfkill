@@ -283,6 +283,42 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 
     <!-- ************************************************************ -->
 
+    <signal name="UrfkeyPressed">
+      <arg type="i" name="keycode" direction="out">
+        <doc:doc><doc:summary>
+	  The keycode emitted from the input device
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a rfkill key is pressed. The keycode is defined in
+            &lt;linux/input.h&gt;.
+          </doc:para>
+          <doc:list>
+            <doc:item>
+              <doc:term>237</doc:term><doc:definition>KEY_BLUETOOTH</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>238</doc:term><doc:definition>KEY_WLAN</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>239</doc:term><doc:definition>KEY_UWB</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>246</doc:term><doc:definition>KEY_WIMAX</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>247</doc:term><doc:definition>KEY_RFKILL</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
     <property name="DaemonVersion" type="s" access="read">
       <doc:doc>
         <doc:description>

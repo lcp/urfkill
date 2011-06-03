@@ -57,6 +57,7 @@ enum
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_URFKEY_PRESSED,
 	SIGNAL_LAST,
 };
 
@@ -126,7 +127,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	gboolean block = FALSE;
 
 	if (urf_consolekit_is_inhibited (priv->consolekit))
-		return;
+		goto out;
 
 	switch (code) {
 	case KEY_WLAN:
@@ -160,13 +161,15 @@ urf_daemon_input_event_cb (UrfInput *input,
 		break;
 	case KILLSWITCH_STATE_NO_ADAPTER:
 	default:
-		return;
+		goto out;
 	}
 
 	if (priv->master_key)
 		type = RFKILL_TYPE_ALL;
 
 	urf_killswitch_set_block (killswitch, type, block);
+out:
+	g_signal_emit (daemon, signals[SIGNAL_URFKEY_PRESSED], 0, code);
 }
 
 /**
@@ -528,6 +531,14 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      0, NULL, NULL,
 			      urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
 			      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+
+	signals[SIGNAL_URFKEY_PRESSED] =
+		g_signal_new ("urfkey-pressed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
 
 	g_object_class_install_property (object_class,
 					 PROP_DAEMON_VERSION,
