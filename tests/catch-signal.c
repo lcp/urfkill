@@ -52,6 +52,12 @@ device_changed_cb (UrfClient *client, UrfDevice *device, gpointer data)
 }
 
 static void
+key_pressed_cb (UrfClient *client, const int keycode, gpointer data)
+{
+	printf ("\n*** Key %d pressed ***\n", keycode);
+}
+
+static void
 main_sigint_handler (gint sig)
 {
 	signal (SIGINT, SIG_DFL);
@@ -70,6 +76,7 @@ main ()
 	g_signal_connect (client, "device-added", G_CALLBACK (device_added_cb), NULL);
 	g_signal_connect (client, "device-removed", G_CALLBACK (device_removed_cb), NULL);
 	g_signal_connect (client, "device-changed", G_CALLBACK (device_changed_cb), NULL);
+	g_signal_connect (client, "rf-key-pressed", G_CALLBACK (key_pressed_cb), NULL);
 
 	loop = g_main_loop_new (NULL, FALSE);
 
