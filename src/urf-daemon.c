@@ -431,7 +431,7 @@ urf_daemon_init (UrfDaemon *daemon)
 			  G_CALLBACK (urf_daemon_device_changed_cb), daemon);
 
 	daemon->priv->input = urf_input_new ();
-	g_signal_connect (daemon->priv->input, "rf_key_pressed",
+	g_signal_connect (daemon->priv->input, "rf-key-pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
 
 	daemon->priv->consolekit = urf_consolekit_new ();
