@@ -107,7 +107,7 @@ urf_client_find_device (UrfClient   *client,
  *
  * Get a list of the device objects.
  *
- * Return value: (element-type UrfDevice) (transfer container): a list of #UrfDevice objects
+ * Return value: (element-type UrfDevice) (transfer none): a list of #UrfDevice objects
  *
  * Since: 0.2.0
  **/
