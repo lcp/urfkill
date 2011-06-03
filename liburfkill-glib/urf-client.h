@@ -89,7 +89,7 @@ GQuark		 urf_client_error_quark			(void);
 GType		 urf_client_error_get_type		(void);
 
 /* generic */
-GPtrArray	*urf_client_get_devices			(UrfClient	*client);
+GList		*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 UrfDeviceType	 type,
 							 const gboolean	 block,

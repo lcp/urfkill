@@ -52,7 +52,7 @@ struct _UrfClientPrivate
 	DBusGConnection	*bus;
 	DBusGProxy	*proxy;
 	DBusGProxy	*prop_proxy;
-	GPtrArray	*devices;
+	GList		*devices;
 	char		*daemon_version;
 	gboolean	 key_control;
 	gboolean	 have_properties;
@@ -86,13 +86,13 @@ urf_client_find_device (UrfClient   *client,
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device = NULL;
-	guint i;
+	GList *item;
 
 	if (priv->devices == NULL)
 		return NULL;
 
-	for (i=0; i<priv->devices->len; i++) {
-		device = (UrfDevice *) g_ptr_array_index (priv->devices, i);
+	for (item = priv->devices; item; item = item->next) {
+		device = (UrfDevice *) item->data;
 		if (g_strcmp0 (urf_device_get_object_path (device), object_path) == 0)
 			return device;
 	}
@@ -104,18 +104,18 @@ urf_client_find_device (UrfClient   *client,
  * urf_client_get_devices:
  * @client: a #UrfClient instance
  *
- * Get a copy of the device objects.
+ * Get a list of the device objects.
  *
- * Return value: (transfer full): an array of #UrfDevice objects, free with g_ptr_array_unref()
+ * Return value: (element-type UrfDevice) (transfer container): a list of #UrfDevice objects
  *
  * Since: 0.2.0
  **/
-GPtrArray *
+GList *
 urf_client_get_devices (UrfClient *client)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
 
-	return g_ptr_array_ref (client->priv->devices);
+	return client->priv->devices;
 }
 
 /**
@@ -475,7 +475,7 @@ urf_client_add (UrfClient  *client,
 	device = urf_device_new ();
 	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
 
-	g_ptr_array_add (client->priv->devices, device);
+	client->priv->devices = g_list_append (client->priv->devices, device);
 
 	return device;
 }
@@ -519,9 +519,11 @@ urf_client_device_removed_cb (DBusGProxy *proxy,
 		return;
 	}
 
+	client->priv->devices = g_list_remove (priv->devices, device);
+
 	g_signal_emit (client, signals [URF_CLIENT_DEVICE_REMOVED], 0, device);
 
-	g_ptr_array_remove (priv->devices, device);
+	g_object_unref (device);
 }
 
 /**
@@ -784,7 +786,7 @@ urf_client_init (UrfClient *client)
 		goto out;
 	}
 
-	client->priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	client->priv->devices = NULL;
 
 	urf_client_get_devices_private (client, &error);
 	if (error) {
@@ -847,11 +849,6 @@ urf_client_dispose (GObject *object)
 		client->priv->prop_proxy = NULL;
 	}
 
-	if (client->priv->devices) {
-		g_ptr_array_unref (client->priv->devices);
-		client->priv->devices = NULL;
-	}
-
 	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);
 }
 
@@ -868,6 +865,11 @@ urf_client_finalize (GObject *object)
 	client = URF_CLIENT (object);
 
 	g_free (client->priv->daemon_version);
+
+	if (client->priv->devices) {
+		g_list_free_full (client->priv->devices, g_object_unref);
+		client->priv->devices = NULL;
+	}
 
 	G_OBJECT_CLASS (urf_client_parent_class)->finalize (object);
 }
