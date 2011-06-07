@@ -181,7 +181,6 @@ urf_killswitch_set_block_idx (UrfKillswitch  *killswitch,
 	UrfDevice *device;
 	struct rfkill_event event;
 	ssize_t len;
-	gboolean found = FALSE;
 
 	device = urf_killswitch_find_device (killswitch, index);
 	if (device == NULL) {
@@ -248,7 +247,6 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 	UrfKillswitchPrivate *priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
-	gboolean soft, hard;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
@@ -332,7 +330,6 @@ UrfDevice *
 urf_killswitch_get_device (UrfKillswitch *killswitch,
 			   const guint    index)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
 
 	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
@@ -384,7 +381,6 @@ update_killswitch (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
-	guint type;
 	gboolean changed, old_hard;
 	char *object_path;
 
