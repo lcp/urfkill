@@ -500,12 +500,19 @@ static void
 urf_consolekit_finalize (GObject *object)
 {
 	UrfConsolekit *consolekit = URF_CONSOLEKIT (object);
+	GList *item;
 
-	if (consolekit->priv->seats)
-		g_list_free_full (consolekit->priv->seats, g_object_unref);
+	if (consolekit->priv->seats) {
+		for (item = consolekit->priv->seats; item; item = item->next)
+			g_object_unref (item->data);
+		g_list_free (consolekit->priv->seats);
+		consolekit->priv->seats = NULL;
+	}
 	if (consolekit->priv->inhibitors) {
-		g_list_free_full (consolekit->priv->seats,
-				  (GDestroyNotify)free_inhibitor);
+		for (item = consolekit->priv->inhibitors; item; item = item->next)
+			free_inhibitor (item->data);
+		g_list_free (consolekit->priv->inhibitors);
+		consolekit->priv->inhibitors = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_consolekit_parent_class)->finalize (object);

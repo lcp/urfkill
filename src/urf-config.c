@@ -602,7 +602,11 @@ urf_config_load_profile (UrfConfig *config)
 		profile_xml_parse (hardware_info, options, profile);
 		g_free (profile);
 	}
-	g_list_free_full (profile_list, g_free);
+
+	/* Clean up the list */
+	for (lptr = profile_list; lptr; lptr = lptr->next)
+		g_free (lptr->data);
+	g_list_free (profile_list);
 
 	priv->options.key_control = options->key_control;
 	priv->options.master_key = options->master_key;

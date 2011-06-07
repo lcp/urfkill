@@ -892,6 +892,7 @@ static void
 urf_client_finalize (GObject *object)
 {
 	UrfClient *client;
+	GList *item;
 
 	g_return_if_fail (URF_IS_CLIENT (object));
 
@@ -900,7 +901,9 @@ urf_client_finalize (GObject *object)
 	g_free (client->priv->daemon_version);
 
 	if (client->priv->devices) {
-		g_list_free_full (client->priv->devices, g_object_unref);
+		for (item = client->priv->devices; item; item = item->next)
+			g_object_unref (item->data);
+		g_list_free (client->priv->devices);
 		client->priv->devices = NULL;
 	}
 
