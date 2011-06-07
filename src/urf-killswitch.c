@@ -386,6 +386,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	UrfDevice *device;
 	guint type;
 	gboolean changed, old_hard;
+	char *object_path;
 
 	device = urf_killswitch_find_device (killswitch, index);
 	if (device == NULL) {
@@ -399,7 +400,9 @@ update_killswitch (UrfKillswitch *killswitch,
 	if (changed == TRUE) {
 		g_debug ("updating killswitch status %d to soft %d hard %d",
 			 index, soft, hard);
-		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, index);
+		object_path = g_strdup (urf_device_get_object_path (device));
+		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, object_path);
+		g_free (object_path);
 
 		if (priv->force_sync) {
 			/* Sync soft and hard blocks */
@@ -725,8 +728,8 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 			      G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (UrfKillswitchClass, device_changed),
 			      NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 }
 

@@ -64,7 +64,7 @@ typedef struct {
         void 			(*device_removed)	(UrfKillswitch	*killswitch,
 							 const char	*object_path);
         void 			(*device_changed)	(UrfKillswitch	*killswitch,
-							 const guint	 index);
+							 const char	*object_path);
 } UrfKillswitchClass;
 
 GType			 urf_killswitch_get_type		(void);
