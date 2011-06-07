@@ -197,15 +197,6 @@ urf_device_set_property (GObject      *object,
 	UrfDevicePrivate *priv = device->priv;
 
 	switch (prop_id) {
-	case PROP_DEVICE_INDEX:
-		priv->index = g_value_get_uint (value);
-		if (priv->name)
-			g_free (priv->name);
-		priv->name = get_rfkill_name_by_index (priv->index);
-		break;
-	case PROP_DEVICE_TYPE:
-		priv->type = g_value_get_uint (value);
-		break;
 	case PROP_DEVICE_SOFT:
 		priv->soft = g_value_get_boolean (value);
 		break;
@@ -280,7 +271,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 				   "Killswitch Index",
 				   "The Index of the killswitch device",
 				   0, G_MAXUINT, 0,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_INDEX,
 					 pspec);
@@ -289,7 +280,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 				   "Killswitch Type",
 				   "The type of the killswitch device",
 				   0, NUM_RFKILL_TYPES, 0,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_TYPE,
 					 pspec);
