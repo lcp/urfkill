@@ -324,7 +324,7 @@ parse_xml_start_element (void       *data,
 	const char *type = NULL;
 	const char *match_key = NULL;
 	const char *match_body = NULL;
-	int operator;
+	int operator = 0;
 	int i;
 
 	info->xml_depth++;
@@ -582,7 +582,7 @@ urf_config_load_profile (UrfConfig *config)
 	options->force_sync = priv->options.force_sync;
 
 	profile_dir = g_dir_open (URFKILL_PROFILE_DIR, 0, NULL);
-	while (file = g_dir_read_name (profile_dir)) {
+	while ((file = g_dir_read_name (profile_dir))) {
 		if (file[0] == '.' || !g_str_has_suffix (file, ".xml"))
 			continue;
 
