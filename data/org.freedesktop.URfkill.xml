@@ -261,16 +261,6 @@ method return sender=:1.164 -> dest=:1.167 reply_serial=2
 	  The object path for the device that was changed
         </doc:summary></doc:doc>
       </arg>
-      <arg type="b" name="soft"   direction="out">
-        <doc:doc><doc:summary>
-	  The state of the soft block of the device after the change
-        </doc:summary></doc:doc>
-      </arg>
-      <arg type="b" name="hard"   direction="out">
-        <doc:doc><doc:summary>
-	  The state of the hard block of the device after the change
-        </doc:summary></doc:doc>
-      </arg>
 
       <doc:doc>
         <doc:description>

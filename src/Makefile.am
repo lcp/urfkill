@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+NULL =
+
 INCLUDES = \
 	-I$(top_builddir)/src -I$(top_srcdir)/src		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"		\
@@ -21,14 +23,7 @@ INCLUDES = \
 BUILT_SOURCES =							\
 	urf-daemon-glue.h					\
 	urf-device-glue.h					\
-	urf-marshal.h						\
-	urf-marshal.c
-
-urf-marshal.h: urf-marshal.list
-	glib-genmarshal $< --prefix=urf_marshal --header > $@
-
-urf-marshal.c: urf-marshal.list
-	echo "#include \"urf-marshal.h\"" > $@ && glib-genmarshal $< --prefix=urf_marshal --body >> $@
+	$(NULL)
 
 urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 	dbus-binding-tool --prefix=urf_daemon --mode=glib-server --output=urf-daemon-glue.h \
@@ -76,9 +71,6 @@ urfkilld_LDADD =						\
 	$(DBUS_GLIB_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST =							\
-	urf-marshal.list
 
 clean-local :
 	rm -f *~

@@ -42,7 +42,6 @@
 #include "urf-consolekit.h"
 
 #include "urf-daemon-glue.h"
-#include "urf-marshal.h"
 
 enum
 {
@@ -396,24 +395,16 @@ urf_daemon_device_removed_cb (UrfKillswitch *killswitch,
  **/
 static void
 urf_daemon_device_changed_cb (UrfKillswitch *killswitch,
-			      const guint    index,
+			      const char    *object_path,
 			      UrfDaemon     *daemon)
 {
-	UrfDevice *device;
-
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
-
-	device = urf_killswitch_get_device (killswitch, index);
-
-	if (!device)
+	if (object_path == NULL) {
+		g_warning ("Invalid object path");
 		return;
-
-	g_signal_emit (daemon, signals[SIGNAL_DEVICE_CHANGED], 0,
-		       urf_device_get_object_path (device),
-		       urf_device_get_soft (device),
-		       urf_device_get_hard (device));
-	g_object_unref (device);
+	}
+	g_signal_emit (daemon, signals[SIGNAL_DEVICE_CHANGED], 0, object_path);
 }
 
 /**
@@ -529,8 +520,8 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
-			      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+			      g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	signals[SIGNAL_URFKEY_PRESSED] =
 		g_signal_new ("urfkey-pressed",
