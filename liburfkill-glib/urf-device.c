@@ -44,6 +44,7 @@
 struct _UrfDevicePrivate
 {
 	DBusGConnection *bus;
+	DBusGProxy	*proxy;
 	DBusGProxy      *proxy_props;
 	char            *object_path;
 	guint            index;
@@ -140,6 +141,16 @@ urf_device_refresh_private (UrfDevice *device,
 }
 
 /**
+ * urf_device_changed_cb:
+ **/
+static void
+urf_device_changed_cb (DBusGProxy *proxy,
+		       UrfDevice  *device)
+{
+	urf_device_refresh_private (device, NULL);
+}
+
+/**
  * urf_device_set_object_path_sync:
  * @device: a #UrfDevice instance
  * @object_path: the #UrfDevice object path
@@ -158,6 +169,7 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 				 GCancellable *cancellable,
 				 GError       **error)
 {
+	UrfDevicePrivate *priv = device->priv;
 	GError *error_local = NULL;
 	gboolean ret = FALSE;
 	DBusGProxy *proxy_props;
@@ -176,17 +188,28 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 	}
 
 	/* connect to the bus */
-	device->priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error_local);
-	if (device->priv->bus == NULL) {
+	priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error_local);
+	if (priv->bus == NULL) {
 		g_set_error (error, 1, 0, "Couldn't connect to system bus: %s", error_local->message);
 		g_error_free (error_local);
 		goto out;
 	}
 
 	/* connect to the correct path for properties */
-	proxy_props = dbus_g_proxy_new_for_name (device->priv->bus, "org.freedesktop.URfkill",
-						 object_path, "org.freedesktop.DBus.Properties");
+	proxy_props = dbus_g_proxy_new_for_name (priv->bus,
+						 "org.freedesktop.URfkill",
+						 object_path,
+						 "org.freedesktop.DBus.Properties");
 	if (proxy_props == NULL) {
+		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
+		goto out;
+	}
+
+	priv->proxy = dbus_g_proxy_new_for_name (priv->bus,
+						 "org.freedesktop.URfkill",
+						 object_path,
+						 "org.freedesktop.URfkill.Device");
+	if (priv->proxy == NULL) {
 		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
 		goto out;
 	}
@@ -200,29 +223,16 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 		g_set_error (error, 1, 0, "cannot refresh: %s", error_local->message);
 		g_error_free (error_local);
 	}
+
+	/* connect signals */
+	dbus_g_proxy_add_signal (priv->proxy, "Changed",
+				 G_TYPE_INVALID);
+
+	/* callbacks */
+	dbus_g_proxy_connect_signal (priv->proxy, "Changed",
+				     G_CALLBACK (urf_device_changed_cb), device, NULL);
 out:
 	return ret;
-}
-
-/**
- * urf_device_update_states:
- * @device: a #UrfDevice instance
- * @soft: the new state of soft block
- * @hard: the new state of hard block
- *
- * Update the states of hard and soft blocks
- *
- * Since: 0.2.0
- **/
-void
-urf_device_update_states (UrfDevice      *device,
-			  const gboolean  soft,
-			  const gboolean  hard)
-{
-	g_return_if_fail (URF_IS_DEVICE (device));
-
-	device->priv->soft = soft;
-	device->priv->hard = hard;
 }
 
 /**

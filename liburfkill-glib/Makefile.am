@@ -1,3 +1,5 @@
+NULL =
+
 INCLUDES = \
 	$(GLIB_CFLAGS)						\
 	$(DBUS_GLIB_CFLAGS)					\
@@ -9,14 +11,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 
 BUILT_SOURCES =							\
-	urf-marshal.h						\
-	urf-marshal.c
-
-urf-marshal.h: urf-marshal.list
-	glib-genmarshal $< --prefix=urf_marshal --header > $@
-
-urf-marshal.c: urf-marshal.list
-	echo "#include \"urf-marshal.h\"" > $@ && glib-genmarshal $< --prefix=urf_marshal --body >> $@
+	$(NULL)
 
 lib_LTLIBRARIES =						\
 	liburfkill-glib.la
@@ -50,7 +45,7 @@ liburfkill_glib_la_CFLAGS =					\
 
 EXTRA_DIST =							\
 	urf-version.h.in					\
-	urf-marshal.list
+	$(NULL)
 
 CLEANFILES = $(BUILT_SOURCES)
 

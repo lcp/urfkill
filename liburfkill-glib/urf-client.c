@@ -38,7 +38,6 @@
 #include <dbus/dbus-glib.h>
 
 #include "urf-client.h"
-#include "urf-marshal.h"
 
 static void	urf_client_class_init	(UrfClientClass	*klass);
 static void	urf_client_init		(UrfClient	*client);
@@ -533,8 +532,6 @@ urf_client_device_removed_cb (DBusGProxy *proxy,
 static void
 urf_client_device_changed_cb (DBusGProxy     *proxy,
 			      const char     *object_path,
-			      const gboolean  soft,
-			      const gboolean  hard,
 			      UrfClient      *client)
 {
 	UrfDevice *device;
@@ -542,11 +539,9 @@ urf_client_device_changed_cb (DBusGProxy     *proxy,
 	device = urf_client_find_device (client, object_path);
 
 	if (device == NULL) {
-		g_warning ("no device to be changed: index %s", object_path);
+		g_warning ("no device to be changed: %s", object_path);
 		return;
 	}
-
-	urf_device_update_states (device, soft, hard);
 
 	g_signal_emit (client, signals [URF_CLIENT_DEVICE_CHANGED], 0, device);
 }
@@ -824,11 +819,6 @@ urf_client_init (UrfClient *client)
 	}
 
 	/* connect signals */
-	dbus_g_object_register_marshaller (urf_marshal_VOID__STRING_BOOLEAN_BOOLEAN,
-					   G_TYPE_NONE,
-					   G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
-					   G_TYPE_INVALID);
-
 	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceAdded",
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
@@ -836,7 +826,7 @@ urf_client_init (UrfClient *client)
 				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceChanged",
-				 G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN,
+				 G_TYPE_STRING,
 				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "UrfkeyPressed",
 				 G_TYPE_INT,
