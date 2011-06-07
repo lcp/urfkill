@@ -385,8 +385,7 @@ update_killswitch (UrfKillswitch *killswitch,
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	UrfDevice *device;
 	guint type;
-	gboolean old_soft, old_hard;
-	gboolean changed = FALSE;
+	gboolean changed, old_hard;
 
 	device = urf_killswitch_find_device (killswitch, index);
 	if (device == NULL) {
@@ -394,15 +393,8 @@ update_killswitch (UrfKillswitch *killswitch,
 		return;
 	}
 
-	old_soft = urf_device_get_soft (device);
 	old_hard = urf_device_get_hard (device);
-	if (old_soft != soft || old_hard != hard) {
-		g_object_set (device,
-			      "soft", soft,
-			      "hard", hard,
-			      NULL);
-		changed = TRUE;
-	}
+	changed = urf_device_update_states (device, soft, hard);
 
 	if (changed == TRUE) {
 		g_debug ("updating killswitch status %d to soft %d hard %d",
