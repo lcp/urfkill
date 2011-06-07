@@ -42,6 +42,13 @@ enum
 	PROP_LAST
 };
 
+enum {
+	SIGNAL_CHANGED,
+	LAST_SIGNAL
+};
+
+static int signals[LAST_SIGNAL] = { 0 };
+
 #define URF_DEVICE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                 URF_TYPE_DEVICE, UrfDevicePrivate))
 
@@ -94,6 +101,29 @@ static GType etype = 0;
 	}
 
 	return etype;
+}
+
+/**
+ * urf_device_update_states:
+ *
+ * Return value: #TRUE if the states of the blocks are changed,
+ *               otherwise #FALSE
+ **/
+gboolean
+urf_device_update_states (UrfDevice      *device,
+			  const gboolean  soft,
+			  const gboolean  hard)
+{
+	UrfDevicePrivate *priv = device->priv;
+
+	if (priv->soft != soft || priv->hard != hard) {
+		priv->soft = soft;
+		priv->hard = hard;
+		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 /**
@@ -185,31 +215,6 @@ urf_device_get_property (GObject    *object,
 }
 
 /**
- * urf_device_set_property:
- **/
-static void
-urf_device_set_property (GObject      *object,
-			 guint         prop_id,
-			 const GValue *value,
-			 GParamSpec   *pspec)
-{
-	UrfDevice *device = URF_DEVICE (object);
-	UrfDevicePrivate *priv = device->priv;
-
-	switch (prop_id) {
-	case PROP_DEVICE_SOFT:
-		priv->soft = g_value_get_boolean (value);
-		break;
-	case PROP_DEVICE_HARD:
-		priv->hard = g_value_get_boolean (value);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-		break;
-	}
-}
-
-/**
  * urf_device_dispose:
  **/
 static void
@@ -263,9 +268,16 @@ urf_device_class_init(UrfDeviceClass *klass)
 
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
 	object_class->get_property = urf_device_get_property;
-	object_class->set_property = urf_device_set_property;
 	object_class->dispose = urf_device_dispose;
 	object_class->finalize = urf_device_finalize;
+
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0, G_TYPE_NONE);
 
 	pspec = g_param_spec_uint ("index",
 				   "Killswitch Index",
@@ -289,7 +301,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 				      "Killswitch Soft Block",
 				      "The soft block of the killswitch device",
 				      FALSE,
-				      G_PARAM_READWRITE);
+				      G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_SOFT,
 					 pspec);
@@ -298,7 +310,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 				      "Killswitch Hard Block",
 				      "The hard block of the killswitch device",
 				      FALSE,
-				      G_PARAM_READWRITE);
+				      G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_HARD,
 					 pspec);

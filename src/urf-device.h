@@ -64,6 +64,10 @@ UrfDevice		*urf_device_new			(guint		 index,
 							 gboolean	 soft,
 							 gboolean	 hard);
 
+gboolean		 urf_device_update_states	(UrfDevice	*device,
+							 const gboolean	 soft,
+							 const gboolean	 hard);
+
 guint			 urf_device_get_index		(UrfDevice	*device);
 guint			 urf_device_get_rf_type		(UrfDevice	*device);
 const char 		*urf_device_get_name		(UrfDevice	*device);

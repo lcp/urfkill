@@ -57,6 +57,18 @@ method return sender=:1.164 -> dest=:1.169 reply_serial=2
 
     <!-- ************************************************************ -->
 
+    <signal name="Changed">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a property of the device is changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
     <property name="index" type="u" access="read">
       <doc:doc>
         <doc:description>
