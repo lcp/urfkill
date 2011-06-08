@@ -335,7 +335,6 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = daemon->priv;
 	char *bus_name;
 	guint cookie = 0;
-	GError *error = NULL;
 
 	bus_name = dbus_g_method_get_sender (context);
 	cookie = urf_consolekit_inhibit (priv->consolekit, bus_name, reason);

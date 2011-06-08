@@ -360,7 +360,6 @@ urf_consolekit_bus_owner_changed_cb (DBusGProxy    *bus_proxy,
 				     const char    *new_owner,
 				     UrfConsolekit *consolekit)
 {
-	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfInhibitor *inhibitor;
 
 	if (strlen (new_owner) == 0 &&
