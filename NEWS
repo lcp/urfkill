@@ -1,3 +1,29 @@
+Version 0.2.0
+~~~~~~~~~~~~~
+Released: 2011-06-17
+
+New Features:
+- All DBus methods, signals, and properties were revised and amended (Gary Lin)
+- Support the individual key control settings for each user (Gary Lin)
+- GObject introspection support in liburfkill-glib (Gary Lin)
+- Documents for the daemon, the DBus interfaces, and liburfkill-glib (Gary Lin)
+- Test cases for the daemon and liburkill-glib (Gary Lin)
+
+Bugfixes:
+
+- urf-killswitch: A cosmetic modification (Gary Lin)
+- urf-killswitch: missing converting function (Gary Lin)
+- urf-killswitch: Free the object properly (Gary Lin)
+- glib/urf-client: update coments and details of signals (Gary Lin)
+- glib/urf-client: Get Daemon Version (Gary Lin)
+- urf-daemon: Remove redundant state check (Gary Lin)
+- glib/urf-client: plug a leakage (Gary Lin)
+- urf-consolekit: Free UrfInhibitor correctly (Gary Lin)
+- urf-daemon: Clean up unused code (Gary Lin)
+- urf-[consolekit,seat]: Drop SessionRemoved (Gary Lin)
+- urf-consolekit: Safe guards for some functions (Gary Lin)
+- Replace g_list_free_full() with g_list_free() (Gary Lin)
+
 Version 0.1.1
 ~~~~~~~~~~~~~
 Released: 2011-04-15
