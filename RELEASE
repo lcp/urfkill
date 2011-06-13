@@ -2,9 +2,9 @@ urfkill Release Notes
 
 1. Write NEWS entries for urfkill.
 
-git shortlog urfkill-0.1.1.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git shortlog urfkill-0.2.0.. | grep -i -v trivial | grep -v Merge > NEWS.new
 
-Version 0.2.0
+Version 0.2.1
 ~~~~~~~~~~~~~
 Released: 2011-xx-xx
 
@@ -14,8 +14,8 @@ Bugfixes:
 
 2. Commit changes to git:
 
-git commit -a -m "Released urfkill 0.2.0"
-git tag -s -f -m "Released urfkill 0.2.0" urfkill-0.2.0
+git commit -a -m "Released urfkill 0.2.1"
+git tag -s -f -m "Released urfkill 0.2.1" urfkill-0.2.1
 <wait>
 git push --tags
 git push
@@ -28,7 +28,7 @@ make dist
 
 TO BE SETUP
 
-5. Do post release version bump in configure.ac
+5. Do post release version bump in configure.ac and RELEASE
 
 6. Commit changes:
 
