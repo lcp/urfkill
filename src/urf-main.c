@@ -36,6 +36,10 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#if GLIB_CHECK_VERSION(2,29,4)
+ #include <glib-unix.h>
+#endif
+
 #include "urf-config.h"
 #include "urf-daemon.h"
 
@@ -88,6 +92,19 @@ out:
 	return ret;
 }
 
+#if GLIB_CHECK_VERSION(2,29,4)
+/**
+ * urf_main_sigint_cb:
+ **/
+static void
+urf_main_sigint_cb (gpointer user_data)
+{
+	g_debug ("Handling SIGINT");
+	g_main_loop_quit (loop);
+	return FALSE;
+}
+
+#else
 /**
  * urf_main_sigint_handler:
  **/
@@ -102,6 +119,7 @@ urf_main_sigint_handler (gint sig)
 	/* cleanup */
 	g_main_loop_quit (loop);
 }
+#endif
 
 /**
  * urf_main_timed_exit_cb:
@@ -188,14 +206,23 @@ main (gint argc, gchar **argv)
 		goto out;
 	}
 
+	loop = g_main_loop_new (NULL, FALSE);
+
+#if GLIB_CHECK_VERSION(2,29,4)
 	/* do stuff on ctrl-c */
+	g_unix_signal_add_watch_full (SIGINT,
+				      G_PRIORITY_DEFAULT,
+				      urf_main_sigint_cb,
+				      loop,
+				      NULL);
+#else
 	signal (SIGINT, urf_main_sigint_handler);
+#endif
 
 	g_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
 
 	/* start the daemon */
 	daemon = urf_daemon_new (config);
-	loop = g_main_loop_new (NULL, FALSE);
 	ret = urf_daemon_startup (daemon);
 	if (!ret) {
 		g_warning ("Could not startup; bailing out");
