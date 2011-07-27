@@ -185,6 +185,15 @@ urf_device_get_object_path (UrfDevice *device)
 }
 
 /**
+ * urf_device_is_platform:
+ */
+gboolean
+urf_device_is_platform (UrfDevice *device)
+{
+	return device->priv->platform;
+}
+
+/**
  * urf_device_get_property:
  **/
 static void
