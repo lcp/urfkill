@@ -7,7 +7,7 @@ m4_define([urf_version],
           [urf_major_version.urf_minor_version.urf_micro_version])
 
 AC_PREREQ(2.63)
-AC_INIT([urfkill],[urf_version],[glin@novell.com],[urfkill])
+AC_INIT([urfkill],[urf_version],[glin@suse.com],[urfkill])
 AM_INIT_AUTOMAKE([-Wno-portability])
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE([1.9 tar-ustar dist-bzip2])

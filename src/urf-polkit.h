@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
  * Copyright (C) 2008 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2010 Gary Ching-Pang Lin <glin@novell.com>
+ * Copyright (C) 2010 Gary Ching-Pang Lin <glin@suse.com>
  *
  * Licensed under the GNU General Public License Version 2
  *

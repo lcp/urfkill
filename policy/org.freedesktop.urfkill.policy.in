@@ -7,7 +7,7 @@
 <!--
 Policy definitions for urfkill
 
-Copyright (c) 2010 Gary Ching-Pang Lin <glin@novell.com>
+Copyright (c) 2010 Gary Ching-Pang Lin <glin@suse.com>
 
 NOTE: If you make changes to this file, make sure to validate the file
 using the polkit-policy-file-validate(1) tool. Changes made to this
