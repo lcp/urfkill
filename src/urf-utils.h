@@ -23,8 +23,6 @@
 
 #include <glib.h>
 
-#define CK_SESSION_PREFIX "/org/freedesktop/ConsoleKit/Session"
-
 typedef struct {
 	char *sys_vendor;
 	char *bios_date;
@@ -34,9 +32,7 @@ typedef struct {
 	char *product_version;
 } DmiInfo;
 
-char		*get_rfkill_name_by_index	(guint		 index);
 DmiInfo		*get_dmi_info			(void);
 void		 dmi_info_free			(DmiInfo	*info);
-gboolean	 verify_session_id		(const char	*session_id);
 
 #endif /* __URF_UTILS_H__ */
