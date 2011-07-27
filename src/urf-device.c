@@ -25,11 +25,14 @@
 #include <glib.h>
 #include <linux/rfkill.h>
 #include <dbus/dbus-glib.h>
+#include <libudev.h>
 
 #include "urf-device.h"
 
 #include "urf-device-glue.h"
 #include "urf-utils.h"
+
+#define RFKILL_SYSPATH_PREFIX "/sys/class/rfkill/rfkill"
 
 enum
 {
@@ -58,6 +61,7 @@ struct UrfDevicePrivate {
 	char		*name;
 	gboolean	 soft;
 	gboolean	 hard;
+	gboolean	 platform;
 	char		*object_path;
 	DBusGConnection	*connection;
 };
@@ -254,6 +258,7 @@ urf_device_init (UrfDevice *device)
 {
 	device->priv = URF_DEVICE_GET_PRIVATE (device);
 	device->priv->name = NULL;
+	device->priv->platform = FALSE;
 	device->priv->object_path = NULL;
 }
 
@@ -361,6 +366,51 @@ urf_device_register_device (UrfDevice *device)
 }
 
 /**
+ * urf_device_get_udev_attrs
+ */
+static void
+urf_device_get_udev_attrs (UrfDevice *device)
+{
+	UrfDevicePrivate *priv = device->priv;
+	struct udev *udev;
+	struct udev_device *dev;
+	struct udev_device *parent_dev;
+	char *syspath;
+	const char *subsys;
+	const char *parent_subsys = NULL;
+
+	udev = udev_new ();
+	if (udev == NULL) {
+		g_warning ("udev_new() failed");
+		return;
+	}
+
+	syspath = g_strdup_printf (RFKILL_SYSPATH_PREFIX "%u", priv->index);
+	dev = udev_device_new_from_syspath (udev, syspath);
+	if (dev == NULL) {
+		g_warning ("Failed to get udev device from %s", syspath);
+		g_free (syspath);
+		return;
+	}
+	g_free (syspath);
+
+	priv->name = g_strdup (udev_device_get_sysattr_value (dev, "name"));
+
+	subsys = udev_device_get_subsystem (dev);
+
+	parent_dev = udev_device_get_parent (dev);
+	if (parent_dev)
+		parent_subsys = udev_device_get_subsystem (parent_dev);
+
+	if (g_strcmp0 (subsys, "platform") == 0 ||
+	    g_strcmp0 (parent_subsys, "platform") == 0)
+		priv->platform = TRUE;
+
+	udev_device_unref (dev);
+	udev_unref (udev);
+}
+
+/**
  * urf_device_new:
  */
 UrfDevice *
@@ -376,7 +426,6 @@ urf_device_new (guint    index,
 	priv->type = type;
 	priv->soft = soft;
 	priv->hard = hard;
-	priv->name = get_rfkill_name_by_index (index);
 
 	if (!urf_device_register_device (device))
 		return NULL;
