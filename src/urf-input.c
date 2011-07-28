@@ -171,6 +171,7 @@ input_dev_open_channel (UrfInput   *input,
 					 G_IO_IN | G_IO_HUP | G_IO_ERR,
 					 (GIOFunc) input_event_cb,
 					 input);
+	g_debug ("Watch %s", dev_node);
 
 	return TRUE;
 }
@@ -187,6 +188,7 @@ urf_input_startup (UrfInput *input)
 	struct udev_list_entry *dev_list_entry;
 	struct udev_device *dev;
 	struct udev_device *parent_dev;
+	struct udev_device *grandparent_dev;
 	char *dev_node = NULL;
 	GHashTable *device_table = NULL;
 	gboolean ret;
@@ -212,6 +214,12 @@ urf_input_startup (UrfInput *input)
 		dev = udev_device_new_from_syspath (udev, path);
 		parent_dev = udev_device_get_parent_with_subsystem_devtype (dev, "input", 0);
 		if (!parent_dev) {
+			udev_device_unref(dev);
+			continue;
+		}
+
+		grandparent_dev = udev_device_get_parent_with_subsystem_devtype (parent_dev, "platform", 0);
+		if (!grandparent_dev) {
 			udev_device_unref(dev);
 			continue;
 		}
