@@ -136,7 +136,7 @@ input_event_cb (GIOChannel   *source,
 							  NULL);
 		}
 	} else {
-		g_debug ("something else happened");
+		g_warning ("Failed to fetch the input event");
 		return FALSE;
 	}
 
