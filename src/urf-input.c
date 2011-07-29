@@ -226,6 +226,9 @@ urf_input_startup (UrfInput *input)
 	udev_enumerate_unref(enumerate);
 	udev_unref(udev);
 
+	if (!dev_node)
+		return FALSE;
+
 	ret = input_dev_open_channel (input, dev_node);
 	g_free (dev_node);
 
