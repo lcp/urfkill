@@ -386,7 +386,6 @@ urf_device_get_udev_attrs (UrfDevice *device)
 	struct udev_device *parent_dev;
 	char *syspath;
 	const char *subsys;
-	const char *parent_subsys = NULL;
 
 	udev = udev_new ();
 	if (udev == NULL) {
@@ -407,12 +406,8 @@ urf_device_get_udev_attrs (UrfDevice *device)
 
 	subsys = udev_device_get_subsystem (dev);
 
-	parent_dev = udev_device_get_parent (dev);
-	if (parent_dev)
-		parent_subsys = udev_device_get_subsystem (parent_dev);
-
-	if (g_strcmp0 (subsys, "platform") == 0 ||
-	    g_strcmp0 (parent_subsys, "platform") == 0)
+	parent_dev = udev_device_get_parent_with_subsystem_devtype (dev, "platform", NULL);
+	if (g_strcmp0 (subsys, "platform") == 0 || parent_dev)
 		priv->platform = TRUE;
 
 	udev_device_unref (dev);
