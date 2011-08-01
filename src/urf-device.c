@@ -436,6 +436,8 @@ urf_device_new (guint    index,
 	priv->soft = soft;
 	priv->hard = hard;
 
+	urf_device_get_udev_attrs (device);
+
 	if (!urf_device_register_device (device))
 		return NULL;
 
