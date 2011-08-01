@@ -8,14 +8,17 @@ m4_define([urf_version],
 
 AC_PREREQ(2.63)
 AC_INIT([urfkill],[urf_version],[glin@suse.com],[urfkill])
-AM_INIT_AUTOMAKE([-Wno-portability])
-AC_CONFIG_SRCDIR(src)
-AM_INIT_AUTOMAKE([1.9 tar-ustar dist-bzip2])
+
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR(src)
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
+
+AM_INIT_AUTOMAKE([1.11 -Wno-portability tar-ustar dist-bzip2 no-dist-gzip])
+AM_MAINTAINER_MODE([enable])
 
 # enable nice build output on automake1.11
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+AM_SILENT_RULES([yes])
 
 # use this in urf-version.h
 URF_MAJOR_VERSION=urf_major_version
@@ -140,16 +143,10 @@ fi
 AC_SUBST(WARNINGFLAGS_C)
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.21.5])
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
-
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 1.0])
-AC_SUBST(DBUS_CFLAGS)
-AC_SUBST(DBUS_LIBS)
-
 PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1 >= 0.76])
-AC_SUBST(DBUS_GLIB_CFLAGS)
-AC_SUBST(DBUS_GLIB_LIBS)
+PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.16.1])
+PKG_CHECK_MODULES(LIBUDEV, [libudev >= 147])
 
 # XML library
 AC_CHECK_LIB(expat, XML_ParserCreate,
@@ -178,11 +175,6 @@ if test x$has_new_polkit = xno; then
 else
 	AC_DEFINE(USE_SECURITY_POLKIT_NEW, 1, [if we should use PolicyKit new API])
 fi
-
-PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.16.1])
-PKG_CHECK_MODULES(LIBUDEV, [libudev >= 147])
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
 
 GOBJECT_INTROSPECTION_CHECK([0.6.7])
 
@@ -248,3 +240,4 @@ echo "        Building api docs:          ${enable_gtk_doc}"
 echo "        Building man pages:         ${enable_man_pages}"
 echo "        Building unit tests:        ${enable_tests}"
 echo "        Building introspection:     ${enable_introspection}"
+echo ""
