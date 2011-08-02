@@ -15,3 +15,5 @@ catch_signal_LDADD = $(GLIB_LIBS) $(DBUS_GLIB_LIBS) ../liburfkill-glib/liburfkil
 inhibit_keycontrol_SOURCES = inhibit-keycontrol.c
 inhibit_keycontrol_CFLAGS = -I$(top_srcdir)/liburfkill-glib $(GLIB_CFLAGS) $(DBUS_GLIB_CFLAGS)
 inhibit_keycontrol_LDADD = $(GLIB_LIBS) $(DBUS_GLIB_LIBS) ../liburfkill-glib/liburfkill-glib.la
+
+-include $(top_srcdir)/git.mk

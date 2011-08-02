@@ -27,6 +27,11 @@ pkgconfig_DATA = urfkill-glib.pc
 urfkillconfdir = $(sysconfdir)/urfkill
 urfkillconf_DATA = urfkill.conf
 
+DISTCLEANFILES =					\
+	org.freedesktop.URfkill.conf			\
+	org.freedesktop.URfkill.service			\
+	$(NULL)
+
 EXTRA_DIST =						\
 	$(dbusif_DATA)					\
 	$(service_in_files)				\
@@ -37,3 +42,5 @@ EXTRA_DIST =						\
 
 clean-local :
 	rm -f *~ $(service_DATA) $(dbusconf_DATA)
+
+-include $(top_srcdir)/git.mk

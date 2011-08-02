@@ -1,9 +1,0 @@
-.deps
-urfkilld
-*.o
-*-glue.h
-*-marshal.c
-*-marshal.h
-*.conf
-*.service
-.libs

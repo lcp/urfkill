@@ -24,11 +24,30 @@ $(srcdir)/ChangeLog:
 	fi
 
 EXTRA_DIST = 			\
-	HACKING 		\
+	HACKING			\
 	ChangeLog
+
+MAINTAINERCLEANFILES =		\
+	ABOUT-NLS		\
+	aclocal.m4		\
+	build-aux		\
+	ChangeLog		\
+	config.h.in		\
+	gtk-doc.make		\
+	po/Makefile.in.in~	\
+	po/Makevars.template	\
+	po/Rules-quot		\
+	po/e*.header		\
+	po/*.sin		\
+	po/*.sed		\
+	*.tar.bz2		\
+	INSTALL
+
 
 snapshot:
 	$(MAKE) dist distdir=$(PACKAGE)-$(VERSION)-`date +"%Y%m%d"`
 
 clean-local :
 	rm -f *~
+
+-include $(top_srcdir)/git.mk

@@ -12,6 +12,11 @@ man_MANS = 				\
 
 endif # MAN_PAGES_ENABLED
 
+MAINTAINERCLEANFILES =			\
+	urfkill.7			\
+	urfkilld.8			\
+	$(NULL)
+
 EXTRA_DIST= 				\
 	urfkill.xml			\
 	urfkilld.xml			\
@@ -19,3 +24,5 @@ EXTRA_DIST= 				\
 
 clean-local:
 	rm -f *~ *.[78]
+
+-include $(top_srcdir)/git.mk
