@@ -394,49 +394,28 @@ urf_device_get_udev_attrs (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
 	struct udev *udev;
-	struct udev_enumerate *enumerate;
-	struct udev_list_entry *devices;
-	struct udev_list_entry *dev_list_entry;
 	struct udev_device *dev;
 	struct udev_device *parent_dev;
-	const char *subsys;
 
 	udev = udev_new ();
 	if (udev == NULL) {
 		g_warning ("udev_new() failed");
 		return;
 	}
-	enumerate = udev_enumerate_new(udev);
-	udev_enumerate_add_match_subsystem(enumerate, "rfkill");
-	udev_enumerate_scan_devices(enumerate);
-	devices = udev_enumerate_get_list_entry(enumerate);
-
-	udev_list_entry_foreach(dev_list_entry, devices) {
-		const char *path, *index_c;
-		path = udev_list_entry_get_name(dev_list_entry);
-		dev = udev_device_new_from_syspath(udev, path);
-
-		index_c = udev_device_get_sysattr_value (dev, "index");
-		if (index_c && atoi(index_c) == priv->index)
-			break;
-
-		udev_device_unref (dev);
+	dev = get_rfkill_device_by_index (udev, priv->index);
+	if (!dev) {
+		g_warning ("Failed to get udev device for index %u", priv->index);
+		udev_unref (udev);
+		return;
 	}
-
-	if (!dev)
-		goto out;
 
 	priv->name = g_strdup (udev_device_get_sysattr_value (dev, "name"));
 
-	subsys = udev_device_get_subsystem (dev);
-
 	parent_dev = udev_device_get_parent_with_subsystem_devtype (dev, "platform", NULL);
-	if (g_strcmp0 (subsys, "platform") == 0 || parent_dev)
+	if (parent_dev)
 		priv->platform = TRUE;
 
 	udev_device_unref (dev);
-
-out:
 	udev_unref (udev);
 }
 
