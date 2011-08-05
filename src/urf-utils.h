@@ -22,6 +22,7 @@
 #define __URF_UTILS_H__
 
 #include <glib.h>
+#include <libudev.h>
 
 typedef struct {
 	char *sys_vendor;
@@ -32,7 +33,9 @@ typedef struct {
 	char *product_version;
 } DmiInfo;
 
-DmiInfo		*get_dmi_info			(void);
-void		 dmi_info_free			(DmiInfo	*info);
+DmiInfo			*get_dmi_info			(void);
+void			 dmi_info_free			(DmiInfo	*info);
+struct udev_device 	*get_rfkill_device_by_index	(struct udev	*udev,
+							 guint		 index);
 
 #endif /* __URF_UTILS_H__ */

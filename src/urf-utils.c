@@ -80,3 +80,36 @@ dmi_info_free (DmiInfo *info)
 	g_free (info->product_version);
 	g_free (info);
 }
+
+/**
+ * get_rfkill_device_by_index:
+ **/
+struct udev_device *
+get_rfkill_device_by_index (struct udev *udev,
+			    guint        index)
+{
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices;
+	struct udev_list_entry *dev_list_entry;
+	struct udev_device *dev;
+
+	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "rfkill");
+	udev_enumerate_scan_devices(enumerate);
+	devices = udev_enumerate_get_list_entry(enumerate);
+
+	udev_list_entry_foreach(dev_list_entry, devices) {
+		const char *path, *index_c;
+		path = udev_list_entry_get_name(dev_list_entry);
+		dev = udev_device_new_from_syspath(udev, path);
+
+		index_c = udev_device_get_sysattr_value (dev, "index");
+		if (index_c && atoi(index_c) == index)
+			break;
+
+		udev_device_unref (dev);
+		dev = NULL;
+	}
+
+	return dev;
+}
