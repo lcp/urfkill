@@ -35,7 +35,7 @@
 
 #include "urf-polkit.h"
 #include "urf-daemon.h"
-#include "urf-killswitch.h"
+#include "urf-arbitrator.h"
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
@@ -67,7 +67,7 @@ struct UrfDaemonPrivate
 	UrfConfig	*config;
 	DBusGConnection	*connection;
 	UrfPolkit	*polkit;
-	UrfKillswitch   *killswitch;
+	UrfArbitrator   *arbitrator;
 	UrfInput	*input;
 	UrfConsolekit	*consolekit;
 	gboolean	 key_control;
@@ -121,7 +121,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 {
 	UrfDaemon *daemon = URF_DAEMON (data);
 	UrfDaemonPrivate *priv = daemon->priv;
-	UrfKillswitch *killswitch = priv->killswitch;
+	UrfArbitrator *arbitrator = priv->arbitrator;
 	gint type;
 	gboolean block = FALSE;
 
@@ -150,7 +150,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 		return;
 	}
 
-	switch (urf_killswitch_get_state (killswitch, type)) {
+	switch (urf_arbitrator_get_state (arbitrator, type)) {
 	case KILLSWITCH_STATE_UNBLOCKED:
 	case KILLSWITCH_STATE_HARD_BLOCKED:
 		block = TRUE;
@@ -166,7 +166,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	if (priv->master_key)
 		type = RFKILL_TYPE_ALL;
 
-	urf_killswitch_set_block (killswitch, type, block);
+	urf_arbitrator_set_block (arbitrator, type, block);
 out:
 	g_signal_emit (daemon, signals[SIGNAL_URFKEY_PRESSED], 0, code);
 }
@@ -187,10 +187,10 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
-	/* start up the killswitch */
-	ret = urf_killswitch_startup (priv->killswitch, priv->config);
+	/* start up the arbitrator */
+	ret = urf_arbitrator_startup (priv->arbitrator, priv->config);
 	if (!ret) {
-		g_warning ("failed to setup killswitch");
+		g_warning ("failed to setup arbitrator");
 		goto out;
 	}
 
@@ -226,7 +226,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
 
-	if (!urf_killswitch_has_devices (priv->killswitch))
+	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
@@ -236,7 +236,7 @@ urf_daemon_block (UrfDaemon             *daemon,
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.block", context))
 		goto out;
 
-	ret = urf_killswitch_set_block (priv->killswitch, type, block);
+	ret = urf_arbitrator_set_block (priv->arbitrator, type, block);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
@@ -259,7 +259,7 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
 
-	if (!urf_killswitch_has_devices (priv->killswitch))
+	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
 
 	subject = urf_polkit_get_subject (priv->polkit, context);
@@ -269,7 +269,7 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.blockidx", context))
 		goto out;
 
-	ret = urf_killswitch_set_block_idx (priv->killswitch, index, block);
+	ret = urf_arbitrator_set_block_idx (priv->arbitrator, index, block);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
@@ -293,7 +293,7 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 
 	g_return_val_if_fail (URF_IS_DAEMON (daemon), FALSE);
 
-	devices = urf_killswitch_get_devices (priv->killswitch);
+	devices = urf_arbitrator_get_devices (priv->arbitrator);
 
 	object_paths = g_ptr_array_sized_new (g_list_length(devices));
 	g_ptr_array_set_free_func (object_paths, g_free);
@@ -358,12 +358,12 @@ urf_daemon_uninhibit (UrfDaemon             *daemon,
  * urf_daemon_device_added_cb:
  **/
 static void
-urf_daemon_device_added_cb (UrfKillswitch *killswitch,
+urf_daemon_device_added_cb (UrfArbitrator *arbitrator,
 			    const char    *object_path,
 			    UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
-	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 
 	if (object_path == NULL) {
 		g_warning ("Invalid object path");
@@ -376,12 +376,12 @@ urf_daemon_device_added_cb (UrfKillswitch *killswitch,
  * urf_daemon_device_removed_cb:
  **/
 static void
-urf_daemon_device_removed_cb (UrfKillswitch *killswitch,
+urf_daemon_device_removed_cb (UrfArbitrator *arbitrator,
 			      const char    *object_path,
 			      UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
-	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 	if (object_path == NULL) {
 		g_warning ("Invalid object path");
 		return;
@@ -393,12 +393,12 @@ urf_daemon_device_removed_cb (UrfKillswitch *killswitch,
  * urf_daemon_device_changed_cb:
  **/
 static void
-urf_daemon_device_changed_cb (UrfKillswitch *killswitch,
+urf_daemon_device_changed_cb (UrfArbitrator *arbitrator,
 			      const char    *object_path,
 			      UrfDaemon     *daemon)
 {
 	g_return_if_fail (URF_IS_DAEMON (daemon));
-	g_return_if_fail (URF_IS_KILLSWITCH (killswitch));
+	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 	if (object_path == NULL) {
 		g_warning ("Invalid object path");
 		return;
@@ -415,12 +415,12 @@ urf_daemon_init (UrfDaemon *daemon)
 	daemon->priv = URF_DAEMON_GET_PRIVATE (daemon);
 	daemon->priv->polkit = urf_polkit_new ();
 
-	daemon->priv->killswitch = urf_killswitch_new ();
-	g_signal_connect (daemon->priv->killswitch, "device-added",
+	daemon->priv->arbitrator = urf_arbitrator_new ();
+	g_signal_connect (daemon->priv->arbitrator, "device-added",
 			  G_CALLBACK (urf_daemon_device_added_cb), daemon);
-	g_signal_connect (daemon->priv->killswitch, "device-removed",
+	g_signal_connect (daemon->priv->arbitrator, "device-removed",
 			  G_CALLBACK (urf_daemon_device_removed_cb), daemon);
-	g_signal_connect (daemon->priv->killswitch, "device-changed",
+	g_signal_connect (daemon->priv->arbitrator, "device-changed",
 			  G_CALLBACK (urf_daemon_device_changed_cb), daemon);
 
 	daemon->priv->input = urf_input_new ();
@@ -574,9 +574,9 @@ urf_daemon_dispose (GObject *object)
 		priv->polkit = NULL;
 	}
 
-	if (priv->killswitch) {
-		g_object_unref (priv->killswitch);
-		priv->killswitch = NULL;
+	if (priv->arbitrator) {
+		g_object_unref (priv->arbitrator);
+		priv->arbitrator = NULL;
 	}
 
 	if (priv->consolekit) {

@@ -40,7 +40,7 @@
 #define RFKILL_EVENT_SIZE_V1    8
 #endif
 
-#include "urf-killswitch.h"
+#include "urf-arbitrator.h"
 #include "urf-utils.h"
 
 enum {
@@ -52,10 +52,10 @@ enum {
 
 static int signals[LAST_SIGNAL] = { 0 };
 
-#define URF_KILLSWITCH_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
-                                URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
+#define URF_ARBITRATOR_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
+                                URF_TYPE_ARBITRATOR, UrfArbitratorPrivate))
 
-struct UrfKillswitchPrivate {
+struct UrfArbitratorPrivate {
 	int		 fd;
 	gboolean	 force_sync;
 	GIOChannel	*channel;
@@ -64,7 +64,7 @@ struct UrfKillswitchPrivate {
 	UrfDevice	*type_pivot[NUM_RFKILL_TYPES];
 };
 
-G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
+G_DEFINE_TYPE(UrfArbitrator, urf_arbitrator, G_TYPE_OBJECT)
 
 static KillswitchState
 event_to_state (gboolean soft,
@@ -121,13 +121,13 @@ type_to_string (unsigned int type)
 }
 
 /**
- * urf_killswitch_find_device:
+ * urf_arbitrator_find_device:
  **/
 static UrfDevice *
-urf_killswitch_find_device (UrfKillswitch *killswitch,
+urf_arbitrator_find_device (UrfArbitrator *arbitrator,
 			    guint          index)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	GList *item;
 
@@ -141,14 +141,14 @@ urf_killswitch_find_device (UrfKillswitch *killswitch,
 }
 
 /**
- * urf_killswitch_set_block:
+ * urf_arbitrator_set_block:
  **/
 gboolean
-urf_killswitch_set_block (UrfKillswitch  *killswitch,
+urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
 			  const guint     type,
 			  const gboolean  block)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	struct rfkill_event event;
 	ssize_t len;
 
@@ -170,19 +170,19 @@ urf_killswitch_set_block (UrfKillswitch  *killswitch,
 }
 
 /**
- * urf_killswitch_set_block_idx:
+ * urf_arbitrator_set_block_idx:
  **/
 gboolean
-urf_killswitch_set_block_idx (UrfKillswitch  *killswitch,
+urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 			      const guint     index,
 			      const gboolean  block)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	struct rfkill_event event;
 	ssize_t len;
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
 		g_warning ("Block index: No device with index %u", index);
 		return FALSE;
@@ -204,9 +204,9 @@ urf_killswitch_set_block_idx (UrfKillswitch  *killswitch,
 }
 
 static KillswitchState
-aggregate_pivot_state (UrfKillswitch *killswitch)
+aggregate_pivot_state (UrfArbitrator *arbitrator)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 	int i;
@@ -238,26 +238,26 @@ aggregate_pivot_state (UrfKillswitch *killswitch)
 }
 
 /**
- * urf_killswitch_get_state:
+ * urf_arbitrator_get_state:
  **/
 KillswitchState
-urf_killswitch_get_state (UrfKillswitch *killswitch,
+urf_arbitrator_get_state (UrfArbitrator *arbitrator,
 			  guint          type)
 {
-	UrfKillswitchPrivate *priv;
+	UrfArbitratorPrivate *priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
 
-	priv = killswitch->priv;
+	priv = arbitrator->priv;
 
 	if (priv->devices == NULL)
 		return KILLSWITCH_STATE_NO_ADAPTER;
 
 	if (type == RFKILL_TYPE_ALL)
-		return aggregate_pivot_state (killswitch);
+		return aggregate_pivot_state (arbitrator);
 
 	if (priv->type_pivot[type]) {
 		device = priv->type_pivot[type];
@@ -272,25 +272,25 @@ urf_killswitch_get_state (UrfKillswitch *killswitch,
 }
 
 /**
- * urf_killswitch_get_state_idx:
+ * urf_arbitrator_get_state_idx:
  **/
 KillswitchState
-urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
+urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
 			      guint          index)
 {
-	UrfKillswitchPrivate *priv;
+	UrfArbitratorPrivate *priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 	gboolean soft, hard;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
 
-	priv = killswitch->priv;
+	priv = arbitrator->priv;
 
 	if (priv->devices == NULL)
 		return state;
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device) {
 		soft = urf_device_get_soft (device);
 		hard = urf_device_get_hard (device);
@@ -302,39 +302,39 @@ urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
 }
 
 /**
- * urf_killswitch_has_devices:
+ * urf_arbitrator_has_devices:
  **/
 gboolean
-urf_killswitch_has_devices (UrfKillswitch *killswitch)
+urf_arbitrator_has_devices (UrfArbitrator *arbitrator)
 {
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), FALSE);
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 
-	return (killswitch->priv->devices != NULL);
+	return (arbitrator->priv->devices != NULL);
 }
 
 /**
- * urf_killswitch_get_devices:
+ * urf_arbitrator_get_devices:
  **/
 GList*
-urf_killswitch_get_devices (UrfKillswitch *killswitch)
+urf_arbitrator_get_devices (UrfArbitrator *arbitrator)
 {
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), NULL);
 
-	return killswitch->priv->devices;
+	return arbitrator->priv->devices;
 }
 
 /**
- * urf_killswitch_get_killswitch:
+ * urf_arbitrator_get_arbitrator:
  **/
 UrfDevice *
-urf_killswitch_get_device (UrfKillswitch *killswitch,
+urf_arbitrator_get_device (UrfArbitrator *arbitrator,
 			   const guint    index)
 {
 	UrfDevice *device;
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), NULL);
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device)
 		return URF_DEVICE (g_object_ref (device));
 
@@ -345,17 +345,17 @@ urf_killswitch_get_device (UrfKillswitch *killswitch,
  * update_killswitch:
  **/
 static void
-update_killswitch (UrfKillswitch *killswitch,
+update_killswitch (UrfArbitrator *arbitrator,
 		   guint          index,
 		   gboolean       soft,
 		   gboolean       hard)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	gboolean changed, old_hard;
 	char *object_path;
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
 		g_warning ("No device with index %u in the list", index);
 		return;
@@ -368,24 +368,24 @@ update_killswitch (UrfKillswitch *killswitch,
 		g_debug ("updating killswitch status %d to soft %d hard %d",
 			 index, soft, hard);
 		object_path = g_strdup (urf_device_get_object_path (device));
-		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, object_path);
+		g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_CHANGED], 0, object_path);
 		g_free (object_path);
 
 		if (priv->force_sync) {
 			/* Sync soft and hard blocks */
 			if (hard == TRUE && soft == FALSE)
-				urf_killswitch_set_block_idx (killswitch, index, TRUE);
+				urf_arbitrator_set_block_idx (arbitrator, index, TRUE);
 			else if (hard != old_hard && hard == FALSE)
-				urf_killswitch_set_block_idx (killswitch, index, FALSE);
+				urf_arbitrator_set_block_idx (arbitrator, index, FALSE);
 		}
 	}
 }
 
 static void
-assign_new_pivot (UrfKillswitch *killswitch,
+assign_new_pivot (UrfArbitrator *arbitrator,
 		  const guint    type)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	const char *name;
 	GList *item;
@@ -407,17 +407,17 @@ assign_new_pivot (UrfKillswitch *killswitch,
  * remove_killswitch:
  **/
 static void
-remove_killswitch (UrfKillswitch *killswitch,
+remove_killswitch (UrfArbitrator *arbitrator,
 		   guint          index)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	guint type;
 	const char *name;
 	gboolean pivot_changed = FALSE;
 	char *object_path = NULL;
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
 		g_warning ("No device with index %u in the list", index);
 		return;
@@ -439,9 +439,9 @@ remove_killswitch (UrfKillswitch *killswitch,
 
 	/* Find the next pivot */
 	if (pivot_changed) {
-		assign_new_pivot (killswitch, type);
+		assign_new_pivot (arbitrator, type);
 	}
-	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_REMOVED], 0, object_path);
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_REMOVED], 0, object_path);
 	g_free (object_path);
 }
 
@@ -449,18 +449,18 @@ remove_killswitch (UrfKillswitch *killswitch,
  * add_killswitch:
  **/
 static void
-add_killswitch (UrfKillswitch *killswitch,
+add_killswitch (UrfArbitrator *arbitrator,
 		guint          index,
 		guint          type,
 		gboolean       soft,
 		gboolean       hard)
 
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	const char *name;
 
-	device = urf_killswitch_find_device (killswitch, index);
+	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device != NULL) {
 		g_warning ("device with index %u already in the list", index);
 		return;
@@ -478,10 +478,10 @@ add_killswitch (UrfKillswitch *killswitch,
 		g_debug ("assign killswitch idx %d %s as a pivot", index, name);
 	}
 
-	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_ADDED], 0,
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
 		       urf_device_get_object_path (device));
 	if (priv->force_sync && priv->type_pivot[type] != device) {
-		urf_killswitch_set_block_idx (killswitch, index, soft);
+		urf_arbitrator_set_block_idx (arbitrator, index, soft);
 	}
 }
 
@@ -518,7 +518,7 @@ print_event (struct rfkill_event *event)
 static gboolean
 event_cb (GIOChannel    *source,
 	  GIOCondition   condition,
-	  UrfKillswitch *killswitch)
+	  UrfArbitrator *arbitrator)
 {
 	if (condition & G_IO_IN) {
 		GIOStatus status;
@@ -539,11 +539,11 @@ event_cb (GIOChannel    *source,
 			hard = (event.hard > 0)?TRUE:FALSE;
 
 			if (event.op == RFKILL_OP_CHANGE) {
-				update_killswitch (killswitch, event.idx, soft, hard);
+				update_killswitch (arbitrator, event.idx, soft, hard);
 			} else if (event.op == RFKILL_OP_DEL) {
-				remove_killswitch (killswitch, event.idx);
+				remove_killswitch (arbitrator, event.idx);
 			} else if (event.op == RFKILL_OP_ADD) {
-				add_killswitch (killswitch, event.idx, event.type, soft, hard);
+				add_killswitch (arbitrator, event.idx, event.type, soft, hard);
 			}
 
 			status = g_io_channel_read_chars (source,
@@ -561,13 +561,13 @@ event_cb (GIOChannel    *source,
 }
 
 /**
- * urf_killswitch_startup
+ * urf_arbitrator_startup
  **/
 gboolean
-urf_killswitch_startup (UrfKillswitch *killswitch,
+urf_arbitrator_startup (UrfArbitrator *arbitrator,
 			UrfConfig     *config)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
+	UrfArbitratorPrivate *priv = arbitrator->priv;
 	struct rfkill_event event;
 	int fd;
 
@@ -606,7 +606,7 @@ urf_killswitch_startup (UrfKillswitch *killswitch,
 		if (event.type >= NUM_RFKILL_TYPES)
 			continue;
 
-		add_killswitch (killswitch, event.idx, event.type, event.soft, event.hard);
+		add_killswitch (arbitrator, event.idx, event.type, event.soft, event.hard);
 	}
 
 	/* Setup monitoring */
@@ -615,20 +615,20 @@ urf_killswitch_startup (UrfKillswitch *killswitch,
 	priv->watch_id = g_io_add_watch (priv->channel,
 					 G_IO_IN | G_IO_HUP | G_IO_ERR,
 					 (GIOFunc) event_cb,
-					 killswitch);
+					 arbitrator);
 	return TRUE;
 }
 
 /**
- * urf_killswitch_init:
+ * urf_arbitrator_init:
  **/
 static void
-urf_killswitch_init (UrfKillswitch *killswitch)
+urf_arbitrator_init (UrfArbitrator *arbitrator)
 {
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	UrfArbitratorPrivate *priv = URF_ARBITRATOR_GET_PRIVATE (arbitrator);
 	int i;
 
-	killswitch->priv = priv;
+	arbitrator->priv = priv;
 	priv->devices = NULL;
 	priv->fd = -1;
 
@@ -637,12 +637,12 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 }
 
 /**
- * urf_killswitch_finalize:
+ * urf_arbitrator_finalize:
  **/
 static void
-urf_killswitch_finalize (GObject *object)
+urf_arbitrator_finalize (GObject *object)
 {
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (object);
+	UrfArbitratorPrivate *priv = URF_ARBITRATOR_GET_PRIVATE (object);
 
 	/* cleanup monitoring */
 	if (priv->watch_id > 0) {
@@ -657,25 +657,25 @@ urf_killswitch_finalize (GObject *object)
 	g_list_free (priv->devices);
 	priv->devices = NULL;
 
-	G_OBJECT_CLASS(urf_killswitch_parent_class)->finalize(object);
+	G_OBJECT_CLASS(urf_arbitrator_parent_class)->finalize(object);
 }
 
 /**
- * urf_killswitch_class_init:
+ * urf_arbitrator_class_init:
  **/
 static void
-urf_killswitch_class_init(UrfKillswitchClass *klass)
+urf_arbitrator_class_init(UrfArbitratorClass *klass)
 {
 	GObjectClass *object_class = (GObjectClass *) klass;
 
-	g_type_class_add_private(klass, sizeof(UrfKillswitchPrivate));
-	object_class->finalize = urf_killswitch_finalize;
+	g_type_class_add_private(klass, sizeof(UrfArbitratorPrivate));
+	object_class->finalize = urf_arbitrator_finalize;
 
 	signals[DEVICE_ADDED] =
 		g_signal_new ("device-added",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_added),
+			      G_STRUCT_OFFSET (UrfArbitratorClass, device_added),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -684,7 +684,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 		g_signal_new ("device-removed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_removed),
+			      G_STRUCT_OFFSET (UrfArbitratorClass, device_removed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -693,7 +693,7 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 		g_signal_new ("device-changed",
 			      G_TYPE_FROM_CLASS (klass),
 			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_changed),
+			      G_STRUCT_OFFSET (UrfArbitratorClass, device_changed),
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -701,13 +701,13 @@ urf_killswitch_class_init(UrfKillswitchClass *klass)
 }
 
 /**
- * urf_killswitch_new:
+ * urf_arbitrator_new:
  **/
-UrfKillswitch *
-urf_killswitch_new (void)
+UrfArbitrator *
+urf_arbitrator_new (void)
 {
-	UrfKillswitch *killswitch;
-	killswitch = URF_KILLSWITCH(g_object_new (URF_TYPE_KILLSWITCH, NULL));
-	return killswitch;
+	UrfArbitrator *arbitrator;
+	arbitrator = URF_ARBITRATOR(g_object_new (URF_TYPE_ARBITRATOR, NULL));
+	return arbitrator;
 }
 

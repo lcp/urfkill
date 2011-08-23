@@ -36,8 +36,8 @@ urf-device-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.Device.xml Makefil
 libexec_PROGRAMS = urfkilld
 
 urfkilld_SOURCES =						\
-	urf-killswitch.h					\
-	urf-killswitch.c					\
+	urf-arbitrator.h					\
+	urf-arbitrator.c					\
 	urf-device.h						\
 	urf-device.c						\
 	urf-input.h						\

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __URF_KILLSWITCH_H__
-#define __URF_KILLSWITCH_H__
+#ifndef __URF_ARBITRATOR_H__
+#define __URF_ARBITRATOR_H__
 
 #include <glib-object.h>
 
@@ -37,57 +37,57 @@ typedef enum {
 	KILLSWITCH_STATE_HARD_BLOCKED
 } KillswitchState;
 
-#define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())
-#define URF_KILLSWITCH(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-					URF_TYPE_KILLSWITCH, UrfKillswitch))
-#define URF_KILLSWITCH_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), \
-					URF_TYPE_KILLSWITCH, UrfKillswitchClass))
-#define URF_IS_KILLSWITCH(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), \
-					URF_TYPE_KILLSWITCH))
-#define URF_IS_KILLSWITCH_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), \
-					URF_TYPE_KILLSWITCH))
-#define URF_GET_KILLSWITCH_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
-					URF_TYPE_KILLSWITCH, UrfKillswitchClass))
+#define URF_TYPE_ARBITRATOR (urf_arbitrator_get_type())
+#define URF_ARBITRATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
+					URF_TYPE_ARBITRATOR, UrfArbitrator))
+#define URF_ARBITRATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), \
+					URF_TYPE_ARBITRATOR, UrfArbitratorClass))
+#define URF_IS_ARBITRATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), \
+					URF_TYPE_ARBITRATOR))
+#define URF_IS_ARBITRATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), \
+					URF_TYPE_ARBITRATOR))
+#define URF_GET_ARBITRATOR_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
+					URF_TYPE_ARBITRATOR, UrfArbitratorClass))
 
-typedef struct UrfKillswitchPrivate UrfKillswitchPrivate;
+typedef struct UrfArbitratorPrivate UrfArbitratorPrivate;
 
 typedef struct {
 	GObject			 parent;
-	UrfKillswitchPrivate	*priv;
-} UrfKillswitch;
+	UrfArbitratorPrivate	*priv;
+} UrfArbitrator;
 
 typedef struct {
         GObjectClass 		 parent_class;
 
-        void 			(*device_added)		(UrfKillswitch	*killswitch,
+        void 			(*device_added)		(UrfArbitrator	*arbitrator,
 							 const char	*object_path);
-        void 			(*device_removed)	(UrfKillswitch	*killswitch,
+        void 			(*device_removed)	(UrfArbitrator	*arbitrator,
 							 const char	*object_path);
-        void 			(*device_changed)	(UrfKillswitch	*killswitch,
+        void 			(*device_changed)	(UrfArbitrator	*arbitrator,
 							 const char	*object_path);
-} UrfKillswitchClass;
+} UrfArbitratorClass;
 
-GType			 urf_killswitch_get_type		(void);
-UrfKillswitch		*urf_killswitch_new			(void);
+GType			 urf_arbitrator_get_type		(void);
+UrfArbitrator		*urf_arbitrator_new			(void);
 
-gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch,
+gboolean		 urf_arbitrator_startup			(UrfArbitrator  *arbitrator,
 								 UrfConfig	*config);
 
-gboolean		 urf_killswitch_has_devices		(UrfKillswitch	*killswitch);
-GList			*urf_killswitch_get_devices		(UrfKillswitch	*killswitch);
-UrfDevice		*urf_killswitch_get_device		(UrfKillswitch  *killswitch,
+gboolean		 urf_arbitrator_has_devices		(UrfArbitrator	*arbitrator);
+GList			*urf_arbitrator_get_devices		(UrfArbitrator	*arbitrator);
+UrfDevice		*urf_arbitrator_get_device		(UrfArbitrator  *arbitrator,
 								 const guint	 index);
-gboolean		 urf_killswitch_set_block		(UrfKillswitch	*killswitch,
+gboolean		 urf_arbitrator_set_block		(UrfArbitrator	*arbitrator,
 								 const guint	 type,
 								 const gboolean	 block);
-gboolean		 urf_killswitch_set_block_idx		(UrfKillswitch	*killswitch,
+gboolean		 urf_arbitrator_set_block_idx		(UrfArbitrator	*arbitrator,
 								 const guint	 index,
 								 const gboolean	 block);
-KillswitchState		 urf_killswitch_get_state		(UrfKillswitch	*killswitch,
+KillswitchState		 urf_arbitrator_get_state		(UrfArbitrator	*arbitrator,
 								 guint 		 type);
-KillswitchState		 urf_killswitch_get_state_idx		(UrfKillswitch	*killswitch,
+KillswitchState		 urf_arbitrator_get_state_idx		(UrfArbitrator	*arbitrator,
 								 guint 		 index);
 
 G_END_DECLS
 
-#endif /* __URF_KILLSWITCH_H__ */
+#endif /* __URF_ARBITRATOR_H__ */
