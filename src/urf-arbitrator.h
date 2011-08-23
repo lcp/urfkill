@@ -27,15 +27,9 @@
 
 #include "urf-config.h"
 #include "urf-device.h"
+#include "urf-utils.h"
 
 G_BEGIN_DECLS
-
-typedef enum {
-	KILLSWITCH_STATE_NO_ADAPTER = -1,
-	KILLSWITCH_STATE_SOFT_BLOCKED = 0,
-	KILLSWITCH_STATE_UNBLOCKED,
-	KILLSWITCH_STATE_HARD_BLOCKED
-} KillswitchState;
 
 #define URF_TYPE_ARBITRATOR (urf_arbitrator_get_type())
 #define URF_ARBITRATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
