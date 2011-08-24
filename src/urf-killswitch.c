@@ -216,7 +216,7 @@ urf_killswitch_get_property (GObject    *object,
 
 	switch (prop_id) {
 	case PROP_STATE:
-		g_value_set_uint (value, priv->state);
+		g_value_set_int (value, priv->state);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -241,8 +241,8 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 			      G_OBJECT_CLASS_TYPE (klass),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
+			      g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
 
 	g_object_class_install_property (object_class,
 					 PROP_STATE,
