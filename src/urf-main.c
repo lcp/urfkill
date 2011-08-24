@@ -149,10 +149,12 @@ main (gint argc, gchar **argv)
 	gint retval = 1;
 	gboolean timed_exit = FALSE;
 	gboolean immediate_exit = FALSE;
+	gboolean fork_daemon = FALSE;
 	guint timer_id = 0;
 	struct passwd *user;
 	const char *username = NULL;
 	const char *conf_file = NULL;
+	pid_t pid;
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -161,6 +163,9 @@ main (gint argc, gchar **argv)
 		{ "immediate-exit", '\0', 0, G_OPTION_ARG_NONE, &immediate_exit,
 		  /* TRANSLATORS: exit straight away, used for automatic profiling */
 		  _("Exit after the engine has loaded"), NULL },
+		{ "fork", 'f', 0, G_OPTION_ARG_NONE, &fork_daemon,
+		  /* TRANSLATORS: fork to background */
+		  _("Fork on startup"), NULL },
 		{ "user", 'u', 0, G_OPTION_ARG_STRING, &username,
 		  /* TRANSLATORS: change to another user and drop the privilege */
 		  _("Use a specific user instead of root"), NULL },
@@ -259,6 +264,26 @@ main (gint argc, gchar **argv)
 	/* immediatly exit */
 	if (immediate_exit)
 		g_timeout_add (50, (GSourceFunc) urf_main_timed_exit_cb, loop);
+
+	/* fork as daemon Clone ourselves to make a child */
+	if(fork_daemon){
+		pid = fork(); 
+
+		/* If the pid is less than zero,
+		   something went wrong when forking */
+		if (pid < 0) {
+			return pid;
+		}
+
+		/* If the pid we got back was greater
+		   than zero, then the clone was
+		   successful and we are the parent. */
+		if (pid > 0) {
+			return 0;
+		}
+
+		/* If execution reaches this point we are the child */
+	}
 
 	/* wait for input or timeout */
 	g_main_loop_run (loop);
