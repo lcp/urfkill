@@ -133,7 +133,8 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 		priv->state = new_state;
 		g_signal_emit (G_OBJECT (killswitch),
 			       signals[SIGNAL_STATE_CHANGED],
-			       0);
+			       0,
+			       priv->state);
 	}
 }
 
