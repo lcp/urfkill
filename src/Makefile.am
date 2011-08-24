@@ -40,6 +40,8 @@ urfkilld_SOURCES =						\
 	urf-arbitrator.c					\
 	urf-device.h						\
 	urf-device.c						\
+	urf-killswitch.h					\
+	urf-killswitch.c					\
 	urf-input.h						\
 	urf-input.c						\
 	urf-config.h						\
