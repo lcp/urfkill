@@ -28,7 +28,10 @@
 #include <linux/rfkill.h>
 
 #include "urf-killswitch.h"
+#include "urf-killswitch-glue.h"
 #include "urf-device.h"
+
+#define BASE_OBJECT_PATH "/org/freedesktop/URfkill/"
 
 enum
 {
@@ -50,6 +53,8 @@ struct UrfKillswitchPrivate
 	GList		 *devices;
 	enum rfkill_type  type;
 	KillswitchState   state;
+	DBusGConnection	 *connection;
+	char		 *object_path;
 };
 
 G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
@@ -194,6 +199,11 @@ urf_killswitch_dispose (GObject *object)
 	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
+	if (priv->connection) {
+		dbus_g_connection_unref (priv->connection);
+		priv->connection = NULL;
+	}
+
 	if (priv->devices) {
 		g_list_foreach (priv->devices, (GFunc) g_object_unref, NULL);
 		g_list_free (priv->devices);
@@ -201,6 +211,19 @@ urf_killswitch_dispose (GObject *object)
 	}
 
 	G_OBJECT_CLASS (urf_killswitch_parent_class)->dispose (object);
+}
+
+/**
+ * urf_killswitch_finalize:
+ **/
+static void
+urf_killswitch_finalize (GObject *object)
+{
+	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
+
+	g_free (killswitch->priv->object_path);
+
+	G_OBJECT_CLASS (urf_killswitch_parent_class)->finalize (object);
 }
 
 /**
@@ -233,6 +256,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->dispose = urf_killswitch_dispose;
+	object_class->finalize = urf_killswitch_finalize;
 	object_class->get_property = urf_killswitch_get_property;
 
 	g_type_class_add_private (klass, sizeof (UrfKillswitchPrivate));
@@ -254,6 +278,8 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 							   KILLSWITCH_STATE_HARD_BLOCKED,
 							   KILLSWITCH_STATE_NO_ADAPTER,
 							   G_PARAM_READABLE));
+
+	dbus_g_object_type_install_info (URF_TYPE_KILLSWITCH, &dbus_glib_urf_killswitch_object_info);
 }
 
 /**
@@ -264,6 +290,31 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 {
 	killswitch->priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
 	killswitch->priv->devices = NULL;
+	killswitch->priv->object_path = NULL;
+	killswitch->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
+}
+
+/**
+ * urf_device_register_device:
+ **/
+static gboolean
+urf_killswitch_register_switch (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GError *error = NULL;
+
+	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (priv->connection == NULL) {
+		g_error ("error getting system bus: %s", error->message);
+		g_error_free (error);
+		return FALSE;
+	}
+
+	priv->object_path = g_strdup_printf (BASE_OBJECT_PATH"%s",
+					     type_to_string (priv->type));
+	dbus_g_connection_register_g_object (priv->connection,
+					     priv->object_path, G_OBJECT (killswitch));
+	return TRUE;
 }
 
 /**
@@ -279,6 +330,11 @@ urf_killswitch_new (enum rfkill_type type)
 
 	killswitch = URF_KILLSWITCH (g_object_new (URF_TYPE_KILLSWITCH, NULL));
 	killswitch->priv->type = type;
+
+	if (!urf_killswitch_register_switch (killswitch)) {
+		g_object_unref (killswitch);
+		return NULL;
+	}
 
 	return killswitch;
 }

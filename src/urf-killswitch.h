@@ -52,17 +52,6 @@ typedef struct {
         GObjectClass parent_class;
 } UrfKillswitchClass;
 
-/*
-typedef enum
-{
-        URF_KILLSWITCH_ERROR_GENERAL,
-        URF_KILLSWITCH_NUM_ERRORS
-} UrfKillswitchError;
-
-#define URF_KILLSWITCH_ERROR urf_killswitch_error_quark ()
-#define URF_KILLSWITCH_TYPE_ERROR (urf_killswitch_error_get_type ())
-*/
-
 GType			 urf_killswitch_get_type		(void);
 
 UrfKillswitch		*urf_killswitch_new			(enum rfkill_type	 type);

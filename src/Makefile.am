@@ -23,6 +23,7 @@ INCLUDES = \
 BUILT_SOURCES =							\
 	urf-daemon-glue.h					\
 	urf-device-glue.h					\
+	urf-killswitch-glue.h					\
 	$(NULL)
 
 urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
@@ -32,6 +33,10 @@ urf-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.xml Makefile.am
 urf-device-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.Device.xml Makefile.am
 	dbus-binding-tool --prefix=urf_device --mode=glib-server --output=urf-device-glue.h \
 	$(top_srcdir)/data/org.freedesktop.URfkill.Device.xml
+
+urf-killswitch-glue.h: $(top_srcdir)/data/org.freedesktop.URfkill.Killswitch.xml Makefile.am
+	dbus-binding-tool --prefix=urf_killswitch --mode=glib-server --output=urf-killswitch-glue.h \
+	$(top_srcdir)/data/org.freedesktop.URfkill.Killswitch.xml
 
 libexec_PROGRAMS = urfkilld
 
