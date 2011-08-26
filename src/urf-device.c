@@ -451,8 +451,10 @@ urf_device_new (guint    index,
 
 	urf_device_get_udev_attrs (device);
 
-	if (!urf_device_register_device (device))
+	if (!urf_device_register_device (device)) {
+		g_object_unref (device);
 		return NULL;
+	}
 
 	return device;
 }
