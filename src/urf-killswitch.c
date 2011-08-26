@@ -108,28 +108,20 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	non_platform = KILLSWITCH_STATE_NO_ADAPTER;
 	new_state = KILLSWITCH_STATE_NO_ADAPTER;
 
-	/* check the states of platform switches */
 	for (iter = priv->devices; iter; iter = iter->next) {
 		KillswitchState state;
 		device = (UrfDevice *)iter->data;
-
-		if (urf_device_is_platform (device) != TRUE)
-			continue;
 		state = urf_device_get_state (device);
-		if (state > platform)
-			platform = state;
-	}
 
-	/* check the states of non-platform switches */
-	for (iter = priv->devices; iter; iter = iter->next) {
-		KillswitchState state;
-		device = (UrfDevice *)iter->data;
-
-		if (urf_device_is_platform (device) != FALSE)
-			continue;
-		state = urf_device_get_state (device);
-		if (state > non_platform)
-			non_platform = state;
+		if (urf_device_is_platform (device) == TRUE) {
+			/* Update the state of platform switch */
+			if (state > platform)
+				platform = state;
+		} else {
+			/* Update the state of non-platform switch */
+			if (state > non_platform)
+				non_platform = state;
+		}
 	}
 
 	new_state = aggregate_states (platform, non_platform);
