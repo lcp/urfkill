@@ -67,31 +67,6 @@ struct UrfArbitratorPrivate {
 
 G_DEFINE_TYPE(UrfArbitrator, urf_arbitrator, G_TYPE_OBJECT)
 
-static const char *
-type_to_string (unsigned int type)
-{
-	switch (type) {
-	case RFKILL_TYPE_ALL:
-		return "ALL";
-	case RFKILL_TYPE_WLAN:
-		return "WLAN";
-	case RFKILL_TYPE_BLUETOOTH:
-		return "BLUETOOTH";
-	case RFKILL_TYPE_UWB:
-		return "UWB";
-	case RFKILL_TYPE_WIMAX:
-		return "WIMAX";
-	case RFKILL_TYPE_WWAN:
-		return "WWAN";
-	case RFKILL_TYPE_GPS:
-		return "GPS";
-	case RFKILL_TYPE_FM:
-		return "FM";
-	default:
-		g_assert_not_reached ();
-	}
-}
-
 /**
  * urf_arbitrator_find_device:
  **/

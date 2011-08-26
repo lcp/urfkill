@@ -23,11 +23,12 @@
 
 #include <glib.h>
 #include <libudev.h>
+#include <linux/rfkill.h>
 
 typedef enum {
 	KILLSWITCH_STATE_NO_ADAPTER = -1,
-	KILLSWITCH_STATE_SOFT_BLOCKED = 0,
-	KILLSWITCH_STATE_UNBLOCKED,
+	KILLSWITCH_STATE_UNBLOCKED = 0,
+	KILLSWITCH_STATE_SOFT_BLOCKED,
 	KILLSWITCH_STATE_HARD_BLOCKED
 } KillswitchState;
 
@@ -47,5 +48,6 @@ struct udev_device 	*get_rfkill_device_by_index	(struct udev	*udev,
 KillswitchState		 event_to_state			(gboolean	 soft,
 							 gboolean	 hard);
 const char 		*state_to_string		(KillswitchState state);
+const char		*type_to_string			(guint		 type);
 
 #endif /* __URF_UTILS_H__ */
