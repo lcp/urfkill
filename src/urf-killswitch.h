@@ -1,8 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2005-2008 Marcel Holtmann <marcel@holtmann.org>
- * Copyright (C) 2006-2009 Bastien Nocera <hadess@hadess.net>
- * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@suse.com>
+ * Copyright (C) 2011 Gary Ching-Pang Lin <glin@suse.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,19 +21,13 @@
 #ifndef __URF_KILLSWITCH_H__
 #define __URF_KILLSWITCH_H__
 
+#include <linux/rfkill.h>
 #include <glib-object.h>
 
-#include "urf-config.h"
 #include "urf-device.h"
+#include "urf-utils.h"
 
 G_BEGIN_DECLS
-
-typedef enum {
-	KILLSWITCH_STATE_NO_ADAPTER = -1,
-	KILLSWITCH_STATE_SOFT_BLOCKED = 0,
-	KILLSWITCH_STATE_UNBLOCKED,
-	KILLSWITCH_STATE_HARD_BLOCKED
-} KillswitchState;
 
 #define URF_TYPE_KILLSWITCH (urf_killswitch_get_type())
 #define URF_KILLSWITCH(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
@@ -52,41 +44,22 @@ typedef enum {
 typedef struct UrfKillswitchPrivate UrfKillswitchPrivate;
 
 typedef struct {
-	GObject			 parent;
-	UrfKillswitchPrivate	*priv;
+	GObject parent;
+	UrfKillswitchPrivate *priv;
 } UrfKillswitch;
 
 typedef struct {
-        GObjectClass 		 parent_class;
-
-        void 			(*device_added)		(UrfKillswitch	*killswitch,
-							 const char	*object_path);
-        void 			(*device_removed)	(UrfKillswitch	*killswitch,
-							 const char	*object_path);
-        void 			(*device_changed)	(UrfKillswitch	*killswitch,
-							 const char	*object_path);
+        GObjectClass parent_class;
 } UrfKillswitchClass;
 
 GType			 urf_killswitch_get_type		(void);
-UrfKillswitch		*urf_killswitch_new			(void);
 
-gboolean		 urf_killswitch_startup			(UrfKillswitch  *killswitch,
-								 UrfConfig	*config);
-
-gboolean		 urf_killswitch_has_devices		(UrfKillswitch	*killswitch);
-GList			*urf_killswitch_get_devices		(UrfKillswitch	*killswitch);
-UrfDevice		*urf_killswitch_get_device		(UrfKillswitch  *killswitch,
-								 const guint	 index);
-gboolean		 urf_killswitch_set_block		(UrfKillswitch	*killswitch,
-								 const guint	 type,
-								 const gboolean	 block);
-gboolean		 urf_killswitch_set_block_idx		(UrfKillswitch	*killswitch,
-								 const guint	 index,
-								 const gboolean	 block);
-KillswitchState		 urf_killswitch_get_state		(UrfKillswitch	*killswitch,
-								 guint 		 type);
-KillswitchState		 urf_killswitch_get_state_idx		(UrfKillswitch	*killswitch,
-								 guint 		 index);
+UrfKillswitch		*urf_killswitch_new			(enum rfkill_type	 type);
+void			 urf_killswitch_add_device		(UrfKillswitch		*killswitch,
+								 UrfDevice		*device);
+void			 urf_killswitch_del_device		(UrfKillswitch		*killswitch,
+								 UrfDevice		*device);
+KillswitchState		 urf_killswitch_get_state		(UrfKillswitch		*killswitch);
 
 G_END_DECLS
 

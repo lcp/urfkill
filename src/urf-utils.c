@@ -113,3 +113,57 @@ get_rfkill_device_by_index (struct udev *udev,
 
 	return dev;
 }
+
+KillswitchState
+event_to_state (gboolean soft,
+		gboolean hard)
+{
+	if (hard)
+		return KILLSWITCH_STATE_HARD_BLOCKED;
+	else if (soft)
+		return KILLSWITCH_STATE_SOFT_BLOCKED;
+	else
+		return KILLSWITCH_STATE_UNBLOCKED;
+}
+
+const char *
+state_to_string (KillswitchState state)
+{
+	switch (state) {
+	case KILLSWITCH_STATE_NO_ADAPTER:
+		return "KILLSWITCH_STATE_NO_ADAPTER";
+	case KILLSWITCH_STATE_SOFT_BLOCKED:
+		return "KILLSWITCH_STATE_SOFT_BLOCKED";
+	case KILLSWITCH_STATE_UNBLOCKED:
+		return "KILLSWITCH_STATE_UNBLOCKED";
+	case KILLSWITCH_STATE_HARD_BLOCKED:
+		return "KILLSWITCH_STATE_HARD_BLOCKED";
+	default:
+		g_assert_not_reached ();
+	}
+}
+
+const char *
+type_to_string (guint type)
+{
+	switch (type) {
+	case RFKILL_TYPE_ALL:
+		return "ALL";
+	case RFKILL_TYPE_WLAN:
+		return "WLAN";
+	case RFKILL_TYPE_BLUETOOTH:
+		return "BLUETOOTH";
+	case RFKILL_TYPE_UWB:
+		return "UWB";
+	case RFKILL_TYPE_WIMAX:
+		return "WIMAX";
+	case RFKILL_TYPE_WWAN:
+		return "WWAN";
+	case RFKILL_TYPE_GPS:
+		return "GPS";
+	case RFKILL_TYPE_FM:
+		return "FM";
+	default:
+		g_assert_not_reached ();
+	}
+}

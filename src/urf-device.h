@@ -22,6 +22,7 @@
 #define __URF_DEVICE_H__
 
 #include <glib-object.h>
+#include "urf-utils.h"
 
 G_BEGIN_DECLS
 
@@ -74,6 +75,7 @@ const char 		*urf_device_get_name		(UrfDevice	*device);
 gboolean		 urf_device_get_soft		(UrfDevice	*device);
 gboolean		 urf_device_get_hard		(UrfDevice	*device);
 const char		*urf_device_get_object_path	(UrfDevice	*device);
+KillswitchState		 urf_device_get_state		(UrfDevice	*device);
 gboolean		 urf_device_is_platform		(UrfDevice	*device);
 
 G_END_DECLS

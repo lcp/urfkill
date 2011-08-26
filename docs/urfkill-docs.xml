@@ -66,6 +66,7 @@
     </partintro>
     <xi:include href="dbus/org.freedesktop.URfkill.ref.xml"/>
     <xi:include href="dbus/org.freedesktop.URfkill.Device.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.URfkill.Killswitch.ref.xml"/>
   </reference>
 
   <reference id="liburfkill-glib">

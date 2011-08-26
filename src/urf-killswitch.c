@@ -1,8 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2005-2008 Marcel Holtmann <marcel@holtmann.org>
- * Copyright (C) 2006-2009 Bastien Nocera <hadess@hadess.net>
- * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@suse.com>
+ * Copyright (C) 2011 Gary Ching-Pang Lin <glin@suse.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,619 +19,190 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#  include "config.h"
 #endif
-
-#include <errno.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ioctl.h>
 
 #include <glib.h>
-
+#include <glib-object.h>
+#include <dbus/dbus-glib.h>
 #include <linux/rfkill.h>
 
-#ifndef RFKILL_EVENT_SIZE_V1
-#define RFKILL_EVENT_SIZE_V1    8
-#endif
-
 #include "urf-killswitch.h"
-#include "urf-utils.h"
+#include "urf-killswitch-glue.h"
+#include "urf-device.h"
 
-enum {
-	DEVICE_ADDED,
-	DEVICE_REMOVED,
-	DEVICE_CHANGED,
-	LAST_SIGNAL
+#define BASE_OBJECT_PATH "/org/freedesktop/URfkill/"
+
+enum
+{
+	PROP_0,
+	PROP_STATE,
+	PROP_LAST
 };
 
-static int signals[LAST_SIGNAL] = { 0 };
-
-#define URF_KILLSWITCH_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
-                                URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
-
-struct UrfKillswitchPrivate {
-	int		 fd;
-	gboolean	 force_sync;
-	GIOChannel	*channel;
-	guint		 watch_id;
-	GList		*devices; /* a GList of UrfDevice */
-	UrfDevice	*type_pivot[NUM_RFKILL_TYPES];
+enum
+{
+	SIGNAL_STATE_CHANGED,
+	SIGNAL_LAST,
 };
 
-G_DEFINE_TYPE(UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
+static guint signals[SIGNAL_LAST] = { 0 };
 
-static KillswitchState
-event_to_state (gboolean soft,
-		gboolean hard)
+struct UrfKillswitchPrivate
 {
-	if (hard)
-		return KILLSWITCH_STATE_HARD_BLOCKED;
-	else if (soft)
-		return KILLSWITCH_STATE_SOFT_BLOCKED;
-	else
-		return KILLSWITCH_STATE_UNBLOCKED;
-}
+	GList		 *devices;
+	enum rfkill_type  type;
+	KillswitchState   state;
+	DBusGConnection	 *connection;
+	char		 *object_path;
+};
 
-static const char *
-state_to_string (KillswitchState state)
-{
-	switch (state) {
-	case KILLSWITCH_STATE_NO_ADAPTER:
-		return "KILLSWITCH_STATE_NO_ADAPTER";
-	case KILLSWITCH_STATE_SOFT_BLOCKED:
-		return "KILLSWITCH_STATE_SOFT_BLOCKED";
-	case KILLSWITCH_STATE_UNBLOCKED:
-		return "KILLSWITCH_STATE_UNBLOCKED";
-	case KILLSWITCH_STATE_HARD_BLOCKED:
-		return "KILLSWITCH_STATE_HARD_BLOCKED";
-	default:
-		g_assert_not_reached ();
-	}
-}
+G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 
-static const char *
-type_to_string (unsigned int type)
-{
-	switch (type) {
-	case RFKILL_TYPE_ALL:
-		return "ALL";
-	case RFKILL_TYPE_WLAN:
-		return "WLAN";
-	case RFKILL_TYPE_BLUETOOTH:
-		return "BLUETOOTH";
-	case RFKILL_TYPE_UWB:
-		return "UWB";
-	case RFKILL_TYPE_WIMAX:
-		return "WIMAX";
-	case RFKILL_TYPE_WWAN:
-		return "WWAN";
-	case RFKILL_TYPE_GPS:
-		return "GPS";
-	case RFKILL_TYPE_FM:
-		return "FM";
-	default:
-		g_assert_not_reached ();
-	}
-}
+#define URF_KILLSWITCH_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
+				URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
-/**
- * urf_killswitch_find_device:
- **/
-static UrfDevice *
-urf_killswitch_find_device (UrfKillswitch *killswitch,
-			    guint          index)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	GList *item;
-
-	for (item = priv->devices; item != NULL; item = item->next) {
-		device = (UrfDevice *)item->data;
-		if (urf_device_get_index (device) == index)
-			return device;
-	}
-
-	return NULL;
-}
-
-/**
- * urf_killswitch_set_block:
- **/
-gboolean
-urf_killswitch_set_block (UrfKillswitch  *killswitch,
-			  const guint     type,
-			  const gboolean  block)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	struct rfkill_event event;
-	ssize_t len;
-
-	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
-
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE_ALL;
-	event.type = type;
-	event.soft = block;
-
-	g_debug ("Set %s to %s", type_to_string (type), block?"block":"unblock");
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * urf_killswitch_set_block_idx:
- **/
-gboolean
-urf_killswitch_set_block_idx (UrfKillswitch  *killswitch,
-			      const guint     index,
-			      const gboolean  block)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	struct rfkill_event event;
-	ssize_t len;
-
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device == NULL) {
-		g_warning ("Block index: No device with index %u", index);
-		return FALSE;
-	}
-
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE;
-	event.idx = index;
-	event.soft = block;
-
-	g_debug ("Set device %u to %s", index, block?"block":"unblock");
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static KillswitchState
-aggregate_pivot_state (UrfKillswitch *killswitch)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	int state = KILLSWITCH_STATE_NO_ADAPTER;
-	int i;
-	gboolean soft, hard;
-
-	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
-		if (!priv->type_pivot[i])
-			continue;
-
-		device = priv->type_pivot[i];
-		soft = urf_device_get_soft (device);
-		hard = urf_device_get_hard (device);
-		switch (event_to_state (soft, hard)) {
-		case KILLSWITCH_STATE_UNBLOCKED:
-			if (state == KILLSWITCH_STATE_NO_ADAPTER)
-				state = KILLSWITCH_STATE_UNBLOCKED;
-			break;
-		case KILLSWITCH_STATE_SOFT_BLOCKED:
-			state = KILLSWITCH_STATE_SOFT_BLOCKED;
-			break;
-		case KILLSWITCH_STATE_HARD_BLOCKED:
-			return KILLSWITCH_STATE_HARD_BLOCKED;
-		default:
-			break;
-		}
-	}
-
-	return state;
-}
-
-/**
- * urf_killswitch_get_state:
- **/
 KillswitchState
-urf_killswitch_get_state (UrfKillswitch *killswitch,
-			  guint          type)
+urf_killswitch_get_state (UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv;
-	UrfDevice *device;
-	int state = KILLSWITCH_STATE_NO_ADAPTER;
+	return killswitch->priv->state;
+}
 
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
-	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
-
-	priv = killswitch->priv;
-
-	if (priv->devices == NULL)
+KillswitchState
+aggregate_states (KillswitchState platform,
+		  KillswitchState non_platform)
+{
+	if (platform == KILLSWITCH_STATE_NO_ADAPTER &&
+	    non_platform == KILLSWITCH_STATE_NO_ADAPTER)
 		return KILLSWITCH_STATE_NO_ADAPTER;
+	else if (platform == KILLSWITCH_STATE_NO_ADAPTER)
+		return non_platform;
+	else
+		return platform;
 
-	if (type == RFKILL_TYPE_ALL)
-		return aggregate_pivot_state (killswitch);
-
-	if (priv->type_pivot[type]) {
-		device = priv->type_pivot[type];
-		state = event_to_state (urf_device_get_soft (device),
-					urf_device_get_hard (device));
-	}
-
-	g_debug ("devices %s state %s",
-		 type_to_string (type), state_to_string (state));
-
-	return state;
+	if (platform == KILLSWITCH_STATE_UNBLOCKED)
+		return non_platform;
+	else
+		return platform;
 }
 
 /**
- * urf_killswitch_get_state_idx:
- **/
-KillswitchState
-urf_killswitch_get_state_idx (UrfKillswitch *killswitch,
-			      guint          index)
-{
-	UrfKillswitchPrivate *priv;
-	UrfDevice *device;
-	int state = KILLSWITCH_STATE_NO_ADAPTER;
-	gboolean soft, hard;
-
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), state);
-
-	priv = killswitch->priv;
-
-	if (priv->devices == NULL)
-		return state;
-
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device) {
-		soft = urf_device_get_soft (device);
-		hard = urf_device_get_hard (device);
-		state = event_to_state (soft, hard);
-		g_debug ("killswitch %d is %s", index, state_to_string (state));
-	}
-
-	return state;
-}
-
-/**
- * urf_killswitch_has_devices:
- **/
-gboolean
-urf_killswitch_has_devices (UrfKillswitch *killswitch)
-{
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), FALSE);
-
-	return (killswitch->priv->devices != NULL);
-}
-
-/**
- * urf_killswitch_get_devices:
- **/
-GList*
-urf_killswitch_get_devices (UrfKillswitch *killswitch)
-{
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
-
-	return killswitch->priv->devices;
-}
-
-/**
- * urf_killswitch_get_killswitch:
- **/
-UrfDevice *
-urf_killswitch_get_device (UrfKillswitch *killswitch,
-			   const guint    index)
-{
-	UrfDevice *device;
-
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NULL);
-
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device)
-		return URF_DEVICE (g_object_ref (device));
-
-	return NULL;
-}
-
-/**
- * update_killswitch:
+ * urf_killswitch_state_refresh:
  **/
 static void
-update_killswitch (UrfKillswitch *killswitch,
-		   guint          index,
-		   gboolean       soft,
-		   gboolean       hard)
+urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	KillswitchState platform;
+	KillswitchState non_platform;
+	KillswitchState new_state;
 	UrfDevice *device;
-	gboolean changed, old_hard;
-	char *object_path;
+	GList *iter;
 
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device == NULL) {
-		g_warning ("No device with index %u in the list", index);
+	if (priv->devices == NULL) {
+		priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 		return;
 	}
 
-	old_hard = urf_device_get_hard (device);
-	changed = urf_device_update_states (device, soft, hard);
+	platform = KILLSWITCH_STATE_NO_ADAPTER;
+	non_platform = KILLSWITCH_STATE_NO_ADAPTER;
+	new_state = KILLSWITCH_STATE_NO_ADAPTER;
 
-	if (changed == TRUE) {
-		g_debug ("updating killswitch status %d to soft %d hard %d",
-			 index, soft, hard);
-		object_path = g_strdup (urf_device_get_object_path (device));
-		g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_CHANGED], 0, object_path);
-		g_free (object_path);
+	for (iter = priv->devices; iter; iter = iter->next) {
+		KillswitchState state;
+		device = (UrfDevice *)iter->data;
+		state = urf_device_get_state (device);
 
-		if (priv->force_sync) {
-			/* Sync soft and hard blocks */
-			if (hard == TRUE && soft == FALSE)
-				urf_killswitch_set_block_idx (killswitch, index, TRUE);
-			else if (hard != old_hard && hard == FALSE)
-				urf_killswitch_set_block_idx (killswitch, index, FALSE);
+		if (urf_device_is_platform (device) == TRUE) {
+			/* Update the state of platform switch */
+			if (state > platform)
+				platform = state;
+		} else {
+			/* Update the state of non-platform switch */
+			if (state > non_platform)
+				non_platform = state;
 		}
+	}
+
+	new_state = aggregate_states (platform, non_platform);
+	/* emit a signal for change */
+	if (priv->state != new_state) {
+		priv->state = new_state;
+		g_signal_emit (G_OBJECT (killswitch),
+			       signals[SIGNAL_STATE_CHANGED],
+			       0,
+			       priv->state);
 	}
 }
 
 static void
-assign_new_pivot (UrfKillswitch *killswitch,
-		  const guint    type)
+device_changed_cb (UrfDevice     *device,
+		   UrfKillswitch *killswitch)
 {
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	const char *name;
-	GList *item;
-
-	for (item = priv->devices; item != NULL; item = item->next) {
-		device = (UrfDevice *)item->data;
-		name = urf_device_get_name (device);
-		if (urf_device_get_rf_type (device) == type &&
-		    (priv->type_pivot[type] == NULL ||
-		     urf_device_is_platform (device))) {
-			priv->type_pivot[type] = device;
-			g_debug ("assign killswitch idx %d %s as a pivot",
-				 urf_device_get_index (device), name);
-		}
-	}
+	urf_killswitch_state_refresh (killswitch);
 }
 
 /**
- * remove_killswitch:
+ * urf_killswitch_add_device:
  **/
-static void
-remove_killswitch (UrfKillswitch *killswitch,
-		   guint          index)
+void
+urf_killswitch_add_device (UrfKillswitch *killswitch,
+			   UrfDevice     *device)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	guint type;
-	const char *name;
-	gboolean pivot_changed = FALSE;
-	char *object_path = NULL;
 
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device == NULL) {
-		g_warning ("No device with index %u in the list", index);
+	if (urf_device_get_rf_type (device) != priv->type ||
+	    g_list_find (priv->devices, (gconstpointer)device) != NULL)
 		return;
-	}
 
-	priv->devices = g_list_remove (priv->devices, device);
-	type = urf_device_get_rf_type (device);
-	object_path = g_strdup (urf_device_get_object_path(device));
+	priv->devices = g_list_prepend (priv->devices,
+					(gpointer)g_object_ref (device));
+	g_signal_connect (G_OBJECT (device), "changed",
+			  G_CALLBACK (device_changed_cb), killswitch);
 
-	name = urf_device_get_name (device);
-	g_debug ("removing killswitch idx %d %s", index, name);
+	urf_killswitch_state_refresh (killswitch);
+}
 
-	if (priv->type_pivot[type] == device) {
-		priv->type_pivot[type] = NULL;
-		pivot_changed = TRUE;
-	}
+/**
+ * urf_killswitch_del_device:
+ **/
+void
+urf_killswitch_del_device (UrfKillswitch *killswitch,
+			   UrfDevice     *device)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
 
+	if (urf_device_get_rf_type (device) != priv->type ||
+	    g_list_find (priv->devices, (gconstpointer)device) == NULL)
+		return;
+
+	priv->devices = g_list_remove (priv->devices, (gpointer)device);
 	g_object_unref (device);
 
-	/* Find the next pivot */
-	if (pivot_changed) {
-		assign_new_pivot (killswitch, type);
-	}
-	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_REMOVED], 0, object_path);
-	g_free (object_path);
+	urf_killswitch_state_refresh (killswitch);
 }
 
 /**
- * add_killswitch:
+ * urf_killswitch_dispose:
  **/
 static void
-add_killswitch (UrfKillswitch *killswitch,
-		guint          index,
-		guint          type,
-		gboolean       soft,
-		gboolean       hard)
-
+urf_killswitch_dispose (GObject *object)
 {
+	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
 	UrfKillswitchPrivate *priv = killswitch->priv;
-	UrfDevice *device;
-	const char *name;
 
-	device = urf_killswitch_find_device (killswitch, index);
-	if (device != NULL) {
-		g_warning ("device with index %u already in the list", index);
-		return;
+	if (priv->connection) {
+		dbus_g_connection_unref (priv->connection);
+		priv->connection = NULL;
 	}
 
-	g_debug ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
-
-	device = urf_device_new (index, type, soft, hard);
-	priv->devices = g_list_append (priv->devices, device);
-
-	/* Assume that only one platform vendor in a machine */
-	name = urf_device_get_name (device);
-	if (priv->type_pivot[type] == NULL || urf_device_is_platform (device)) {
-		priv->type_pivot[type] = device;
-		g_debug ("assign killswitch idx %d %s as a pivot", index, name);
+	if (priv->devices) {
+		g_list_foreach (priv->devices, (GFunc) g_object_unref, NULL);
+		g_list_free (priv->devices);
+		priv->devices = NULL;
 	}
 
-	g_signal_emit (G_OBJECT (killswitch), signals[DEVICE_ADDED], 0,
-		       urf_device_get_object_path (device));
-	if (priv->force_sync && priv->type_pivot[type] != device) {
-		urf_killswitch_set_block_idx (killswitch, index, soft);
-	}
-}
-
-static const char *
-op_to_string (unsigned int op)
-{
-	switch (op) {
-	case RFKILL_OP_ADD:
-		return "ADD";
-	case RFKILL_OP_DEL:
-		return "DEL";
-	case RFKILL_OP_CHANGE:
-		return "CHANGE";
-	case RFKILL_OP_CHANGE_ALL:
-		return "CHANGE_ALL";
-	default:
-		g_assert_not_reached ();
-	}
-}
-
-static void
-print_event (struct rfkill_event *event)
-{
-	g_debug ("RFKILL event: idx %u type %u (%s) op %u (%s) soft %u hard %u",
-		 event->idx,
-		 event->type, type_to_string (event->type),
-		 event->op, op_to_string (event->op),
-		 event->soft, event->hard);
-}
-
-/**
- * event_cb:
- **/
-static gboolean
-event_cb (GIOChannel    *source,
-	  GIOCondition   condition,
-	  UrfKillswitch *killswitch)
-{
-	if (condition & G_IO_IN) {
-		GIOStatus status;
-		struct rfkill_event event;
-		gsize read;
-		gboolean soft, hard;
-
-		status = g_io_channel_read_chars (source,
-						  (char *) &event,
-						  sizeof(event),
-						  &read,
-						  NULL);
-
-		while (status == G_IO_STATUS_NORMAL && read == sizeof(event)) {
-			print_event (&event);
-
-			soft = (event.soft > 0)?TRUE:FALSE;
-			hard = (event.hard > 0)?TRUE:FALSE;
-
-			if (event.op == RFKILL_OP_CHANGE) {
-				update_killswitch (killswitch, event.idx, soft, hard);
-			} else if (event.op == RFKILL_OP_DEL) {
-				remove_killswitch (killswitch, event.idx);
-			} else if (event.op == RFKILL_OP_ADD) {
-				add_killswitch (killswitch, event.idx, event.type, soft, hard);
-			}
-
-			status = g_io_channel_read_chars (source,
-							  (char *) &event,
-							  sizeof(event),
-							  &read,
-							  NULL);
-		}
-	} else {
-		g_debug ("something else happened");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-/**
- * urf_killswitch_startup
- **/
-gboolean
-urf_killswitch_startup (UrfKillswitch *killswitch,
-			UrfConfig     *config)
-{
-	UrfKillswitchPrivate *priv = killswitch->priv;
-	struct rfkill_event event;
-	int fd;
-
-	priv->force_sync = urf_config_get_force_sync (config);
-
-	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
-	if (fd < 0) {
-		if (errno == EACCES)
-			g_warning ("Could not open RFKILL control device, please verify your installation");
-		return FALSE;
-	}
-
-	/* Disable rfkill input */
-	ioctl(fd, RFKILL_IOCTL_NOINPUT);
-
-	priv->fd = fd;
-
-	while (1) {
-		ssize_t len;
-
-		len = read(fd, &event, sizeof(event));
-		if (len < 0) {
-			if (errno == EAGAIN)
-				break;
-			g_debug ("Reading of RFKILL events failed");
-			break;
-		}
-
-		if (len != RFKILL_EVENT_SIZE_V1) {
-			g_warning("Wrong size of RFKILL event\n");
-			continue;
-		}
-
-		if (event.op != RFKILL_OP_ADD)
-			continue;
-		if (event.type >= NUM_RFKILL_TYPES)
-			continue;
-
-		add_killswitch (killswitch, event.idx, event.type, event.soft, event.hard);
-	}
-
-	/* Setup monitoring */
-	priv->channel = g_io_channel_unix_new (priv->fd);
-	g_io_channel_set_encoding (priv->channel, NULL, NULL);
-	priv->watch_id = g_io_add_watch (priv->channel,
-					 G_IO_IN | G_IO_HUP | G_IO_ERR,
-					 (GIOFunc) event_cb,
-					 killswitch);
-	return TRUE;
-}
-
-/**
- * urf_killswitch_init:
- **/
-static void
-urf_killswitch_init (UrfKillswitch *killswitch)
-{
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
-	int i;
-
-	killswitch->priv = priv;
-	priv->devices = NULL;
-	priv->fd = -1;
-
-	for (i = 0; i < NUM_RFKILL_TYPES; i++)
-		priv->type_pivot[i] = NULL;
+	G_OBJECT_CLASS (urf_killswitch_parent_class)->dispose (object);
 }
 
 /**
@@ -642,72 +211,122 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 static void
 urf_killswitch_finalize (GObject *object)
 {
-	UrfKillswitchPrivate *priv = URF_KILLSWITCH_GET_PRIVATE (object);
+	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
 
-	/* cleanup monitoring */
-	if (priv->watch_id > 0) {
-		g_source_remove (priv->watch_id);
-		priv->watch_id = 0;
-		g_io_channel_shutdown (priv->channel, FALSE, NULL);
-		g_io_channel_unref (priv->channel);
+	g_free (killswitch->priv->object_path);
+
+	G_OBJECT_CLASS (urf_killswitch_parent_class)->finalize (object);
+}
+
+/**
+ * urf_killswitch_get_property:
+ **/
+static void
+urf_killswitch_get_property (GObject    *object,
+			     guint       prop_id,
+			     GValue     *value,
+			     GParamSpec *pspec)
+{
+	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
+	UrfKillswitchPrivate *priv = killswitch->priv;
+
+	switch (prop_id) {
+	case PROP_STATE:
+		g_value_set_int (value, priv->state);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
 	}
-	close(priv->fd);
-
-	g_list_foreach (priv->devices, (GFunc) g_object_unref, NULL);
-	g_list_free (priv->devices);
-	priv->devices = NULL;
-
-	G_OBJECT_CLASS(urf_killswitch_parent_class)->finalize(object);
 }
 
 /**
  * urf_killswitch_class_init:
  **/
 static void
-urf_killswitch_class_init(UrfKillswitchClass *klass)
+urf_killswitch_class_init (UrfKillswitchClass *klass)
 {
-	GObjectClass *object_class = (GObjectClass *) klass;
-
-	g_type_class_add_private(klass, sizeof(UrfKillswitchPrivate));
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	object_class->dispose = urf_killswitch_dispose;
 	object_class->finalize = urf_killswitch_finalize;
+	object_class->get_property = urf_killswitch_get_property;
 
-	signals[DEVICE_ADDED] =
-		g_signal_new ("device-added",
-			      G_TYPE_FROM_CLASS (klass),
-			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_added),
-			      NULL, NULL,
-			      g_cclosure_marshal_VOID__STRING,
-			      G_TYPE_NONE, 1, G_TYPE_STRING);
+	g_type_class_add_private (klass, sizeof (UrfKillswitchPrivate));
 
-	signals[DEVICE_REMOVED] =
-		g_signal_new ("device-removed",
-			      G_TYPE_FROM_CLASS (klass),
-			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_removed),
-			      NULL, NULL,
-			      g_cclosure_marshal_VOID__STRING,
-			      G_TYPE_NONE, 1, G_TYPE_STRING);
+	signals[SIGNAL_STATE_CHANGED] =
+		g_signal_new ("state-changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__INT,
+			      G_TYPE_NONE, 1, G_TYPE_INT);
 
-	signals[DEVICE_CHANGED] =
-		g_signal_new ("device-changed",
-			      G_TYPE_FROM_CLASS (klass),
-			      G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (UrfKillswitchClass, device_changed),
-			      NULL, NULL,
-			      g_cclosure_marshal_VOID__STRING,
-			      G_TYPE_NONE, 1, G_TYPE_STRING);
+	g_object_class_install_property (object_class,
+					 PROP_STATE,
+					 g_param_spec_int ("state",
+							   "Killswitch State",
+							   "The state of the killswitch",
+							   KILLSWITCH_STATE_NO_ADAPTER,
+							   KILLSWITCH_STATE_HARD_BLOCKED,
+							   KILLSWITCH_STATE_NO_ADAPTER,
+							   G_PARAM_READABLE));
 
+	dbus_g_object_type_install_info (URF_TYPE_KILLSWITCH, &dbus_glib_urf_killswitch_object_info);
+}
+
+/**
+ * urf_killswitch_init:
+ **/
+static void
+urf_killswitch_init (UrfKillswitch *killswitch)
+{
+	killswitch->priv = URF_KILLSWITCH_GET_PRIVATE (killswitch);
+	killswitch->priv->devices = NULL;
+	killswitch->priv->object_path = NULL;
+	killswitch->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
+}
+
+/**
+ * urf_device_register_device:
+ **/
+static gboolean
+urf_killswitch_register_switch (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GError *error = NULL;
+
+	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (priv->connection == NULL) {
+		g_error ("error getting system bus: %s", error->message);
+		g_error_free (error);
+		return FALSE;
+	}
+
+	priv->object_path = g_strdup_printf (BASE_OBJECT_PATH"%s",
+					     type_to_string (priv->type));
+	dbus_g_connection_register_g_object (priv->connection,
+					     priv->object_path, G_OBJECT (killswitch));
+	return TRUE;
 }
 
 /**
  * urf_killswitch_new:
  **/
 UrfKillswitch *
-urf_killswitch_new (void)
+urf_killswitch_new (enum rfkill_type type)
 {
 	UrfKillswitch *killswitch;
-	killswitch = URF_KILLSWITCH(g_object_new (URF_TYPE_KILLSWITCH, NULL));
+
+	if (type <= RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES)
+		return NULL;
+
+	killswitch = URF_KILLSWITCH (g_object_new (URF_TYPE_KILLSWITCH, NULL));
+	killswitch->priv->type = type;
+
+	if (!urf_killswitch_register_switch (killswitch)) {
+		g_object_unref (killswitch);
+		return NULL;
+	}
+
 	return killswitch;
 }
-

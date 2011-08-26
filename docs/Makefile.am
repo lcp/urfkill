@@ -59,6 +59,7 @@ content_files =  			    			\
 	version.xml			    			\
 	dbus/org.freedesktop.URfkill.ref.xml			\
 	dbus/org.freedesktop.URfkill.Device.ref.xml		\
+	dbus/org.freedesktop.URfkill.Killswitch.ref.xml		\
 	$(NULL)
 
 # Images to copy into HTML directory

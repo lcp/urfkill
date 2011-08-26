@@ -62,6 +62,7 @@ struct UrfDevicePrivate {
 	gboolean	 soft;
 	gboolean	 hard;
 	gboolean	 platform;
+	KillswitchState	 state;
 	char		*object_path;
 	DBusGConnection	*connection;
 };
@@ -123,6 +124,7 @@ urf_device_update_states (UrfDevice      *device,
 	if (priv->soft != soft || priv->hard != hard) {
 		priv->soft = soft;
 		priv->hard = hard;
+		priv->state = event_to_state (priv->soft, priv->hard);
 		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
 		return TRUE;
 	}
@@ -173,6 +175,15 @@ gboolean
 urf_device_get_hard (UrfDevice *device)
 {
 	return device->priv->hard;
+}
+
+/**
+ * urf_device_get_state:
+ **/
+KillswitchState
+urf_device_get_state (UrfDevice *device)
+{
+	return device->priv->state;
 }
 
 /**
@@ -271,6 +282,7 @@ urf_device_init (UrfDevice *device)
 	device->priv = URF_DEVICE_GET_PRIVATE (device);
 	device->priv->name = NULL;
 	device->priv->platform = FALSE;
+	device->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 	device->priv->object_path = NULL;
 }
 
@@ -371,19 +383,19 @@ static gboolean
 urf_device_register_device (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
-	gboolean ret = TRUE;
 	GError *error = NULL;
 
 	device->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
 	if (device->priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
 		g_error_free (error);
+		return FALSE;
 	}
 
 	priv->object_path = urf_device_compute_object_path (device);
 	dbus_g_connection_register_g_object (priv->connection,
 					     priv->object_path, G_OBJECT (device));
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -435,11 +447,14 @@ urf_device_new (guint    index,
 	priv->type = type;
 	priv->soft = soft;
 	priv->hard = hard;
+	priv->state = event_to_state (soft, hard);
 
 	urf_device_get_udev_attrs (device);
 
-	if (!urf_device_register_device (device))
+	if (!urf_device_register_device (device)) {
+		g_object_unref (device);
 		return NULL;
+	}
 
 	return device;
 }
