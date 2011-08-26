@@ -383,19 +383,19 @@ static gboolean
 urf_device_register_device (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
-	gboolean ret = TRUE;
 	GError *error = NULL;
 
 	device->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
 	if (device->priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
 		g_error_free (error);
+		return FALSE;
 	}
 
 	priv->object_path = urf_device_compute_object_path (device);
 	dbus_g_connection_register_g_object (priv->connection,
 					     priv->object_path, G_OBJECT (device));
-	return ret;
+	return TRUE;
 }
 
 /**
