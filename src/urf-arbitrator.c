@@ -497,7 +497,8 @@ urf_arbitrator_init (UrfArbitrator *arbitrator)
 	priv->devices = NULL;
 	priv->fd = -1;
 
-	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+	priv->killswitch[RFKILL_TYPE_ALL] = NULL;
+	for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++)
 		priv->killswitch[i] = urf_killswitch_new (i);
 }
 
