@@ -4,6 +4,20 @@
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.URfkill.Killswitch">
+    <doc:doc>
+      <doc:description>
+        <doc:para>
+          Objects implementing this interface represent different types
+          of killswitches and are discovered through the
+          <doc:tt>org.freedesktop.URfkill.Killswitch</doc:tt> interface
+          on the <doc:tt>/org/freedesktop/URfkill/TYPENAME</doc:tt>
+          object on the D-Bus system bus service with the well-known
+          name <doc:tt>org.freedesktop.URfkill</doc:tt>. The TYPENAME
+          could be "WLAN", "BLUETOOTH", "UWB", "WIMAX", "WWAN", "GPS",
+          or "FM".
+        </doc:para>
+      </doc:description>
+    </doc:doc>
 
     <signal name="StateChanged">
       <doc:doc>
