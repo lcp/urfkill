@@ -72,14 +72,6 @@ KillswitchState
 aggregate_states (KillswitchState platform,
 		  KillswitchState non_platform)
 {
-	if (platform == KILLSWITCH_STATE_NO_ADAPTER &&
-	    non_platform == KILLSWITCH_STATE_NO_ADAPTER)
-		return KILLSWITCH_STATE_NO_ADAPTER;
-	else if (platform == KILLSWITCH_STATE_NO_ADAPTER)
-		return non_platform;
-	else
-		return platform;
-
 	if (platform == KILLSWITCH_STATE_UNBLOCKED)
 		return non_platform;
 	else
@@ -94,8 +86,8 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	KillswitchState platform;
-	KillswitchState non_platform;
 	KillswitchState new_state;
+	gboolean platform_checked = FALSE;
 	UrfDevice *device;
 	GList *iter;
 
@@ -105,7 +97,6 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	}
 
 	platform = KILLSWITCH_STATE_NO_ADAPTER;
-	non_platform = KILLSWITCH_STATE_NO_ADAPTER;
 	new_state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	for (iter = priv->devices; iter; iter = iter->next) {
@@ -115,16 +106,18 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 
 		if (urf_device_is_platform (device) == TRUE) {
 			/* Update the state of platform switch */
+			platform_checked = TRUE;
 			if (state > platform)
 				platform = state;
 		} else {
 			/* Update the state of non-platform switch */
-			if (state > non_platform)
-				non_platform = state;
+			if (state > new_state)
+				new_state = state;
 		}
 	}
 
-	new_state = aggregate_states (platform, non_platform);
+	if (platform_checked)
+		new_state = aggregate_states (platform, new_state);
 	/* emit a signal for change */
 	if (priv->state != new_state) {
 		priv->state = new_state;
