@@ -9,6 +9,7 @@ UrfClientError
 urf_client_new
 urf_client_error_quark
 urf_client_error_get_type
+urf_client_enumerate_devices_sync
 urf_client_get_devices
 urf_client_set_block
 urf_client_set_block_idx

@@ -91,6 +91,9 @@ GQuark		 urf_client_error_quark			(void);
 GType		 urf_client_error_get_type		(void);
 
 /* generic */
+gboolean	 urf_client_enumerate_devices_sync	(UrfClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GList		*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 UrfDeviceType	 type,

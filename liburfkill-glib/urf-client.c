@@ -101,10 +101,193 @@ urf_client_find_device (UrfClient   *client,
 }
 
 /**
+ * urf_client_add:
+ **/
+static UrfDevice *
+urf_client_add (UrfClient  *client,
+		const char *object_path)
+{
+	UrfDevice *device;
+
+	device = urf_device_new ();
+	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
+
+	client->priv->devices = g_list_append (client->priv->devices, device);
+
+	return device;
+}
+
+/**
+ * urf_client_device_added_cb:
+ **/
+static void
+urf_client_device_added_cb (DBusGProxy  *proxy,
+			    const gchar *object_path,
+			    UrfClient   *client)
+{
+	UrfDevice *device;
+
+	device = urf_client_find_device (client, object_path);
+	if (device != NULL) {
+		g_warning ("already added: %s", object_path);
+		return;
+	}
+
+	device = urf_client_add (client, object_path);
+
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_ADDED], 0, device);
+}
+
+/**
+ * urf_client_device_removed_cb:
+ **/
+static void
+urf_client_device_removed_cb (DBusGProxy *proxy,
+			      const char *object_path,
+			      UrfClient  *client)
+{
+	UrfClientPrivate *priv = client->priv;
+	UrfDevice *device;
+
+	device = urf_client_find_device (client, object_path);
+
+	if (device == NULL) {
+		g_warning ("no such device to be removed: %s", object_path);
+		return;
+	}
+
+	client->priv->devices = g_list_remove (priv->devices, device);
+
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_REMOVED], 0, device);
+
+	g_object_unref (device);
+}
+
+/**
+ * urf_client_device_changed_cb:
+ **/
+static void
+urf_client_device_changed_cb (DBusGProxy     *proxy,
+			      const char     *object_path,
+			      UrfClient      *client)
+{
+	UrfDevice *device;
+
+	device = urf_client_find_device (client, object_path);
+
+	if (device == NULL) {
+		g_warning ("no device to be changed: %s", object_path);
+		return;
+	}
+
+	g_signal_emit (client, signals [URF_CLIENT_DEVICE_CHANGED], 0, device);
+}
+
+/**
+ * urf_client_get_devices_private:
+ **/
+static void
+urf_client_get_devices_private (UrfClient *client,
+				GError    **error)
+{
+	GError *error_local = NULL;
+	GType g_type_array;
+	GPtrArray *devices = NULL;
+	const char *object_path;
+	gboolean ret;
+	guint i;
+
+	g_return_if_fail (URF_IS_CLIENT (client));
+	g_return_if_fail (client->priv->proxy != NULL);
+
+	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
+	ret = dbus_g_proxy_call (client->priv->proxy, "EnumerateDevices", &error_local,
+				 G_TYPE_INVALID,
+				 g_type_array, &devices,
+				 G_TYPE_INVALID);
+	if (!ret) {
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		g_error_free (error_local);
+		return;
+	}
+
+	/* no data */
+	if (devices == NULL) {
+		g_set_error_literal (error, 1, 0, "no data");
+		return;
+	}
+
+	/* convert */
+	for (i=0; i < devices->len; i++) {
+		object_path = (const char *) g_ptr_array_index (devices, i);
+		urf_client_add (client, object_path);
+	}
+}
+
+/**
+ * urf_client_enumerate_devices_sync:
+ * @client: a #UrfClient instance
+ * @cancellable: a #GCancellable or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Enumerate the devices from the daemon.
+ *
+ * Return value: #TRUE for success, else #FALSE and @error is used
+ *
+ * Since: 0.3.0
+ **/
+gboolean
+urf_client_enumerate_devices_sync (UrfClient    *client,
+				   GCancellable *cancellable,
+				   GError       **error)
+{
+	UrfClientPrivate *priv = client->priv;
+	GError *error_local = NULL;
+	gboolean ret = FALSE;
+
+	urf_client_get_devices_private (client, &error_local);
+	if (error_local) {
+		g_warning ("Failed to enumerate devices: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		goto out;
+	}
+
+	/* connect signals */
+	dbus_g_proxy_add_signal (priv->proxy, "DeviceAdded",
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (priv->proxy, "DeviceRemoved",
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (priv->proxy, "DeviceChanged",
+				 G_TYPE_STRING,
+				 G_TYPE_INVALID);
+	/* callbacks */
+	dbus_g_proxy_connect_signal (priv->proxy, "DeviceAdded",
+				     G_CALLBACK (urf_client_device_added_cb), client, NULL);
+	dbus_g_proxy_connect_signal (priv->proxy, "DeviceRemoved",
+				     G_CALLBACK (urf_client_device_removed_cb), client, NULL);
+	dbus_g_proxy_connect_signal (priv->proxy, "DeviceChanged",
+				     G_CALLBACK (urf_client_device_changed_cb), client, NULL);
+
+	ret = TRUE;
+out:
+	if (error_local != NULL)
+		g_error_free (error_local);
+	return ret;
+}
+
+/**
  * urf_client_get_devices:
  * @client: a #UrfClient instance
  *
  * Get a list of the device objects.
+ * <note>
+ *   <para>
+ *     You must have called #urf_client_enumerate_devices_sync before
+ *     calling this function.
+ *   </para>
+ * </note>
  *
  * Return value: (element-type UrfDevice) (transfer none): a list of #UrfDevice objects
  *
@@ -464,89 +647,6 @@ urf_client_get_key_control (UrfClient *client)
 }
 
 /**
- * urf_client_add:
- **/
-static UrfDevice *
-urf_client_add (UrfClient  *client,
-		const char *object_path)
-{
-	UrfDevice *device;
-
-	device = urf_device_new ();
-	urf_device_set_object_path_sync (device, object_path, NULL, NULL);
-
-	client->priv->devices = g_list_append (client->priv->devices, device);
-
-	return device;
-}
-
-/**
- * urf_client_device_added_cb:
- **/
-static void
-urf_client_device_added_cb (DBusGProxy  *proxy,
-			    const gchar *object_path,
-			    UrfClient   *client)
-{
-	UrfDevice *device;
-
-	device = urf_client_find_device (client, object_path);
-	if (device != NULL) {
-		g_warning ("already added: %s", object_path);
-		return;
-	}
-
-	device = urf_client_add (client, object_path);
-
-	g_signal_emit (client, signals [URF_CLIENT_DEVICE_ADDED], 0, device);
-}
-
-/**
- * urf_client_device_removed_cb:
- **/
-static void
-urf_client_device_removed_cb (DBusGProxy *proxy,
-			      const char *object_path,
-			      UrfClient  *client)
-{
-	UrfClientPrivate *priv = client->priv;
-	UrfDevice *device;
-
-	device = urf_client_find_device (client, object_path);
-
-	if (device == NULL) {
-		g_warning ("no such device to be removed: %s", object_path);
-		return;
-	}
-
-	client->priv->devices = g_list_remove (priv->devices, device);
-
-	g_signal_emit (client, signals [URF_CLIENT_DEVICE_REMOVED], 0, device);
-
-	g_object_unref (device);
-}
-
-/**
- * urf_client_device_changed_cb:
- **/
-static void
-urf_client_device_changed_cb (DBusGProxy     *proxy,
-			      const char     *object_path,
-			      UrfClient      *client)
-{
-	UrfDevice *device;
-
-	device = urf_client_find_device (client, object_path);
-
-	if (device == NULL) {
-		g_warning ("no device to be changed: %s", object_path);
-		return;
-	}
-
-	g_signal_emit (client, signals [URF_CLIENT_DEVICE_CHANGED], 0, device);
-}
-
-/**
  * urf_client_rf_key_pressed_cb:
  **/
 static void
@@ -555,47 +655,6 @@ urf_client_rf_key_pressed_cb (DBusGProxy *proxy,
 			      UrfClient  *client)
 {
 	g_signal_emit (client, signals [URF_CLIENT_RF_KEY_PRESSED], 0, keycode);
-}
-
-/**
- * urf_client_get_devices_private:
- **/
-static void
-urf_client_get_devices_private (UrfClient *client,
-				GError    **error)
-{
-	GError *error_local = NULL;
-	GType g_type_array;
-	GPtrArray *devices = NULL;
-	const char *object_path;
-	gboolean ret;
-	guint i;
-
-	g_return_if_fail (URF_IS_CLIENT (client));
-	g_return_if_fail (client->priv->proxy != NULL);
-
-	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
-	ret = dbus_g_proxy_call (client->priv->proxy, "EnumerateDevices", &error_local,
-				 G_TYPE_INVALID,
-				 g_type_array, &devices,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		g_error_free (error_local);
-		return;
-	}
-
-	/* no data */
-	if (devices == NULL) {
-		g_set_error_literal (error, 1, 0, "no data");
-		return;
-	}
-
-	/* convert */
-	for (i=0; i < devices->len; i++) {
-		object_path = (const char *) g_ptr_array_index (devices, i);
-		urf_client_add (client, object_path);
-	}
 }
 
 /**
@@ -811,36 +870,12 @@ urf_client_init (UrfClient *client)
 
 	client->priv->devices = NULL;
 
-	urf_client_get_devices_private (client, &error);
-	if (error) {
-		g_warning ("Failed to enumerate devices: %s", error->message);
-		g_error_free (error);
-		goto out;
-	}
-
-	/* connect signals */
-	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceAdded",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceRemoved",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (client->priv->proxy, "DeviceChanged",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (client->priv->proxy, "UrfkeyPressed",
 				 G_TYPE_INT,
 				 G_TYPE_INVALID);
 	/* callbacks */
-	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceAdded",
-				     G_CALLBACK (urf_client_device_added_cb), client, NULL);
-	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceRemoved",
-				     G_CALLBACK (urf_client_device_removed_cb), client, NULL);
-	dbus_g_proxy_connect_signal (client->priv->proxy, "DeviceChanged",
-				     G_CALLBACK (urf_client_device_changed_cb), client, NULL);
 	dbus_g_proxy_connect_signal (client->priv->proxy, "UrfkeyPressed",
 				     G_CALLBACK (urf_client_rf_key_pressed_cb), client, NULL);
-
 out:
 	return;
 }
