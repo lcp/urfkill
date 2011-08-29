@@ -39,6 +39,7 @@ main ()
 	g_type_init();
 
 	client = urf_client_new ();
+	urf_client_enumerate_devices_sync (client, NULL, NULL);
 
 	g_print ("Daemon Version: %s\n\n", urf_client_get_daemon_version (client));
 

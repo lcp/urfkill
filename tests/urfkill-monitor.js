@@ -54,6 +54,7 @@ function DeviceQuery () {
 DeviceQuery.prototype = {
   _init: function () {
     this._urfClient = new Urfkill.Client ();
+    this._urfClient.enumerate_devices_sync (null, null);
     this._devices = this._urfClient.get_devices ();
     this._cookie = 0;
     this._urfClient.connect ("device-added", Lang.bind (this, this._device_added));

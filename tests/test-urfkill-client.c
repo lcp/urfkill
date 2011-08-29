@@ -69,6 +69,7 @@ main ()
 	g_type_init();
 
 	client = urf_client_new ();
+	urf_client_enumerate_devices_sync (client, NULL, NULL);
 
 	g_signal_connect (client, "device-added", G_CALLBACK (device_added_cb), NULL);
 	g_signal_connect (client, "device-removed", G_CALLBACK (device_removed_cb), NULL);
