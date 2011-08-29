@@ -31,32 +31,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * UrfDeviceType:
- * @URFDEVICE_TYPE_ALL: toggles all switches (requests only - not a switch type)
- * @URFDEVICE_TYPE_WLAN: switch is on a 802.11 wireless network device.
- * @URFDEVICE_TYPE_BLUETOOTH: switch is on a bluetooth device.
- * @URFDEVICE_TYPE_UWB: switch is on a ultra wideband device.
- * @URFDEVICE_TYPE_WIMAX: switch is on a WiMAX device.
- * @URFDEVICE_TYPE_WWAN: switch is on a wireless WAN device.
- * @URFDEVICE_TYPE_GPS: switch is on a GPS device.
- * @URFDEVICE_TYPE_FM: switch is on a FM radio device.
- * @NUM_URFDEVICE_TYPES: number of defined rfkill types
- *
- * The type of the rfkill device following the definition in &lt;linux/rfkill.h&gt;
- */
-typedef enum {
-        URFDEVICE_TYPE_ALL = 0,
-        URFDEVICE_TYPE_WLAN,
-        URFDEVICE_TYPE_BLUETOOTH,
-        URFDEVICE_TYPE_UWB,
-        URFDEVICE_TYPE_WIMAX,
-        URFDEVICE_TYPE_WWAN,
-        URFDEVICE_TYPE_GPS,
-        URFDEVICE_TYPE_FM,
-        NUM_URFDEVICE_TYPES,
-} UrfDeviceType;
-
 #define URF_TYPE_DEVICE		(urf_device_get_type ())
 #define URF_DEVICE(o)		(G_TYPE_CHECK_INSTANCE_CAST ((o), URF_TYPE_DEVICE, UrfDevice))
 #define URF_DEVICE_CLASS(k)	(G_TYPE_CHECK_CLASS_CAST((k), URF_TYPE_DEVICE, UrfDeviceClass))

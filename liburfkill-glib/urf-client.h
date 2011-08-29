@@ -30,6 +30,7 @@
 #include <gio/gio.h>
 
 #include "urf-device.h"
+#include "urf-enum.h"
 
 G_BEGIN_DECLS
 
@@ -96,7 +97,7 @@ gboolean	 urf_client_enumerate_devices_sync	(UrfClient	*client,
 							 GError		**error);
 GList		*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
-							 UrfDeviceType	 type,
+							 UrfSwitchType	 type,
 							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);

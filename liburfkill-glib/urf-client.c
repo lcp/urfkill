@@ -325,7 +325,7 @@ urf_client_get_devices (UrfClient *client)
  **/
 gboolean
 urf_client_set_block (UrfClient      *client,
-		      UrfDeviceType   type,
+		      UrfSwitchType   type,
 		      const gboolean  block,
 		      GCancellable   *cancellable,
 		      GError         **error)
@@ -335,7 +335,7 @@ urf_client_set_block (UrfClient      *client,
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
-	g_return_val_if_fail (type < NUM_URFDEVICE_TYPES, FALSE);
+	g_return_val_if_fail (type < NUM_URFSWITCH_TYPES, FALSE);
 
 	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
 				 G_TYPE_UINT, type,
@@ -525,7 +525,7 @@ gboolean
 urf_client_set_wlan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	return urf_client_set_block (client, URFDEVICE_TYPE_WLAN, block, NULL, NULL);
+	return urf_client_set_block (client, URFSWITCH_TYPE_WLAN, block, NULL, NULL);
 }
 
 /**
@@ -544,7 +544,7 @@ gboolean
 urf_client_set_bluetooth_block (UrfClient     *client,
 				const gboolean block)
 {
-	return urf_client_set_block (client, URFDEVICE_TYPE_BLUETOOTH, block, NULL, NULL);
+	return urf_client_set_block (client, URFSWITCH_TYPE_BLUETOOTH, block, NULL, NULL);
 }
 
 /**
@@ -563,7 +563,7 @@ gboolean
 urf_client_set_wwan_block (UrfClient     *client,
 			   const gboolean block)
 {
-	return urf_client_set_block (client, URFDEVICE_TYPE_WWAN, block, NULL, NULL);
+	return urf_client_set_block (client, URFSWITCH_TYPE_WWAN, block, NULL, NULL);
 }
 
 /**

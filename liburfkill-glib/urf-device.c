@@ -37,6 +37,7 @@
 #include <dbus/dbus-glib.h>
 
 #include "urf-device.h"
+#include "urf-enum.h"
 
 #define URF_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
 					URF_TYPE_DEVICE, UrfDevicePrivate))
@@ -342,13 +343,13 @@ urf_device_class_init(UrfDeviceClass *klass)
 	/**
 	 * UrfDevice:type:
 	 *
-	 * The type of the rfkill device. See #UrfDeviceType.
+	 * The type of the rfkill device. See #UrfSwitchType.
 	 *
 	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("type",
 				   "Type", "The type of the rfkill device",
-				   0, NUM_URFDEVICE_TYPES-1, 0,
+				   0, NUM_URFSWITCH_TYPES-1, 0,
 				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 

@@ -20,6 +20,7 @@ liburfkill_glib_includedir = $(includedir)/liburfkill-glib
 liburfkill_glib_include_HEADERS =				\
 	urfkill.h						\
 	urf-version.h						\
+	urf-enum.h						\
 	urf-device.h						\
 	urf-client.h
 

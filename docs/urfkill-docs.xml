@@ -78,6 +78,7 @@
     </partintro>
     <xi:include href="xml/urf-client.xml"/>
     <xi:include href="xml/urf-device.xml"/>
+    <xi:include href="xml/urf-enum.xml"/>
   </reference>
 
   <index>

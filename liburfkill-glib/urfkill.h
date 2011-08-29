@@ -25,6 +25,7 @@
 #define __URFKILL_H_INSIDE__
 
 #include <liburfkill-glib/urf-version.h>
+#include <liburfkill-glib/urf-enum.h>
 #include <liburfkill-glib/urf-client.h>
 #include <liburfkill-glib/urf-device.h>
 

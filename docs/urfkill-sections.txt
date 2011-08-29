@@ -33,7 +33,6 @@ URF_CLIENT_GET_CLASS
 <SECTION>
 <FILE>urf-device</FILE>
 <TITLE>UrfDevice</TITLE>
-UrfDeviceType
 UrfDevice
 UrfDeviceClass
 urf_device_new
@@ -47,6 +46,12 @@ urf_device_get_type
 URF_DEVICE_CLASS
 URF_IS_DEVICE_CLASS
 URF_DEVICE_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>urf-enum</FILE>
+UrfSwitchType
+UrfSwitchState
 </SECTION>
 
 <SECTION>
