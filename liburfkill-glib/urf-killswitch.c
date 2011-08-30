@@ -272,8 +272,10 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 						   object_path,
 						   &error);
 
-	if (error)
+	if (error) {
 		g_warning ("UrfKillswitch: %s", error->message);
+		g_error_free (error);
+	}
 
 	return ret;
 }
