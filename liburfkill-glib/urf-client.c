@@ -761,7 +761,7 @@ urf_client_class_init (UrfClientClass *klass)
 	/* install signals */
 	/**
 	 * UrfClient::device-added:
-	 * @client: the #UrfClient instance that emitted the signa
+	 * @client: the #UrfClient instance that emitted the signal
 	 * @device: the #UrfDevice that was added.
 	 *
 	 * The device-added signal is emitted when a rfkill device is added.
@@ -777,7 +777,7 @@ urf_client_class_init (UrfClientClass *klass)
 
 	/**
 	 * UrfClient::device-removed:
-	 * @client: the #UrfClient instance that emitted the signa
+	 * @client: the #UrfClient instance that emitted the signal
 	 * @device: the #UrfDevice that was removed.
 	 *
 	 * The device-removed signal is emitted when a rfkill device is removed.
@@ -793,7 +793,7 @@ urf_client_class_init (UrfClientClass *klass)
 
 	/**
 	 * UrfClient::device-changed:
-	 * @client: the #UrfClient instance that emitted the signa
+	 * @client: the #UrfClient instance that emitted the signal
 	 * @device: the #UrfDevice that was changed.
 	 *
 	 * The device-changed signal is emitted when a rfkill device is changed.
@@ -809,7 +809,7 @@ urf_client_class_init (UrfClientClass *klass)
 
 	/**
 	 * UrfClient::rf-key-pressed:
-	 * @client: the #UrfClient instance that emitted the signa
+	 * @client: the #UrfClient instance that emitted the signal
 	 * @keycode: the keycode from the input device
 	 *
 	 * The rf-key-pressed signal is emitted when a rfkill key is pressed.

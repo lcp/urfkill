@@ -64,7 +64,7 @@ typedef enum {
 
 /**
  * UrfSwitchState:
- * @URFSWITCH_STATE_NO_ADAPTOR: switch doesn't exist
+ * @URFSWITCH_STATE_NO_ADAPTER: switch doesn't exist
  * @URFSWITCH_STATE_UNBLOCKED: switch is unblocked
  * @URFSWITCH_STATE_SOFT_BLOCKED: switch is soft-blocked.
  * @URFSWITCH_STATE_HARD_BLOCKED: switch is hard-blocked.
@@ -72,7 +72,7 @@ typedef enum {
  * The state of the switch
  */
 typedef enum {
-	URFSWITCH_STATE_NO_ADAPTOR = -1,
+	URFSWITCH_STATE_NO_ADAPTER = -1,
 	URFSWITCH_STATE_UNBLOCKED = 0,
 	URFSWITCH_STATE_SOFT_BLOCKED,
 	URFSWITCH_STATE_HARD_BLOCKED,
