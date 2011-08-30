@@ -71,6 +71,16 @@ static gpointer urf_killswitch_object[NUM_URFSWITCH_TYPES] = {
 
 G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 
+/**
+ * urf_killswitch_get_switch_type:
+ * @killswitch: a #UrfKillswitch instance
+ *
+ * Get the type of the killswitch.
+ *
+ * Return value: The type of the killswitch
+ *
+ * Since: 0.3.0
+ **/
 UrfSwitchType
 urf_killswitch_get_switch_type (UrfKillswitch *killswitch)
 {
@@ -360,7 +370,6 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	object_class->get_property = urf_killswitch_get_property;
 	object_class->finalize = urf_killswitch_finalize;
 	object_class->dispose = urf_killswitch_dispose;
-
 
 	/**
 	 * UrfKillswitch:state:
