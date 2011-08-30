@@ -314,6 +314,36 @@ urf_device_finalize (GObject *object)
 }
 
 /**
+ * urf_device_dispose:
+ **/
+static void
+urf_device_dispose (GObject *object)
+{
+	UrfDevicePrivate *priv;
+
+	g_return_if_fail (URF_IS_DEVICE (object));
+
+	priv = URF_DEVICE (object)->priv;
+
+	if (priv->bus) {
+		dbus_g_connection_unref (priv->bus);
+		priv->bus = NULL;
+	}
+
+	if (priv->proxy) {
+		g_object_unref (priv->proxy);
+		priv->proxy = NULL;
+	}
+
+	if (priv->proxy_props) {
+		g_object_unref (priv->proxy_props);
+		priv->proxy_props = NULL;
+	}
+
+	G_OBJECT_CLASS(urf_device_parent_class)->dispose(object);
+}
+
+/**
  * urf_device_class_init:
  * @klass: The UrfDeviceClass
  **/
@@ -326,6 +356,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
 	object_class->get_property = urf_device_get_property;
 	object_class->finalize = urf_device_finalize;
+	object_class->dispose = urf_device_dispose;
 
 	/**
 	 * UrfDevice:index:
