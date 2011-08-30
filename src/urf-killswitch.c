@@ -72,7 +72,8 @@ KillswitchState
 aggregate_states (KillswitchState platform,
 		  KillswitchState non_platform)
 {
-	if (platform == KILLSWITCH_STATE_UNBLOCKED)
+	if (platform == KILLSWITCH_STATE_UNBLOCKED &&
+	    non_platform != KILLSWITCH_STATE_NO_ADAPTER)
 		return non_platform;
 	else
 		return platform;
