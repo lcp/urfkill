@@ -24,7 +24,7 @@
  * @short_description: Client object for accessing information about killswitches
  * @title: UrfKillswitch
  * @include: urfkill.h
- * @see_also: #UrfClient, #UrfDevice, #UrfEnum
+ * @see_also: #UrfClient, #UrfDevice
  *
  * A helper GObject for accessing killswitches
  */
@@ -363,7 +363,8 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	/**
 	 * UrfKillswitch:state:
 	 *
-	 * The state of the killswitch
+	 * The state of the killswitch.
+	 * See #UrfSwitchState.
 	 *
 	 * Since: 0.3.0
 	 */
@@ -381,6 +382,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	 * @state: the new state
 	 *
 	 * The state-changed signal is emitted when the killswitch state is changed.
+	 * See #UrfSwitchState.
 	 *
 	 * Since 0.3.0
 	 **/

@@ -76,9 +76,10 @@
         This part documents GObjects used in liburfkill-glib.
       </para>
     </partintro>
+    <xi:include href="xml/urf-enum.xml"/>
     <xi:include href="xml/urf-client.xml"/>
     <xi:include href="xml/urf-device.xml"/>
-    <xi:include href="xml/urf-enum.xml"/>
+    <xi:include href="xml/urf-killswitch.xml"/>
   </reference>
 
   <index>

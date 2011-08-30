@@ -31,6 +31,23 @@ URF_CLIENT_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>urf-killswitch</FILE>
+<TITLE>UrfKillswitch</TITLE>
+UrfKillswitch
+UrfKillswitchClass
+urf_killswitch_new
+urf_killswitch_get_switch_type
+<SUBSECTION Standard>
+URF_KILLSWITCH
+URF_IS_KILLSWITCH
+URF_TYPE_KILLSWITCH
+urf_killswitch_get_type
+URF_KILLSWITCH_CLASS
+URF_IS_KILLSWITCH_CLASS
+URF_KILLSWITCH_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>urf-device</FILE>
 <TITLE>UrfDevice</TITLE>
 UrfDevice
