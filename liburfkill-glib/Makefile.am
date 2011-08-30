@@ -22,10 +22,12 @@ liburfkill_glib_include_HEADERS =				\
 	urf-version.h						\
 	urf-enum.h						\
 	urf-device.h						\
+	urf-killswitch.h					\
 	urf-client.h
 
 liburfkill_glib_la_SOURCES =					\
 	urf-device.c						\
+	urf-killswitch.c					\
 	urf-client.c						\
 	$(BUILT_SOURCES)
 
