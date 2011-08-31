@@ -291,6 +291,71 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 }
 
 /**
+ * urf_killswitch_set_block:
+ **/
+static void
+urf_killswitch_set_block (UrfKillswitch  *killswitch,
+			  UrfSwitchState  state)
+{
+	DBusGProxy *proxy;
+	gboolean block;
+	gboolean status, ret;
+	GError *error = NULL;
+
+	if (state == URFSWITCH_STATE_UNBLOCKED)
+		block = FALSE;
+	else
+		block = TRUE;
+
+	proxy = dbus_g_proxy_new_for_name (killswitch->priv->bus,
+					   "org.freedesktop.URfkill",
+					   "/org/freedesktop/URfkill",
+					   "org.freedesktop.URfkill");
+	if (proxy == NULL) {
+		g_warning ("Couldn't connect to proxy to set block");
+		return;
+	}
+	ret = dbus_g_proxy_call (proxy, "Block", &error,
+				 G_TYPE_UINT, killswitch->priv->type,
+				 G_TYPE_BOOLEAN, block,
+				 G_TYPE_INVALID,
+				 G_TYPE_BOOLEAN, &status,
+				 G_TYPE_INVALID);
+
+	if (error) {
+		g_warning ("Couldn't sent BLOCK: %s", error->message);
+		g_error_free (error);
+	}
+
+	g_object_unref (proxy);
+}
+
+/**
+ * urf_killswitch_set_property:
+ **/
+static void
+urf_killswitch_set_property (GObject      *object,
+			     guint         prop_id,
+			     const GValue *value,
+			     GParamSpec   *pspec)
+{
+	UrfKillswitch *killswitch = URF_KILLSWITCH (object);
+	int state;
+
+	switch (prop_id) {
+	case PROP_KILLSWITCH_STATE:
+		state = g_value_get_int (value);
+		if (state == URFSWITCH_STATE_UNBLOCKED ||
+		    state == URFSWITCH_STATE_SOFT_BLOCKED)
+			urf_killswitch_set_block (killswitch, state);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+/**
  * urf_killswitch_get_property:
  **/
 static void
@@ -367,6 +432,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	GObjectClass *object_class = (GObjectClass *) klass;
 	GParamSpec *pspec;
 
+	object_class->set_property = urf_killswitch_set_property;
 	object_class->get_property = urf_killswitch_get_property;
 	object_class->finalize = urf_killswitch_finalize;
 	object_class->dispose = urf_killswitch_dispose;
@@ -374,8 +440,15 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	/**
 	 * UrfKillswitch:state:
 	 *
-	 * The state of the killswitch.
-	 * See #UrfSwitchState.
+	 * The state of the killswitch. See #UrfSwitchState.
+	 * <note>
+	 *   <para>
+	 *     Writing the states other than #URFSWITCH_STATE_UNBLOCKED
+	 *     or #URFSWITCH_STATE_SOFT_BLOCKED will be ignored. Also,
+	 *     the state writing may not take effect, and it depends on
+	 *     the state of the hardware.
+	 *   </para>
+	 * </note>
 	 *
 	 * Since: 0.3.0
 	 */
@@ -384,7 +457,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 				  URFSWITCH_STATE_NO_ADAPTER,
 				  URFSWITCH_STATE_HARD_BLOCKED,
 				  URFSWITCH_STATE_NO_ADAPTER,
-				  G_PARAM_READABLE);
+				  G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_KILLSWITCH_STATE, pspec);
 
 	/**
