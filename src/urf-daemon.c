@@ -237,11 +237,11 @@ urf_daemon_block (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_arbitrator_set_block (priv->arbitrator, type, block);
+
+	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-
-	dbus_g_method_return (context, ret);
 
 	return ret;
 }
@@ -270,11 +270,11 @@ urf_daemon_block_idx (UrfDaemon             *daemon,
 		goto out;
 
 	ret = urf_arbitrator_set_block_idx (priv->arbitrator, index, block);
+
+	dbus_g_method_return (context, ret);
 out:
 	if (subject != NULL)
 		g_object_unref (subject);
-
-	dbus_g_method_return (context, ret);
 
 	return ret;
 }
