@@ -1,4 +1,4 @@
-noinst_PROGRAMS = test-urfkill-client enumerate-devices catch-signal inhibit-keycontrol monitor-killswitch
+noinst_PROGRAMS = test-urfkill-client enumerate-devices catch-signal inhibit-keycontrol monitor-killswitch killswitch-write
 
 test_urfkill_client_SOURCES = test-urfkill-client.c
 test_urfkill_client_CFLAGS = -I$(top_srcdir)/liburfkill-glib $(GLIB_CFLAGS) $(DBUS_GLIB_CFLAGS)
@@ -19,5 +19,9 @@ inhibit_keycontrol_LDADD = $(GLIB_LIBS) $(DBUS_GLIB_LIBS) ../liburfkill-glib/lib
 monitor_killswitch_SOURCES = monitor-killswitch.c
 monitor_killswitch_CFLAGS = -I$(top_srcdir)/liburfkill-glib $(GLIB_CFLAGS) $(DBUS_GLIB_CFLAGS)
 monitor_killswitch_LDADD = $(GLIB_LIBS) $(DBUS_GLIB_LIBS) ../liburfkill-glib/liburfkill-glib.la
+
+killswitch_write_SOURCES = killswitch-write.c
+killswitch_write_CFLAGS = -I$(top_srcdir)/liburfkill-glib $(GLIB_CFLAGS) $(DBUS_GLIB_CFLAGS)
+killswitch_write_LDADD = $(GLIB_LIBS) $(DBUS_GLIB_LIBS) ../liburfkill-glib/liburfkill-glib.la
 
 -include $(top_srcdir)/git.mk

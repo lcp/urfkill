@@ -13,8 +13,30 @@
           on the <doc:tt>/org/freedesktop/URfkill/TYPENAME</doc:tt>
           object on the D-Bus system bus service with the well-known
           name <doc:tt>org.freedesktop.URfkill</doc:tt>. The TYPENAME
-          could be "WLAN", "BLUETOOTH", "UWB", "WIMAX", "WWAN", "GPS",
-          or "FM".
+          could be <doc:tt>"WLAN"</doc:tt>, <doc:tt>"BLUETOOTH"</doc:tt>,
+          <doc:tt>"UWB"</doc:tt>, <doc:tt>"WIMAX"</doc:tt>,
+          <doc:tt>"WWAN"</doc:tt>, <doc:tt>"GPS"</doc:tt>, or
+          <doc:tt>"FM"</doc:tt>.
+        </doc:para>
+        <doc:para>
+          <doc:example language="shell" title="simple example">
+            <doc:code>
+$ dbus-send --print-reply \
+            --system \
+            --dest=org.freedesktop.URfkill \
+            /org/freedesktop/URfkill/WLAN \
+            org.freedesktop.DBus.Properties.GetAll \
+            string:"org.freedesktop.URfkill.Killswitch"
+
+method return sender=:1.144 -> dest=:1.154 reply_serial=2
+   array [
+      dict entry(
+         string "state"
+         variant             int32 2
+      )
+   ]
+            </doc:code>
+          </doc:example>
         </doc:para>
       </doc:description>
     </doc:doc>
@@ -39,16 +61,16 @@
           </doc:para>
           <doc:list>
             <doc:item>
-              <doc:term>-1</doc:term><doc:definition>KILLSWITCH_STATE_NO_ADAPTER</doc:definition>
+              <doc:term>-1</doc:term><doc:definition>killswitch is not available.</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>0</doc:term><doc:definition>KILLSWITCH_STATE_UNBLOCKED</doc:definition>
+              <doc:term>0</doc:term><doc:definition>killswitch is unblocked.</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>1</doc:term><doc:definition>KILLSWITCH_STATE_SOFT_BLOCKED</doc:definition>
+              <doc:term>1</doc:term><doc:definition>killswitch is soft-blocked.</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>2</doc:term><doc:definition>KILLSWITCH_STATE_HARD_BLOCKED</doc:definition>
+              <doc:term>2</doc:term><doc:definition>killswitch is hard-blocked.</doc:definition>
             </doc:item>
           </doc:list>
         </doc:description>
