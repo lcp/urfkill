@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <libudev.h>
 #include "urf-utils.h"
 

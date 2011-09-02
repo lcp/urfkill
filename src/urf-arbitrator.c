@@ -158,7 +158,7 @@ urf_arbitrator_get_state (UrfArbitrator *arbitrator,
 			  guint          type)
 {
 	UrfArbitratorPrivate *priv;
-	int state;
+	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
@@ -293,7 +293,6 @@ remove_killswitch (UrfArbitrator *arbitrator,
 	UrfDevice *device;
 	guint type;
 	const char *name;
-	gboolean pivot_changed = FALSE;
 	char *object_path = NULL;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
