@@ -322,7 +322,7 @@ urf_killswitch_set_block (UrfKillswitch  *killswitch,
 				 G_TYPE_BOOLEAN, &status,
 				 G_TYPE_INVALID);
 
-	if (error) {
+	if (!ret) {
 		g_warning ("Couldn't sent BLOCK: %s", error->message);
 		g_error_free (error);
 	}
