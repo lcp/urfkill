@@ -96,7 +96,7 @@ out:
 /**
  * urf_main_sigint_cb:
  **/
-static void
+static gboolean
 urf_main_sigint_cb (gpointer user_data)
 {
 	g_debug ("Handling SIGINT");
