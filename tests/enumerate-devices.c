@@ -32,8 +32,6 @@ main ()
 {
 	UrfClient *client = NULL;
 	UrfDevice *device;
-	char *daemon_version;
-	gboolean status;
 	GList *devices, *item;
 
 	g_type_init();

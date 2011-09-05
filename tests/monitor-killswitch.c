@@ -22,6 +22,8 @@ type_to_name (UrfSwitchType type)
 		return "GPS";
 	case URFSWITCH_TYPE_FM:
 		return "FM";
+	default:
+		return NULL;
 	}
 	return NULL;
 }
@@ -85,6 +87,8 @@ main ()
 	}
 
 	loop = g_main_loop_new (NULL, FALSE);
+
+	signal (SIGINT, main_sigint_handler);
 
 	g_main_loop_run (loop);
 

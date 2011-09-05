@@ -81,6 +81,8 @@ main ()
 
 	loop = g_main_loop_new (NULL, FALSE);
 
+	signal (SIGINT, main_sigint_handler);
+
 	g_main_loop_run (loop);
 
 	g_object_unref (client);

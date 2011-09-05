@@ -9,8 +9,6 @@ int
 main ()
 {
 	UrfClient *client = NULL;
-	UrfDevice *item;
-	char *daemon_version;
 	guint cookie;
 
 	g_type_init();
