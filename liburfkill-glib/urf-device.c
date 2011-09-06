@@ -259,6 +259,76 @@ urf_device_get_object_path (UrfDevice *device)
 }
 
 /**
+ * set_block_idx_cb:
+ **/
+static void
+set_block_idx_cb (DBusGProxy     *proxy,
+		  DBusGProxyCall *call,
+		  gpointer        user_data)
+{
+	gboolean status;
+	GError *error = NULL;
+
+	if (!dbus_g_proxy_end_call (proxy, call, &error,
+				    G_TYPE_BOOLEAN, &status,
+				    G_TYPE_INVALID)) {
+		g_warning ("Failed to set BLOCK: %s", error->message);
+		g_error_free (error);
+	}
+
+	g_object_unref (proxy);
+}
+
+/**
+ * urf_device_set_block:
+ **/
+static void
+urf_device_set_block (UrfDevice *device,
+		      gboolean   block)
+{
+	DBusGProxy *proxy;
+	DBusGProxyCall *call;
+
+	proxy = dbus_g_proxy_new_for_name (device->priv->bus,
+					   "org.freedesktop.URfkill",
+					   "/org/freedesktop/URfkill",
+					   "org.freedesktop.URfkill");
+	if (proxy == NULL) {
+		g_warning ("Couldn't connect to proxy to set block_idx");
+		return;
+	}
+	call = dbus_g_proxy_begin_call (proxy, "BlockIdx",
+					set_block_idx_cb,
+					NULL, NULL,
+					G_TYPE_UINT, device->priv->index,
+					G_TYPE_BOOLEAN, block,
+					G_TYPE_INVALID);
+}
+
+/**
+ * urf_device_set_property:
+ **/
+static void
+urf_device_set_property (GObject      *object,
+			 guint         prop_id,
+			 const GValue *value,
+			 GParamSpec   *pspec)
+{
+	UrfDevice *device = URF_DEVICE (object);
+	gboolean block;
+
+	switch (prop_id) {
+	case PROP_DEVICE_SOFT:
+		block = g_value_get_boolean (value);
+		urf_device_set_block (device, block);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+/**
  * urf_device_get_property:
  **/
 static void
@@ -354,6 +424,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	GParamSpec *pspec;
 
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
+	object_class->set_property = urf_device_set_property;
 	object_class->get_property = urf_device_get_property;
 	object_class->finalize = urf_device_finalize;
 	object_class->dispose = urf_device_dispose;
@@ -390,12 +461,12 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 * This property indicates whether the soft block of the rfkill device
 	 * is on or not.
 	 *
-	 * Since: 0.2.0
+	 * Since: 0.3.0
 	 */
 	pspec = g_param_spec_boolean ("soft",
 				      "Soft Block", "If the soft block is on",
 				      FALSE,
-				      G_PARAM_READABLE);
+				      G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_DEVICE_SOFT, pspec);
 
 	/**
