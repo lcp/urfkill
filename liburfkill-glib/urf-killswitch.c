@@ -291,6 +291,27 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 }
 
 /**
+ * set_block_cb:
+ **/
+static void
+set_block_cb (DBusGProxy     *proxy,
+	      DBusGProxyCall *call,
+	      gpointer        user_data)
+{
+	gboolean status;
+	GError *error = NULL;
+
+	if (!dbus_g_proxy_end_call (proxy, call, &error,
+				    G_TYPE_BOOLEAN, &status,
+				    G_TYPE_INVALID)) {
+		g_warning ("Failed to set BLOCK: %s", error->message);
+		g_error_free (error);
+	}
+
+	g_object_unref (proxy);
+}
+
+/**
  * urf_killswitch_set_block:
  **/
 static void
@@ -298,9 +319,8 @@ urf_killswitch_set_block (UrfKillswitch  *killswitch,
 			  UrfSwitchState  state)
 {
 	DBusGProxy *proxy;
+	DBusGProxyCall *call;
 	gboolean block;
-	gboolean status, ret;
-	GError *error = NULL;
 
 	if (state == URFSWITCH_STATE_UNBLOCKED)
 		block = FALSE;
@@ -315,19 +335,12 @@ urf_killswitch_set_block (UrfKillswitch  *killswitch,
 		g_warning ("Couldn't connect to proxy to set block");
 		return;
 	}
-	ret = dbus_g_proxy_call (proxy, "Block", &error,
-				 G_TYPE_UINT, killswitch->priv->type,
-				 G_TYPE_BOOLEAN, block,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-
-	if (!ret) {
-		g_warning ("Couldn't sent BLOCK: %s", error->message);
-		g_error_free (error);
-	}
-
-	g_object_unref (proxy);
+	call = dbus_g_proxy_begin_call (proxy, "Block",
+					set_block_cb,
+					NULL, NULL,
+					G_TYPE_UINT, killswitch->priv->type,
+					G_TYPE_BOOLEAN, block,
+					G_TYPE_INVALID);
 }
 
 /**
