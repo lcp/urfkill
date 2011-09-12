@@ -267,7 +267,7 @@ main (gint argc, gchar **argv)
 
 	/* fork as daemon Clone ourselves to make a child */
 	if(fork_daemon){
-		pid = fork(); 
+		pid = fork();
 
 		/* If the pid is less than zero,
 		   something went wrong when forking */
