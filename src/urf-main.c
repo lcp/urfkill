@@ -36,7 +36,7 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#if GLIB_CHECK_VERSION(2,29,4)
+#if GLIB_CHECK_VERSION(2,29,19)
  #include <glib-unix.h>
 #endif
 
@@ -92,7 +92,7 @@ out:
 	return ret;
 }
 
-#if GLIB_CHECK_VERSION(2,29,4)
+#if GLIB_CHECK_VERSION(2,29,19)
 /**
  * urf_main_sigint_cb:
  **/
@@ -213,13 +213,13 @@ main (gint argc, gchar **argv)
 
 	loop = g_main_loop_new (NULL, FALSE);
 
-#if GLIB_CHECK_VERSION(2,29,4)
+#if GLIB_CHECK_VERSION(2,29,19)
 	/* do stuff on ctrl-c */
-	g_unix_signal_add_watch_full (SIGINT,
-				      G_PRIORITY_DEFAULT,
-				      urf_main_sigint_cb,
-				      loop,
-				      NULL);
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGINT,
+				urf_main_sigint_cb,
+				loop,
+				NULL);
 #else
 	signal (SIGINT, urf_main_sigint_handler);
 #endif
