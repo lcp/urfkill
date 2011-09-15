@@ -1,3 +1,36 @@
+Version 0.3.0
+~~~~~~~~~~~~~
+Released: 2011-09-15
+
+New Features:
+- added fork option for urfkill (Reza Jelveh)
+- urf-device: New property: platform (Gary Lin)
+- urf-killswitch: export UrfKillswitch to D-Bus (Gary Lin)
+- glib/urf-client: Add a new function urf_client_enumerate_devices_sync() (Gary Lin)
+- glib/urf-device: Make the "soft" property writable (Gary Lin)
+- glib/urf-killswitch: New objects for killswitches (Gary Lin)
+- Generate .xz tarballs (Gary Lin)
+
+Bugfixes:
+- Use the new threadsafe signal handling support in GLib (Gary Lin)
+- Clean up configure.ac (Gary Lin)
+- Use the upstream GETTEXT (Gary Lin)
+- autogen.sh: Use autoreconf instead of custom script (Gary Lin)
+- Rename UrfKillswitch as UrfArbitrator (Gary Lin)
+- urf-main: Correct the return type (Gary Lin)
+- urf-main: use g_unix_signal_add_full() (Gary Lin)
+- urf-input: Filter out input devices by subsystem and driver (Gary Lin)
+- urf-input: Only open a valid input node (Gary Lin)
+- urf-device: Get the name and subsystem by libudev (Gary Lin)
+- urf-device: Query killswitch information from udev (Gary Lin)
+- urf-device: Match platform parent node (Gary Lin)
+- urf-device: Don't rely on absolute path (Gary Lin)
+- urf-device: Calculate the state of the device (Gary Lin)
+- urf-device: Unref the object after dbus registration failure (Gary Lin)
+- urf-device: Return FALSE for connection failure (Gary Lin)
+- urf-daemon: Do not always invoke dbus_g_method_return for Block() (Gary Lin)
+- glib/urf-device: Unref private objects properly (Gary Lin)
+
 Version 0.2.0
 ~~~~~~~~~~~~~
 Released: 2011-06-17
