@@ -40,7 +40,7 @@ MAINTAINERCLEANFILES =		\
 	po/e*.header		\
 	po/*.sin		\
 	po/*.sed		\
-	*.tar.bz2		\
+	*.tar.xz		\
 	INSTALL
 
 

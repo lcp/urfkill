@@ -14,7 +14,7 @@ AC_CONFIG_SRCDIR(src)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([1.11 -Wno-portability tar-ustar dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([1.11 -Wno-portability tar-ustar dist-xz no-dist-gzip])
 AM_MAINTAINER_MODE([enable])
 
 # enable nice build output on automake1.11
