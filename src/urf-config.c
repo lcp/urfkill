@@ -283,12 +283,14 @@ parse_xml_cdata_handler (void       *data,
 			 int         len)
 {
 	ParseInfo *info = (ParseInfo *)data;
-	char *str = g_strndup (cdata, len);
+	char *str;
 
 	if (info->opt == OPT_NONE ||
 	    info->opt == OPT_UNKNOWN) {
 		return;
 	}
+
+	str = g_strndup (cdata, len);
 
 	switch (info->opt) {
 	case OPT_KEY_CONTROL:
@@ -312,6 +314,8 @@ parse_xml_cdata_handler (void       *data,
 	default:
 		break;
 	}
+
+	g_free (str);
 }
 
 static void
