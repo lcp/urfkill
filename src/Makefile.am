@@ -14,7 +14,6 @@ INCLUDES = \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
 	-I$(top_srcdir)						\
 	$(GIO_CFLAGS)						\
-	$(DBUS_GLIB_CFLAGS)					\
 	$(POLKIT_CFLAGS)					\
 	$(XML_CFLAGS)						\
 	$(GLIB_CFLAGS)
@@ -74,8 +73,7 @@ urfkilld_LDADD =						\
 	$(LIBUDEV_LIBS)						\
 	$(GIO_LIBS)						\
 	$(POLKIT_LIBS)						\
-	$(XML_LIBS)						\
-	$(DBUS_GLIB_LIBS)
+	$(XML_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
 

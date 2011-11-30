@@ -33,7 +33,7 @@ IGNORE_HFILES=							\
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.
 INCLUDES =							\
-	$(DBUS_GLIB_CFLAGS)					\
+	$(GIO_CFLAGS)						\
 	$(GLIB_CFLAGS)						\
 	-I$(top_srcdir)/liburfkill-glib 			\
 	-I$(top_builddir)/liburfkill-glib			\
@@ -45,7 +45,7 @@ URFKILL_GLIB_LIBS =						\
 
 GTKDOC_LIBS = 							\
 	$(URFKILL_GLIB_LIBS)					\
-	$(DBUS_GLIB_LIBS)					\
+	$(GIO_LIBS)						\
 	$(NULL)
 
 # Extra options to supply to gtkdoc-mkdb

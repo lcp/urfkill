@@ -2,7 +2,7 @@ NULL =
 
 INCLUDES = \
 	$(GLIB_CFLAGS)						\
-	$(DBUS_GLIB_CFLAGS)					\
+	$(GIO_CFLAGS)						\
 	-I$(top_srcdir)						\
 	-I$(top_srcdir)/liburfkill-glib				\
 	-DURF_COMPILATION					\
@@ -34,7 +34,7 @@ liburfkill_glib_la_SOURCES =					\
 liburfkill_glib_la_LIBADD =					\
 	$(INTLLIBS)						\
 	$(GLIB_LIBS)						\
-	$(DBUS_GLIB_LIBS)
+	$(GIO_LIBS)
 
 liburfkill_glib_la_LDFLAGS =					\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\
