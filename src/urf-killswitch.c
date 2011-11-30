@@ -193,7 +193,7 @@ urf_killswitch_dispose (GObject *object)
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
 	if (priv->connection) {
-		dbus_g_connection_unref (priv->connection);
+		g_object_unref (priv->connection);
 		priv->connection = NULL;
 	}
 
