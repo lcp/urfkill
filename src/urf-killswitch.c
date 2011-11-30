@@ -23,15 +23,21 @@
 #endif
 
 #include <glib.h>
-#include <glib-object.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 #include <linux/rfkill.h>
 
 #include "urf-killswitch.h"
-#include "urf-killswitch-glue.h"
 #include "urf-device.h"
 
 #define BASE_OBJECT_PATH "/org/freedesktop/URfkill/"
+
+static const char introspection_xml[] =
+"<node>"
+"  <interface name='org.freedesktop.URfkill.Killswitch'>"
+"    <signal name='StateChanged'/>"
+"    <property name='state' type='i' access='read'/>"
+"  </interface>"
+"</node>";
 
 enum
 {
@@ -53,8 +59,9 @@ struct UrfKillswitchPrivate
 	GList		 *devices;
 	enum rfkill_type  type;
 	KillswitchState   state;
-	DBusGConnection	 *connection;
 	char		 *object_path;
+	GDBusConnection	 *connection;
+	GDBusNodeInfo	 *introspection_data;
 };
 
 G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
@@ -264,8 +271,6 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 							   KILLSWITCH_STATE_HARD_BLOCKED,
 							   KILLSWITCH_STATE_NO_ADAPTER,
 							   G_PARAM_READABLE));
-
-	dbus_g_object_type_install_info (URF_TYPE_KILLSWITCH, &dbus_glib_urf_killswitch_object_info);
 }
 
 /**
@@ -280,6 +285,32 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	killswitch->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 }
 
+static GVariant *
+handle_get_property (GDBusConnection *connection,
+                     const gchar *sender,
+                     const gchar *object_path,
+                     const gchar *interface_name,
+                     const gchar *property_name,
+                     GError **error,
+                     gpointer user_data)
+{
+	UrfKillswitch *killswitch = URF_KILLSWITCH (user_data);
+
+	GVariant *retval = NULL;
+
+	if (g_strcmp0 (property_name, "state") == 0)
+		retval = g_variant_new_int32 (killswitch->priv->state);
+
+	return retval;
+}
+
+static const GDBusInterfaceVTable interface_vtable =
+{
+	NULL, /* handle method_call */
+	handle_get_property,
+	NULL, /* handle set_property */
+};
+
 /**
  * urf_device_register_device:
  **/
@@ -287,9 +318,15 @@ static gboolean
 urf_killswitch_register_switch (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	GDBusInterfaceInfo **infos;
 	GError *error = NULL;
+	guint i;
 
-	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
+	g_assert (priv->introspection_data != NULL);
+
+	/* TODO use g_bus_get */
+	priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
 		g_error_free (error);
@@ -298,8 +335,17 @@ urf_killswitch_register_switch (UrfKillswitch *killswitch)
 
 	priv->object_path = g_strdup_printf (BASE_OBJECT_PATH"%s",
 					     type_to_string (priv->type));
-	dbus_g_connection_register_g_object (priv->connection,
-					     priv->object_path, G_OBJECT (killswitch));
+	infos = priv->introspection_data->interfaces;
+	for (i = 0; infos[i] != NULL; i++) {
+		g_dbus_connection_register_object (priv->connection,
+		                                   priv->object_path,
+		                                   infos[i],
+		                                   &interface_vtable,
+		                                   killswitch,
+		                                   NULL,
+		                                   NULL);
+	}
+
 	return TRUE;
 }
 
