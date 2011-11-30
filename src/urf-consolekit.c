@@ -24,7 +24,7 @@
 
 #include <glib.h>
 #include <string.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-consolekit.h"
 
@@ -36,9 +36,8 @@ typedef struct {
 } UrfInhibitor;
 
 struct UrfConsolekitPrivate {
-	DBusGConnection	*connection;
-	DBusGProxy	*proxy;
-	DBusGProxy	*bus_proxy;
+	GDBusProxy	*proxy;
+	GDBusProxy	*bus_proxy;
 	GList		*seats;
 	GList		*inhibitors;
 	gboolean	 inhibit;
@@ -175,32 +174,37 @@ get_session_id (UrfConsolekit *consolekit,
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	pid_t calling_pid;
 	char *session_id = NULL;
+	GVariant *retval;
+	gsize length;
 	GError *error;
 
         error = NULL;
-	if (!dbus_g_proxy_call (priv->bus_proxy, "GetConnectionUnixProcessID", &error,
-				G_TYPE_STRING, bus_name,
-				G_TYPE_INVALID,
-				G_TYPE_UINT, &calling_pid,
-				G_TYPE_INVALID)) {
+	retval = g_dbus_proxy_call_sync (priv->bus_proxy, "GetConnectionUnixProcessID",
+	                                 g_variant_new_string (bus_name),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error);
+	if (error) {
 		g_warning("GetConnectionUnixProcessID() failed: %s", error->message);
 		g_error_free (error);
 		goto out;
 	}
+	calling_pid = g_variant_get_uint32 (retval);
+	g_variant_unref (retval);
 
         error = NULL;
-	if (!dbus_g_proxy_call (priv->proxy, "GetSessionForUnixProcess", &error,
-				G_TYPE_UINT, calling_pid,
-				G_TYPE_INVALID,
-				DBUS_TYPE_G_OBJECT_PATH, &session_id,
-				G_TYPE_INVALID)) {
+	retval = g_dbus_proxy_call_sync (priv->bus_proxy, "GetSessionForUnixProcess",
+	                                 g_variant_new_uint32 (calling_pid),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error);
+	if (error) {
 		g_warning ("Couldn't sent GetSessionForUnixProcess: %s", error->message);
 		g_error_free (error);
 		session_id = NULL;
 		goto out;
 	}
 
-	session_id = g_strdup (session_id);
+	session_id = g_variant_dup_string (retval, &length);
+	g_variant_unref (retval);
 out:
 	return session_id;
 }
@@ -316,10 +320,12 @@ urf_consolekit_add_seat (UrfConsolekit *consolekit,
  * urf_consolekit_seat_added_cb:
  **/
 static void
-urf_consolekit_seat_added_cb (DBusGProxy    *proxy,
-			      const char    *object_path,
-			      UrfConsolekit *consolekit)
+urf_consolekit_seat_added_cb (GDBusProxy *proxy,
+			      const char *object_path,
+			      gpointer    user_data)
 {
+	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
+
 	if (urf_consolekit_find_seat (consolekit, object_path) != NULL) {
 		g_debug ("Already added seat: %s", object_path);
 		return;
@@ -333,10 +339,11 @@ urf_consolekit_seat_added_cb (DBusGProxy    *proxy,
  * urf_consolekit_seat_removed_cb:
  **/
 static void
-urf_consolekit_seat_removed_cb (DBusGProxy    *proxy,
-				const char    *object_path,
-				UrfConsolekit *consolekit)
+urf_consolekit_seat_removed_cb (GDBusProxy *proxy,
+				const char *object_path,
+				gpointer    user_data)
 {
+	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfSeat *seat;
 
@@ -354,12 +361,13 @@ urf_consolekit_seat_removed_cb (DBusGProxy    *proxy,
  * urf_consolekit_bus_owner_changed_cb:
  **/
 static void
-urf_consolekit_bus_owner_changed_cb (DBusGProxy    *bus_proxy,
-				     const char    *name,
-				     const char    *old_owner,
-				     const char    *new_owner,
-				     UrfConsolekit *consolekit)
+urf_consolekit_bus_owner_changed_cb (GDBusProxy *bus_proxy,
+				     const char *name,
+				     const char *old_owner,
+				     const char *new_owner,
+				     gpointer    user_data)
 {
+	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
 	UrfInhibitor *inhibitor;
 
 	if (strlen (new_owner) == 0 &&
@@ -379,34 +387,32 @@ static gboolean
 urf_consolekit_get_seats (UrfConsolekit *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
-	GType g_type_array;
-	GPtrArray *seats = NULL;
 	GError *error = NULL;
-	const char *object_path;
-	gboolean ret;
+	const char **seats;
+	GVariant *retval;
+	gsize length;
 	int i;
 
-	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
-	ret = dbus_g_proxy_call (priv->proxy, "GetSeats", &error,
-				 G_TYPE_INVALID,
-				 g_type_array, &seats,
-				 G_TYPE_INVALID);
-
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (priv->proxy, "GetSeats",
+	                                 NULL,
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error);
+	if (error) {
 		g_warning ("GetSeats Failed: %s", error->message);
 		g_error_free (error);
 		return FALSE;
 	}
+
+	seats = g_variant_get_strv (retval, &length);
 
 	if (seats == NULL) {
 		g_debug ("No Seat exists");
 		return FALSE;
 	}
 
-	for (i = 0; i < seats->len; i++) {
-		object_path = (const char *) g_ptr_array_index (seats, i);
-		urf_consolekit_add_seat (consolekit, object_path);
-		g_debug ("Added seat: %s", object_path);
+	for (i = 0; seats[i] != NULL; i++) {
+		urf_consolekit_add_seat (consolekit, seats[i]);
+		g_debug ("Added seat: %s", seats[i]);
 	}
 
 	return TRUE;
@@ -419,51 +425,52 @@ gboolean
 urf_consolekit_startup (UrfConsolekit *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
-	GError *error = NULL;
+	GError *error;
 	gboolean ret;
 
-	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-	if (error != NULL) {
-		g_warning ("Failed to get bus: %s", error->message);
+	error = NULL;
+	priv->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                             G_DBUS_PROXY_FLAGS_NONE,
+	                                             NULL,
+	                                             "org.freedesktop.ConsoleKit",
+	                                             "/org/freedesktop/ConsoleKit/Manager",
+	                                             "org.freedesktop.ConsoleKit.Manager",
+	                                             NULL,
+	                                             &error);
+	if (priv->proxy) {
+		g_error ("failed to setup proxy for consolekit: %s", error->message);
 		g_error_free (error);
 		return FALSE;
 	}
 
-	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
-						 "org.freedesktop.ConsoleKit",
-						 "/org/freedesktop/ConsoleKit/Manager",
-						 "org.freedesktop.ConsoleKit.Manager");
+	error = NULL;
+	priv->bus_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                                 G_DBUS_PROXY_FLAGS_NONE,
+	                                                 NULL,
+	                                                 "org.freedesktop.DBus",
+	                                                 "/org/freedesktop/DBus",
+	                                                 "org.freedesktop.DBus",
+	                                                 NULL,
+	                                                 &error);
+	if (priv->bus_proxy) {
+		g_error ("failed to setup proxy for consolekit: %s", error->message);
+		g_error_free (error);
+		return FALSE;
+	}
 
-	priv->bus_proxy = dbus_g_proxy_new_for_name (priv->connection,
-						     DBUS_SERVICE_DBUS,
-						     DBUS_PATH_DBUS,
-						     DBUS_INTERFACE_DBUS);
 	/* Get seats */
 	ret = urf_consolekit_get_seats (consolekit);
 	if (!ret)
 		return FALSE;
 
 	/* connect signals */
-	dbus_g_proxy_add_signal (priv->proxy, "SeatAdded",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (priv->proxy, "SeatRemoved",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
+	g_signal_connect (G_OBJECT (priv->proxy), "SeatAdded",
+	                  G_CALLBACK (urf_consolekit_seat_added_cb), consolekit);
+	g_signal_connect (G_OBJECT (priv->proxy), "SeatRemoved",
+	                  G_CALLBACK (urf_consolekit_seat_removed_cb), consolekit);
 
-	dbus_g_proxy_add_signal (priv->bus_proxy, "NameOwnerChanged",
-				 G_TYPE_STRING,
-				 G_TYPE_STRING,
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	/* callbacks */
-	dbus_g_proxy_connect_signal (priv->proxy, "SeatAdded",
-				     G_CALLBACK (urf_consolekit_seat_added_cb), consolekit, NULL);
-	dbus_g_proxy_connect_signal (priv->proxy, "SeatRemoved",
-				     G_CALLBACK (urf_consolekit_seat_removed_cb), consolekit, NULL);
-
-	dbus_g_proxy_connect_signal (priv->bus_proxy, "NameOwnerChanged",
-				     G_CALLBACK (urf_consolekit_bus_owner_changed_cb), consolekit, NULL);
+	g_signal_connect (G_CALLBACK (priv->bus_proxy), "NameOwnerChanged",
+	                  G_CALLBACK (urf_consolekit_bus_owner_changed_cb), consolekit);
 
 	return TRUE;
 }
@@ -476,10 +483,6 @@ urf_consolekit_dispose (GObject *object)
 {
 	UrfConsolekit *consolekit = URF_CONSOLEKIT(object);
 
-	if (consolekit->priv->connection) {
-		dbus_g_connection_unref (consolekit->priv->connection);
-		consolekit->priv->connection = NULL;
-	}
 	if (consolekit->priv->proxy) {
 		g_object_unref (consolekit->priv->proxy);
 		consolekit->priv->proxy = NULL;
@@ -541,7 +544,6 @@ urf_consolekit_init (UrfConsolekit *consolekit)
 	consolekit->priv->seats = NULL;
 	consolekit->priv->inhibitors = NULL;
 	consolekit->priv->inhibit = FALSE;
-	consolekit->priv->connection = NULL;
 	consolekit->priv->proxy = NULL;
 	consolekit->priv->bus_proxy = NULL;
 }
