@@ -25,13 +25,25 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <linux/rfkill.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 #include <libudev.h>
 
 #include "urf-device.h"
 
-#include "urf-device-glue.h"
 #include "urf-utils.h"
+
+static const char introspection_xml[] =
+"<node>"
+"  <interface name='org.freedesktop.URfkill.Device'>"
+"    <signal name='Changed'/>"
+"    <property name='index' type='u' access='read'/>"
+"    <property name='type' type='u' access='read'/>"
+"    <property name='name' type='s' access='read'/>"
+"    <property name='soft' type='b' access='read'/>"
+"    <property name='hard' type='b' access='read'/>"
+"    <property name='platform' type='b' access='read/>"
+"  </interface>"
+"</node>";
 
 enum
 {
@@ -64,49 +76,11 @@ struct UrfDevicePrivate {
 	gboolean	 platform;
 	KillswitchState	 state;
 	char		*object_path;
-	DBusGConnection	*connection;
+	GDBusConnection	*connection;
+	GDBusNodeInfo	*introspection_data;
 };
 
 G_DEFINE_TYPE(UrfDevice, urf_device, G_TYPE_OBJECT)
-
-
-/**
- * urf_device_error_quark:
- **/
-GQuark
-urf_device_error_quark (void)
-{
-	static GQuark ret = 0;
-
-	if (ret == 0) {
-		ret = g_quark_from_static_string ("urf_device_error");
-	}
-
-	return ret;
-}
-
-#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
-
-/**
- * up_device_error_get_type:
- **/
-GType
-urf_device_error_get_type (void)
-{
-static GType etype = 0;
-
-	if (etype == 0) {
-		static const GEnumValue values[] =
-			{
-				ENUM_ENTRY (URF_DEVICE_ERROR_GENERAL, "GeneralError"),
-				{ 0, 0, 0 }
-			};
-		g_assert (URF_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-		etype = g_enum_register_static ("UrfDeviceError", values);
-	}
-
-	return etype;
-}
 
 /**
  * urf_device_update_states:
@@ -250,8 +224,13 @@ urf_device_dispose (GObject *object)
 	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (object);
 
 	if (priv->connection) {
-		dbus_g_connection_unref (priv->connection);
+		g_object_unref (priv->connection);
 		priv->connection = NULL;
+	}
+
+	if (priv->introspection_data) {
+		g_dbus_node_info_unref (priv->introspection_data);
+		priv->introspection_data = NULL;
 	}
 
 	G_OBJECT_CLASS(urf_device_parent_class)->dispose(object);
@@ -361,10 +340,44 @@ urf_device_class_init(UrfDeviceClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_PLATFORM,
 					 pspec);
-
-	dbus_g_object_type_install_info (URF_TYPE_DEVICE, &dbus_glib_urf_device_object_info);
-	dbus_g_error_domain_register (URF_DEVICE_ERROR, NULL, URF_DEVICE_TYPE_ERROR);
 }
+
+static GVariant *
+handle_get_property (GDBusConnection *connection,
+                     const gchar *sender,
+                     const gchar *object_path,
+                     const gchar *interface_name,
+                     const gchar *property_name,
+                     GError **error,
+                     gpointer user_data)
+{
+	UrfDevice *device = URF_DEVICE (user_data);
+	UrfDevicePrivate *priv = device->priv;
+
+	GVariant *retval = NULL;
+
+	if (g_strcmp0 (property_name, "index") == 0)
+		retval = g_variant_new_uint32 (priv->index);
+	else if (g_strcmp0 (property_name, "type") == 0)
+		retval = g_variant_new_uint32 (priv->type);
+	else if (g_strcmp0 (property_name, "soft") == 0)
+		retval = g_variant_new_boolean (priv->soft);
+	else if (g_strcmp0 (property_name, "hard") == 0)
+		retval = g_variant_new_boolean (priv->hard);
+	else if (g_strcmp0 (property_name, "name") == 0)
+		retval = g_variant_new_string (priv->name);
+	else if (g_strcmp0 (property_name, "platform") == 0)
+		retval = g_variant_new_boolean (priv->platform);
+
+	return retval;
+}
+
+static const GDBusInterfaceVTable interface_vtable =
+{
+	NULL, /* handle method_call */
+	handle_get_property,
+	NULL, /* handle set_property */
+};
 
 /**
  * urf_device_compute_object_path:
@@ -383,9 +396,15 @@ static gboolean
 urf_device_register_device (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
+	GDBusInterfaceInfo **infos;
 	GError *error = NULL;
+	guint i;
 
-	device->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
+	g_assert (priv->introspection_data != NULL);
+
+	/* TODO use g_bus_get */
+	priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (device->priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
 		g_error_free (error);
@@ -393,8 +412,17 @@ urf_device_register_device (UrfDevice *device)
 	}
 
 	priv->object_path = urf_device_compute_object_path (device);
-	dbus_g_connection_register_g_object (priv->connection,
-					     priv->object_path, G_OBJECT (device));
+	infos = priv->introspection_data->interfaces;
+	for (i = 0; infos[i] != NULL; i++) {
+		g_dbus_connection_register_object (priv->connection,
+		                                   priv->object_path,
+		                                   infos[i],
+		                                   &interface_vtable,
+		                                   device,
+		                                   NULL,
+		                                   NULL);
+	}
+
 	return TRUE;
 }
 

@@ -49,15 +49,6 @@ typedef struct {
         GObjectClass parent_class;
 } UrfDeviceClass;
 
-typedef enum
-{
-        URF_DEVICE_ERROR_GENERAL,
-        URF_DEVICE_NUM_ERRORS
-} UrfDeviceError;
-
-#define URF_DEVICE_ERROR urf_device_error_quark ()
-#define URF_DEVICE_TYPE_ERROR (urf_device_error_get_type ())
-
 GType			 urf_device_get_type		(void);
 
 UrfDevice		*urf_device_new			(guint		 index,
