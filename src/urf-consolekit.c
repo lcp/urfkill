@@ -388,8 +388,9 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	GError *error = NULL;
-	const char **seats;
+	const char *seat_name;
 	GVariant *retval;
+	GVariantIter *iter;
 	gsize length;
 	int i;
 
@@ -403,17 +404,17 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 		return FALSE;
 	}
 
-	seats = g_variant_get_strv (retval, &length);
-
-	if (seats == NULL) {
+	if (retval == NULL) {
 		g_debug ("No Seat exists");
 		return FALSE;
 	}
 
-	for (i = 0; seats[i] != NULL; i++) {
-		urf_consolekit_add_seat (consolekit, seats[i]);
-		g_debug ("Added seat: %s", seats[i]);
+	g_variant_get (retval, "(ao)", &iter);
+	while (g_variant_iter_loop (iter, "o", &seat_name)) {
+		urf_consolekit_add_seat (consolekit, seat_name);
+		g_debug ("Added seat: %s", seat_name);
 	}
+	g_variant_iter_free (iter);
 
 	return TRUE;
 }
