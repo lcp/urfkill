@@ -32,6 +32,8 @@
 
 #include "urf-utils.h"
 
+#define URF_DEVICE_INTERFACE "org.freedesktop.URfkill.Device"
+
 static const char introspection_xml[] =
 "<node>"
 "  <interface name='org.freedesktop.URfkill.Device'>"
@@ -94,12 +96,25 @@ urf_device_update_states (UrfDevice      *device,
 			  const gboolean  hard)
 {
 	UrfDevicePrivate *priv = device->priv;
+	GError *error = NULL;
 
 	if (priv->soft != soft || priv->hard != hard) {
 		priv->soft = soft;
 		priv->hard = hard;
 		priv->state = event_to_state (priv->soft, priv->hard);
-		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
+		g_dbus_connection_emit_signal (priv->connection,
+		                               NULL,
+		                               priv->object_path,
+		                               URF_DEVICE_INTERFACE,
+		                               "Changed",
+		                               NULL,
+		                               &error);
+		if (error) {
+			g_warning ("Failed to emit Changed: %s", error->message);
+			g_error_free (error);
+			return FALSE;
+		}
+
 		return TRUE;
 	}
 
