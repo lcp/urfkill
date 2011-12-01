@@ -104,7 +104,7 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 	                                             "org.freedesktop.ConsoleKit.Seat",
 	                                             NULL,
 	                                             &error);
-	if (priv->proxy) {
+	if (error) {
 		g_error ("failed to setup proxy for consolekit seat: %s", error->message);
 		g_error_free (error);
 		return FALSE;
