@@ -66,19 +66,26 @@ urf_seat_get_active (UrfSeat *seat)
 }
 
 /**
- * urf_seat_active_session_changed_cb:
+ * urf_seat_proxy_signal_cb:
  **/
 static void
-urf_seat_active_session_changed_cb (GDBusProxy *proxy,
-				    const char *session_id,
-				    gpointer   *user_data)
+urf_seat_proxy_signal_cb (GDBusProxy *proxy,
+                          gchar      *sender_name,
+                          gchar      *signal_name,
+                          GVariant   *parameters,
+                          gpointer    user_data)
 {
 	UrfSeat *seat = URF_SEAT (user_data);
+	char *session_id;
 
-	g_free (seat->priv->active);
-	seat->priv->active = g_strdup (session_id);
+	if (g_strcmp0 (signal_name, "ActiveSessionChanged") == 0) {
+		g_variant_get (parameters, "(s)", &session_id);
 
-	g_signal_emit (seat, signals[SIGNAL_ACTIVE_CHANGED], 0, session_id);
+		g_free (seat->priv->active);
+		seat->priv->active = g_strdup (session_id);
+
+		g_signal_emit (seat, signals[SIGNAL_ACTIVE_CHANGED], 0, session_id);
+	}
 }
 
 /**
@@ -127,8 +134,8 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 	g_variant_unref (retval);
 
 	/* connect signals */
-	g_signal_connect (G_OBJECT (priv->proxy), "ActiveSessionChanged",
-	                  G_CALLBACK (urf_seat_active_session_changed_cb), seat);
+	g_signal_connect (G_OBJECT (priv->proxy), "g-signal",
+	                  G_CALLBACK (urf_seat_proxy_signal_cb), seat);
 
 	return TRUE;
 }
