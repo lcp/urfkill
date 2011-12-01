@@ -23,8 +23,7 @@
 #endif
 
 #include <glib.h>
-#include <glib-object.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-seat.h"
 
@@ -37,8 +36,8 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 
 struct UrfSeatPrivate {
-	DBusGConnection	*connection;
-	DBusGProxy	*proxy;
+	GDBusConnection	*connection;
+	GDBusProxy	*proxy;
 	char		*object_path;
 	char		*active;
 };
@@ -70,10 +69,12 @@ urf_seat_get_active (UrfSeat *seat)
  * urf_seat_active_session_changed_cb:
  **/
 static void
-urf_seat_active_session_changed_cb (DBusGProxy *proxy,
+urf_seat_active_session_changed_cb (GDBusProxy *proxy,
 				    const char *session_id,
-				    UrfSeat    *seat)
+				    gpointer   *user_data)
 {
+	UrfSeat *seat = URF_SEAT (user_data);
+
 	g_free (seat->priv->active);
 	seat->priv->active = g_strdup (session_id);
 
@@ -88,43 +89,43 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 			   const char *object_path)
 {
 	UrfSeatPrivate *priv = seat->priv;
-	char *session_id;
-	GError *error = NULL;
-	gboolean ret = FALSE;
+	GVariant *retval;
+	gsize length;
+	GError *error;
 
 	priv->object_path = g_strdup (object_path);
 
-	priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-	if (error != NULL) {
-		g_warning ("Failed to get bus: %s", error->message);
+	error = NULL;
+	priv->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                             G_DBUS_PROXY_FLAGS_NONE,
+	                                             NULL,
+	                                             "org.freedesktop.ConsoleKit",
+	                                             priv->object_path,
+	                                             "org.freedesktop.ConsoleKit.Seat",
+	                                             NULL,
+	                                             &error);
+	if (priv->proxy) {
+		g_error ("failed to setup proxy for consolekit seat: %s", error->message);
 		g_error_free (error);
 		return FALSE;
 	}
 
-	priv->proxy = dbus_g_proxy_new_for_name (priv->connection,
-						 "org.freedesktop.ConsoleKit",
-						 priv->object_path,
-						 "org.freedesktop.ConsoleKit.Seat");
-	ret = dbus_g_proxy_call (priv->proxy, "GetActiveSession", &error,
-				 G_TYPE_INVALID,
-				 DBUS_TYPE_G_OBJECT_PATH, &session_id,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	error = NULL;
+	retval = g_dbus_proxy_call_sync (priv->proxy, "GetActiveSession",
+	                                 NULL,
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error);
+	if (error) {
 		g_warning ("Failed to get Active Session: %s", error->message);
 		g_error_free (error);
 		return FALSE;
 	}
 
-	priv->active = g_strdup (session_id);
+	priv->active = g_variant_dup_string (retval, &length);
 
 	/* connect signals */
-	dbus_g_proxy_add_signal (priv->proxy, "ActiveSessionChanged",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-
-	/* callbacks */
-	dbus_g_proxy_connect_signal (priv->proxy, "ActiveSessionChanged",
-				     G_CALLBACK (urf_seat_active_session_changed_cb), seat, NULL);
+	g_signal_connect (G_OBJECT (priv->proxy), "ActiveSessionChanged",
+	                  G_CALLBACK (urf_seat_active_session_changed_cb), seat);
 
 	return TRUE;
 }
@@ -137,10 +138,6 @@ urf_seat_dispose (GObject *object)
 {
 	UrfSeat *seat = URF_SEAT (object);
 
-	if (seat->priv->connection) {
-		dbus_g_connection_unref (seat->priv->connection);
-		seat->priv->connection = NULL;
-	}
 	if (seat->priv->proxy) {
 		g_object_unref (seat->priv->proxy);
 		seat->priv->proxy = NULL;
