@@ -90,6 +90,7 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 {
 	UrfSeatPrivate *priv = seat->priv;
 	GVariant *retval;
+	char *session;
 	gsize length;
 	GError *error;
 
@@ -121,7 +122,9 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 		return FALSE;
 	}
 
-	priv->active = g_variant_dup_string (retval, &length);
+	g_variant_get (retval, "(o)", &session);
+	priv->active = g_strdup (session);
+	g_variant_unref (retval);
 
 	/* connect signals */
 	g_signal_connect (G_OBJECT (priv->proxy), "ActiveSessionChanged",
