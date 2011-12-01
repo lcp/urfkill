@@ -180,7 +180,7 @@ get_session_id (UrfConsolekit *consolekit,
 
         error = NULL;
 	retval = g_dbus_proxy_call_sync (priv->bus_proxy, "GetConnectionUnixProcessID",
-	                                 g_variant_new_string (bus_name),
+	                                 g_variant_new ("(s)", bus_name),
 	                                 G_DBUS_CALL_FLAGS_NONE,
 	                                 -1, NULL, &error);
 	if (error) {
@@ -192,8 +192,8 @@ get_session_id (UrfConsolekit *consolekit,
 	g_variant_unref (retval);
 
         error = NULL;
-	retval = g_dbus_proxy_call_sync (priv->bus_proxy, "GetSessionForUnixProcess",
-	                                 g_variant_new_uint32 (calling_pid),
+	retval = g_dbus_proxy_call_sync (priv->proxy, "GetSessionForUnixProcess",
+	                                 g_variant_new ("(u)", (guint)calling_pid),
 	                                 G_DBUS_CALL_FLAGS_NONE,
 	                                 -1, NULL, &error);
 	if (error) {
