@@ -29,16 +29,9 @@
 #include <pwd.h>
 #include <grp.h>
 
-#include <glib.h>
+#include <glib-unix.h>
 #include <glib/gi18n-lib.h>
-#include <glib-object.h>
-
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
-
-#if GLIB_CHECK_VERSION(2,29,19)
- #include <glib-unix.h>
-#endif
+#include <gio/gio.h>
 
 #include "urf-config.h"
 #include "urf-daemon.h"
@@ -47,52 +40,30 @@
 #define URFKILL_CONFIG_FILE URFKILL_CONFIG_DIR"urfkill.conf"
 static GMainLoop *loop = NULL;
 
-/**
- * urf_main_acquire_name_on_proxy:
- **/
-static gboolean
-urf_main_acquire_name_on_proxy (DBusGProxy  *bus_proxy,
-				const gchar *name)
+static void
+on_bus_acquired (GDBusConnection *connection,
+                 const gchar     *name,
+                 gpointer         user_data)
 {
-	GError *error = NULL;
-	guint result;
-	gboolean ret = FALSE;
-
-	if (bus_proxy == NULL)
-		goto out;
-
-	ret = dbus_g_proxy_call (bus_proxy, "RequestName", &error,
-        			 G_TYPE_STRING, name,
-				 G_TYPE_UINT, 0,
-				 G_TYPE_INVALID,
-				 G_TYPE_UINT, &result,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		if (error != NULL) {
-			g_warning ("Failed to acquire %s: %s", name, error->message);
-			g_error_free (error);
-		} else {
-			g_warning ("Failed to acquire %s", name);
-		}
-		goto out;
-	}
-
-	/* already taken */
-	if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
-		if (error != NULL) {
-			g_warning ("Failed to acquire %s: %s", name, error->message);
-			g_error_free (error);
-		} else {
-			g_warning ("Failed to acquire %s", name);
-		}
-		ret = FALSE;
-		goto out;
-	}
-out:
-	return ret;
+	/* This is where we'd export some objects on the bus */
 }
 
-#if GLIB_CHECK_VERSION(2,29,19)
+static void
+on_name_acquired (GDBusConnection *connection,
+                  const gchar     *name,
+                  gpointer         user_data)
+{
+	g_debug ("Acquired the name %s on the system bus\n", name);
+}
+
+static void
+on_name_lost (GDBusConnection *connection,
+              const gchar     *name,
+              gpointer         user_data)
+{
+	g_debug ("Lost the name %s on the system bus\n", name);
+}
+
 /**
  * urf_main_sigint_cb:
  **/
@@ -103,23 +74,6 @@ urf_main_sigint_cb (gpointer user_data)
 	g_main_loop_quit (loop);
 	return FALSE;
 }
-
-#else
-/**
- * urf_main_sigint_handler:
- **/
-static void
-urf_main_sigint_handler (gint sig)
-{
-	g_debug ("Handling SIGINT");
-
-	/* restore default */
-	signal (SIGINT, SIG_DFL);
-
-	/* cleanup */
-	g_main_loop_quit (loop);
-}
-#endif
 
 /**
  * urf_main_timed_exit_cb:
@@ -139,22 +93,21 @@ urf_main_timed_exit_cb (GMainLoop *loop)
 gint
 main (gint argc, gchar **argv)
 {
-	GError *error = NULL;
 	UrfConfig *config = NULL;
 	UrfDaemon *daemon = NULL;
 	GOptionContext *context;
-	DBusGProxy *bus_proxy;
-	DBusGConnection *bus;
 	gboolean ret;
 	gint retval = 1;
 	gboolean timed_exit = FALSE;
 	gboolean immediate_exit = FALSE;
 	gboolean fork_daemon = FALSE;
+	guint owner_id;
 	guint timer_id = 0;
 	struct passwd *user;
 	const char *username = NULL;
 	const char *conf_file = NULL;
 	pid_t pid;
+	GError *error = NULL;
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,
@@ -188,41 +141,24 @@ main (gint argc, gchar **argv)
 	config = urf_config_new ();
 	urf_config_load_from_file (config, conf_file);
 
-	/* get bus connection */
-	bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-	if (bus == NULL) {
-		g_warning ("Couldn't connect to system bus: %s", error->message);
-		g_error_free (error);
-		goto out;
-	}
-
-	/* get proxy */
-	bus_proxy = dbus_g_proxy_new_for_name (bus, DBUS_SERVICE_DBUS,
-					       DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-	if (bus_proxy == NULL) {
-		g_warning ("Could not construct bus_proxy object; bailing out");
-		goto out;
-	}
-
 	/* aquire name */
-        ret = urf_main_acquire_name_on_proxy (bus_proxy, URFKILL_SERVICE_NAME);
-	if (!ret) {
-		g_warning ("Could not acquire name; bailing out");
-		goto out;
-	}
+	owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+	                           URFKILL_SERVICE_NAME,
+	                           G_BUS_NAME_OWNER_FLAGS_NONE,
+	                           on_bus_acquired,
+	                           on_name_acquired,
+	                           on_name_lost,
+	                           NULL,
+	                           NULL);
 
 	loop = g_main_loop_new (NULL, FALSE);
 
-#if GLIB_CHECK_VERSION(2,29,19)
 	/* do stuff on ctrl-c */
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT,
 				urf_main_sigint_cb,
 				loop,
 				NULL);
-#else
-	signal (SIGINT, urf_main_sigint_handler);
-#endif
 
 	g_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
 
@@ -256,9 +192,7 @@ main (gint argc, gchar **argv)
 	/* only timeout and close the mainloop if we have specified it on the command line */
 	if (timed_exit) {
 		timer_id = g_timeout_add_seconds (30, (GSourceFunc) urf_main_timed_exit_cb, loop);
-#if GLIB_CHECK_VERSION(2,25,8)
 		g_source_set_name_by_id (timer_id, "[UrfMain] idle");
-#endif
 	}
 
 	/* immediatly exit */
@@ -288,6 +222,7 @@ main (gint argc, gchar **argv)
 	/* wait for input or timeout */
 	g_main_loop_run (loop);
 	retval = 0;
+	g_bus_unown_name (owner_id);
 out:
 	if (daemon != NULL)
 		g_object_unref (daemon);
