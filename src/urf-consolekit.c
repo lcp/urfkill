@@ -437,7 +437,7 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 	                                             "org.freedesktop.ConsoleKit.Manager",
 	                                             NULL,
 	                                             &error);
-	if (priv->proxy) {
+	if (error) {
 		g_error ("failed to setup proxy for consolekit: %s", error->message);
 		g_error_free (error);
 		return FALSE;
@@ -452,7 +452,7 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 	                                                 "org.freedesktop.DBus",
 	                                                 NULL,
 	                                                 &error);
-	if (priv->bus_proxy) {
+	if (error) {
 		g_error ("failed to setup proxy for consolekit: %s", error->message);
 		g_error_free (error);
 		return FALSE;
