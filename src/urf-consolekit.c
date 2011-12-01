@@ -318,15 +318,12 @@ urf_consolekit_add_seat (UrfConsolekit *consolekit,
 }
 
 /**
- * urf_consolekit_seat_added_cb:
+ * urf_consolekit_seat_added:
  **/
 static void
-urf_consolekit_seat_added_cb (GDBusProxy *proxy,
-			      const char *object_path,
-			      gpointer    user_data)
+urf_consolekit_seat_added (UrfConsolekit *consolekit,
+                           const char    *object_path)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
-
 	if (urf_consolekit_find_seat (consolekit, object_path) != NULL) {
 		g_debug ("Already added seat: %s", object_path);
 		return;
@@ -337,14 +334,12 @@ urf_consolekit_seat_added_cb (GDBusProxy *proxy,
 }
 
 /**
- * urf_consolekit_seat_removed_cb:
+ * urf_consolekit_seat_removed:
  **/
 static void
-urf_consolekit_seat_removed_cb (GDBusProxy *proxy,
-				const char *object_path,
-				gpointer    user_data)
+urf_consolekit_seat_removed (UrfConsolekit *consolekit,
+                             const char    *object_path)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfSeat *seat;
 
@@ -359,16 +354,35 @@ urf_consolekit_seat_removed_cb (GDBusProxy *proxy,
 }
 
 /**
- * urf_consolekit_bus_owner_changed_cb:
+ * urf_consolekit_proxy_signal_cb
  **/
 static void
-urf_consolekit_bus_owner_changed_cb (GDBusProxy *bus_proxy,
-				     const char *name,
-				     const char *old_owner,
-				     const char *new_owner,
-				     gpointer    user_data)
+urf_consolekit_proxy_signal_cb (GDBusProxy *proxy,
+                                gchar      *sender_name,
+                                gchar      *signal_name,
+                                GVariant   *parameters,
+                                gpointer    user_data)
 {
 	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
+	char *seat_path;
+
+	if (g_strcmp0 (signal_name, "SeatAdded") == 0) {
+		g_variant_get (parameters, "(o)", &seat_path);
+		urf_consolekit_seat_added (consolekit, seat_path);
+	} else if (g_strcmp0 (signal_name, "SeatRemoved") == 0) {
+		g_variant_get (parameters, "(o)", &seat_path);
+		urf_consolekit_seat_removed (consolekit, seat_path);
+	}
+}
+
+/**
+ * urf_consolekit_bus_owner_changed:
+ **/
+static void
+urf_consolekit_bus_owner_changed (UrfConsolekit *consolekit,
+                                  const char    *old_owner,
+                                  const char    *new_owner)
+{
 	UrfInhibitor *inhibitor;
 
 	if (strlen (new_owner) == 0 &&
@@ -378,6 +392,27 @@ urf_consolekit_bus_owner_changed_cb (GDBusProxy *bus_proxy,
 		if (inhibitor == NULL)
 			return;
 		remove_inhibitor (consolekit, inhibitor);
+	}
+}
+
+/**
+ * urf_consolekit_bus_proxy_signal_cb
+ **/
+static void
+urf_consolekit_bus_proxy_signal_cb (GDBusProxy *proxy,
+                                    gchar      *sender_name,
+                                    gchar      *signal_name,
+                                    GVariant   *parameters,
+                                    gpointer    user_data)
+{
+	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
+	char *name;
+	char *old_owner;
+	char *new_owner;
+
+	if (g_strcmp0 (signal_name, "NameOwnerChanged") == 0) {
+		g_variant_get (parameters, "(sss)", &name, &old_owner, &new_owner);
+		urf_consolekit_bus_owner_changed (consolekit, old_owner, new_owner);
 	}
 }
 
@@ -467,13 +502,10 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 		return FALSE;
 
 	/* connect signals */
-	g_signal_connect (G_OBJECT (priv->proxy), "SeatAdded",
-	                  G_CALLBACK (urf_consolekit_seat_added_cb), consolekit);
-	g_signal_connect (G_OBJECT (priv->proxy), "SeatRemoved",
-	                  G_CALLBACK (urf_consolekit_seat_removed_cb), consolekit);
-
-	g_signal_connect (G_CALLBACK (priv->bus_proxy), "NameOwnerChanged",
-	                  G_CALLBACK (urf_consolekit_bus_owner_changed_cb), consolekit);
+	g_signal_connect (G_OBJECT (priv->proxy), "g-signal",
+	                  G_CALLBACK (urf_consolekit_proxy_signal_cb), consolekit);
+	g_signal_connect (G_CALLBACK (priv->bus_proxy), "g-signal",
+	                  G_CALLBACK (urf_consolekit_bus_proxy_signal_cb), consolekit);
 
 	return TRUE;
 }
