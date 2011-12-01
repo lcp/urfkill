@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <polkit/polkit.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-config.h"
 
@@ -52,13 +52,9 @@ typedef struct
 typedef enum
 {
 	URF_DAEMON_ERROR_GENERAL,
-	URF_DAEMON_NUM_ERRORS
 } UrfDaemonError;
 
 #define URF_DAEMON_ERROR urf_daemon_error_quark ()
-
-GType urf_daemon_error_get_type (void);
-#define URF_DAEMON_TYPE_ERROR (urf_daemon_error_get_type ())
 
 GQuark		 urf_daemon_error_quark		(void);
 GType		 urf_daemon_get_type		(void);
@@ -68,21 +64,21 @@ gboolean	 urf_daemon_startup		(UrfDaemon		*daemon);
 gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
 						 const guint		 type,
 						 const gboolean		 block,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_block_idx		(UrfDaemon		*daemon,
 						 const guint		 index,
 						 const gboolean		 block,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_is_inhibited	(UrfDaemon		*daemon,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_inhibit		(UrfDaemon		*daemon,
 						 const char		*reason,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 void		 urf_daemon_uninhibit		(UrfDaemon		*daemon,
 						 const guint		 cookie,
-						 DBusGMethodInvocation  *context);
+						 GDBusMethodInvocation  *invocation);
 
 G_END_DECLS
 
