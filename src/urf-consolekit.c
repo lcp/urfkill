@@ -188,7 +188,7 @@ get_session_id (UrfConsolekit *consolekit,
 		g_error_free (error);
 		goto out;
 	}
-	calling_pid = g_variant_get_uint32 (retval);
+	g_variant_get (retval, "(u)", &calling_pid);
 	g_variant_unref (retval);
 
         error = NULL;
@@ -203,7 +203,8 @@ get_session_id (UrfConsolekit *consolekit,
 		goto out;
 	}
 
-	session_id = g_variant_dup_string (retval, &length);
+	g_variant_get (retval, "(s)", &session_id);
+	session_id = g_strdup (session_id);
 	g_variant_unref (retval);
 out:
 	return session_id;
@@ -415,6 +416,7 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 		g_debug ("Added seat: %s", seat_name);
 	}
 	g_variant_iter_free (iter);
+	g_variant_unref (retval);
 
 	return TRUE;
 }
