@@ -41,7 +41,7 @@ static const char introspection_xml[] =
 "    <property name='name' type='s' access='read'/>"
 "    <property name='soft' type='b' access='read'/>"
 "    <property name='hard' type='b' access='read'/>"
-"    <property name='platform' type='b' access='read/>"
+"    <property name='platform' type='b' access='read'/>"
 "  </interface>"
 "</node>";
 
