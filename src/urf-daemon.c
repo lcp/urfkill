@@ -284,7 +284,7 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 
 	value = g_variant_builder_end (builder);
 	tuple = g_variant_new_tuple (&value, 1);
-	g_dbus_method_invocation_return_value (invocation, value);
+	g_dbus_method_invocation_return_value (invocation, tuple);
 	g_variant_builder_unref (builder);
 	return TRUE;
 }
