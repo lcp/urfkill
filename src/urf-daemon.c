@@ -141,6 +141,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	UrfArbitrator *arbitrator = priv->arbitrator;
 	gint type;
 	gboolean block = FALSE;
+	GError *error = NULL;
 
 	if (urf_consolekit_is_inhibited (priv->consolekit))
 		goto out;
@@ -186,6 +187,17 @@ urf_daemon_input_event_cb (UrfInput *input,
 	urf_arbitrator_set_block (arbitrator, type, block);
 out:
 	g_signal_emit (daemon, signals[SIGNAL_URFKEY_PRESSED], 0, code);
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               URFKILL_OBJECT_PATH,
+	                               URFKILL_DBUS_INTERFACE,
+	                               "UrfkeyPressed",
+	                               g_variant_new ("(i)", code),
+	                               &error);
+	if (error) {
+		g_warning ("Failed to emit UrfkeyPressed: %s", error->message);
+		g_error_free (error);
+	}
 }
 
 /**
@@ -512,6 +524,9 @@ urf_daemon_device_added_cb (UrfArbitrator *arbitrator,
 			    const char    *object_path,
 			    UrfDaemon     *daemon)
 {
+	UrfDaemonPrivate *priv = daemon->priv;
+	GError *error = NULL;
+
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 
@@ -520,6 +535,17 @@ urf_daemon_device_added_cb (UrfArbitrator *arbitrator,
 		return;
 	}
 	g_signal_emit (daemon, signals[SIGNAL_DEVICE_ADDED], 0, object_path);
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               URFKILL_OBJECT_PATH,
+	                               URFKILL_DBUS_INTERFACE,
+	                               "DeviceAdded",
+	                               g_variant_new ("(o)", object_path),
+	                               &error);
+	if (error) {
+		g_warning ("Failed to emit DeviceAdded: %s", error->message);
+		g_error_free (error);
+	}
 }
 
 /**
@@ -530,6 +556,9 @@ urf_daemon_device_removed_cb (UrfArbitrator *arbitrator,
 			      const char    *object_path,
 			      UrfDaemon     *daemon)
 {
+	UrfDaemonPrivate *priv = daemon->priv;
+	GError *error = NULL;
+
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 	if (object_path == NULL) {
@@ -537,6 +566,17 @@ urf_daemon_device_removed_cb (UrfArbitrator *arbitrator,
 		return;
 	}
 	g_signal_emit (daemon, signals[SIGNAL_DEVICE_REMOVED], 0, object_path);
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               URFKILL_OBJECT_PATH,
+	                               URFKILL_DBUS_INTERFACE,
+	                               "DeviceRemoved",
+	                               g_variant_new ("(o)", object_path),
+	                               &error);
+	if (error) {
+		g_warning ("Failed to emit DeviceRemoved: %s", error->message);
+		g_error_free (error);
+	}
 }
 
 /**
@@ -547,6 +587,9 @@ urf_daemon_device_changed_cb (UrfArbitrator *arbitrator,
 			      const char    *object_path,
 			      UrfDaemon     *daemon)
 {
+	UrfDaemonPrivate *priv = daemon->priv;
+	GError *error = NULL;
+
 	g_return_if_fail (URF_IS_DAEMON (daemon));
 	g_return_if_fail (URF_IS_ARBITRATOR (arbitrator));
 	if (object_path == NULL) {
@@ -554,6 +597,17 @@ urf_daemon_device_changed_cb (UrfArbitrator *arbitrator,
 		return;
 	}
 	g_signal_emit (daemon, signals[SIGNAL_DEVICE_CHANGED], 0, object_path);
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               URFKILL_OBJECT_PATH,
+	                               URFKILL_DBUS_INTERFACE,
+	                               "DeviceChanged",
+	                               g_variant_new ("(o)", object_path),
+	                               &error);
+	if (error) {
+		g_warning ("Failed to emit DeviceChanged: %s", error->message);
+		g_error_free (error);
+	}
 }
 
 /**
