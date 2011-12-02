@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-killswitch.h"
 #include "urf-enum.h"
@@ -46,9 +46,7 @@
 
 struct _UrfKillswitchPrivate
 {
-	DBusGConnection	*bus;
-	DBusGProxy	*proxy;
-	DBusGProxy	*proxy_props;
+	GDBusProxy	*proxy;
 	UrfSwitchType	 type;
 	UrfSwitchState	 state;
 	char		*object_path;
@@ -90,81 +88,28 @@ urf_killswitch_get_switch_type (UrfKillswitch *killswitch)
 }
 
 /**
- * urf_killswitch_get_remote_properties:
- **/
-static GHashTable *
-urf_killswitch_get_remote_properties (UrfKillswitch *killswitch,
-				      GError        **error)
-{
-	gboolean ret;
-	GError *error_local = NULL;
-	GHashTable *hash_table = NULL;
-
-	ret = dbus_g_proxy_call (killswitch->priv->proxy_props, "GetAll", &error_local,
-				 G_TYPE_STRING, "org.freedesktop.URfkill.Killswitch",
-				 G_TYPE_INVALID,
-				 dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
-				 &hash_table,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		g_set_error (error, 1, 0, "Couldn't call GetAll() to get properties for %s: %s",
-			     killswitch->priv->object_path, error_local->message);
-		g_error_free (error_local);
-		goto out;
-	}
-out:
-	return hash_table;
-}
-
-/**
- * urf_killswitch_collect_props_cb:
+ * urf_killswitch_proxy_signal_cb:
  **/
 static void
-urf_killswitch_collect_props_cb (const char    *key,
-				 const GValue  *value,
-				 UrfKillswitch *killswitch)
+urf_killswitch_proxy_signal_cb (GDBusProxy *proxy,
+                                gchar      *sender_name,
+                                gchar      *signal_name,
+                                GVariant   *parameters,
+                                gpointer    user_data)
 {
-	if (g_strcmp0 (key, "state") == 0) {
-		killswitch->priv->state = g_value_get_int (value);
-	} else {
-		g_warning ("unhandled property '%s'", key);
-	}
-}
+	UrfKillswitch *killswitch = URF_KILLSWITCH (user_data);
+	UrfKillswitchPrivate *priv = killswitch->priv;
 
-/**
- * urf_killswitch_refresh_private:
- **/
-static gboolean
-urf_killswitch_refresh_private (UrfKillswitch *killswitch,
-				GError        **error)
-{
-	GHashTable *hash;
-	GError *error_local = NULL;
-
-	/* get all the properties */
-	hash = urf_killswitch_get_remote_properties (killswitch, &error_local);
-	if (hash == NULL) {
-		g_set_error (error, 1, 0, "Cannot get killswitch properties for %s: %s",
-			     killswitch->priv->object_path, error_local->message);
-		g_error_free (error_local);
-		return FALSE;
-	}
-	g_hash_table_foreach (hash, (GHFunc) urf_killswitch_collect_props_cb, killswitch);
-	g_hash_table_unref (hash);
-	return TRUE;
-}
-
-/**
- * urf_killswitch_state_changed_cb:
- **/
-static void
-urf_killswitch_state_changed_cb (DBusGProxy    *proxy,
-				 const int      state,
-				 UrfKillswitch *killswitch)
-{
-	if (killswitch->priv->state != state) {
-		killswitch->priv->state = state;
-		g_signal_emit (killswitch, signals[URF_KILLSWITCH_STATE_CHANGED], 0, state);
+	if (g_strcmp0 (signal_name, "StateChanged") == 0) {
+		int state;
+		value = g_dbus_proxy_get_cached_property (priv->proxy, "state");
+		state = g_variant_get_int32 (value);
+		if (priv->state != state) {
+			priv->state = state;
+			g_signal_emit (killswitch,
+			               signals[URF_KILLSWITCH_STATE_CHANGED],
+			               0, state);
+		}
 	}
 }
 
@@ -177,11 +122,10 @@ urf_killswitch_set_object_path_sync (UrfKillswitch *killswitch,
 				     GError        **error)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	GVariant *value;
 	GError *error_local = NULL;
-	gboolean ret = FALSE;
-	DBusGProxy *proxy_props;
 
-	if (killswitch->priv->object_path != NULL)
+	if (priv->object_path != NULL)
 		return FALSE;
 	if (object_path == NULL)
 		return FALSE;
@@ -192,53 +136,31 @@ urf_killswitch_set_object_path_sync (UrfKillswitch *killswitch,
 		goto out;
 	}
 
-	/* connect to the bus */
-	priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error_local);
-	if (priv->bus == NULL) {
-		g_set_error (error, 1, 0, "Couldn't connect to system bus: %s", error_local->message);
-		g_error_free (error_local);
-		goto out;
-	}
-
 	/* connect to the correct path for properties */
-	proxy_props = dbus_g_proxy_new_for_name (priv->bus,
-						 "org.freedesktop.URfkill",
-						 object_path,
-						 "org.freedesktop.DBus.Properties");
-	if (proxy_props == NULL) {
-		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
-		goto out;
+	priv->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                             G_DBUS_PROXY_FLAGS_NONE,
+	                                             NULL,
+	                                             "org.freedesktop.URfkill",
+	                                             object_path,
+	                                             "org.freedesktop.URfkill.Killswitch",
+	                                             NULL,
+	                                             &error_local);
+	if (error_local) {
+		g_warning ("Couldn't connect to proxy: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		return FALSE;
 	}
 
-	priv->proxy = dbus_g_proxy_new_for_name (priv->bus,
-						 "org.freedesktop.URfkill",
-						 object_path,
-						 "org.freedesktop.URfkill.Killswitch");
-	if (priv->proxy == NULL) {
-		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
-		goto out;
-	}
+        priv->object_path = g_strdup (object_path);
 
-        killswitch->priv->proxy_props = proxy_props;
-        killswitch->priv->object_path = g_strdup (object_path);
-
-	ret = urf_killswitch_refresh_private (killswitch, &error_local);
-
-	if (!ret) {
-		g_set_error (error, 1, 0, "cannot refresh: %s", error_local->message);
-		g_error_free (error_local);
-	}
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "state");
+	priv->state = g_variant_get_int32 (value);
 
 	/* connect signals */
-	dbus_g_proxy_add_signal (priv->proxy, "StateChanged",
-				 G_TYPE_INT,
-				 G_TYPE_INVALID);
-
-	/* callbacks */
-	dbus_g_proxy_connect_signal (priv->proxy, "StateChanged",
-				     G_CALLBACK (urf_killswitch_state_changed_cb), killswitch, NULL);
+	g_signal_connect (priv->proxy, "g-signal",
+	                  G_CALLBACK (urf_killswitch_proxy_signal_cb), killswitch);
 out:
-	return ret;
+	return TRUE;
 }
 
 /**
@@ -294,18 +216,23 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
  * set_block_cb:
  **/
 static void
-set_block_cb (DBusGProxy     *proxy,
-	      DBusGProxyCall *call,
+set_block_cb (GDBusProxy     *proxy,
+              GAsyncResult   *res,
 	      gpointer        user_data)
 {
+	GVariant *retval;
 	gboolean status;
 	GError *error = NULL;
 
-	if (!dbus_g_proxy_end_call (proxy, call, &error,
-				    G_TYPE_BOOLEAN, &status,
-				    G_TYPE_INVALID)) {
+	retval = g_dbus_proxy_call_finish (proxy, res, &error);
+	if (retval)
+		g_variant_get (retval, "(b)", &status);
+
+	if (error) {
 		g_warning ("Failed to set BLOCK: %s", error->message);
 		g_error_free (error);
+	} else if (!status) {
+		g_warning ("Failed to set BLOCK");
 	}
 
 	g_object_unref (proxy);
@@ -318,29 +245,38 @@ static void
 urf_killswitch_set_block (UrfKillswitch  *killswitch,
 			  UrfSwitchState  state)
 {
-	DBusGProxy *proxy;
-	DBusGProxyCall *call;
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GDBusProxy *proxy;
 	gboolean block;
+	GError *error = NULL;
 
 	if (state == URFSWITCH_STATE_UNBLOCKED)
 		block = FALSE;
 	else
 		block = TRUE;
 
-	proxy = dbus_g_proxy_new_for_name (killswitch->priv->bus,
-					   "org.freedesktop.URfkill",
-					   "/org/freedesktop/URfkill",
-					   "org.freedesktop.URfkill");
-	if (proxy == NULL) {
-		g_warning ("Couldn't connect to proxy to set block");
+	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                       G_DBUS_PROXY_FLAGS_NONE,
+	                                       NULL,
+	                                       "org.freedesktop.URfkill",
+	                                       "/org/freedesktop/URfkill",
+	                                       "org.freedesktop.URfkill",
+	                                       NULL,
+	                                       &error);
+	if (error) {
+		g_warning ("Couldn't connect to proxy to set block: %s",
+		           error->message);
+		g_error_free (error);
 		return;
 	}
-	call = dbus_g_proxy_begin_call (proxy, "Block",
-					set_block_cb,
-					NULL, NULL,
-					G_TYPE_UINT, killswitch->priv->type,
-					G_TYPE_BOOLEAN, block,
-					G_TYPE_INVALID);
+	g_dbus_proxy_call (proxy, "Block",
+	                   g_variant_new ("(ub)",
+	                                  priv->type,
+	                                  block),
+	                   G_DBUS_CALL_FLAGS_NONE,
+	                   -1, NULL,
+	                   (GAsyncReadyCallback) set_block_cb,
+	                   killswitch);
 }
 
 /**
@@ -417,19 +353,9 @@ urf_killswitch_dispose (GObject *object)
 
 	priv = URF_KILLSWITCH (object)->priv;
 
-	if (priv->bus) {
-		dbus_g_connection_unref (priv->bus);
-		priv->bus = NULL;
-	}
-
 	if (priv->proxy) {
 		g_object_unref (priv->proxy);
 		priv->proxy = NULL;
-	}
-
-	if (priv->proxy_props) {
-		g_object_unref (priv->proxy_props);
-		priv->proxy_props = NULL;
 	}
 
 	G_OBJECT_CLASS(urf_killswitch_parent_class)->dispose(object);
