@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-device.h"
 #include "urf-enum.h"
@@ -44,9 +44,7 @@
 
 struct _UrfDevicePrivate
 {
-	DBusGConnection *bus;
-	DBusGProxy	*proxy;
-	DBusGProxy      *proxy_props;
+	GDBusProxy	*proxy;
 	char            *object_path;
 	guint            index;
 	guint            type;
@@ -70,88 +68,47 @@ enum {
 G_DEFINE_TYPE (UrfDevice, urf_device, G_TYPE_OBJECT)
 
 /**
- * urf_device_get_device_properties:
- **/
-static GHashTable *
-urf_device_get_device_properties (UrfDevice *device,
-				  GError    **error)
-{
-	gboolean ret;
-	GError *error_local = NULL;
-	GHashTable *hash_table = NULL;
-
-	ret = dbus_g_proxy_call (device->priv->proxy_props, "GetAll", &error_local,
-				 G_TYPE_STRING, "org.freedesktop.URfkill.Device",
-				 G_TYPE_INVALID,
-				 dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
-				 &hash_table,
-				 G_TYPE_INVALID);
-	if (!ret) {
-		g_set_error (error, 1, 0, "Couldn't call GetAll() to get properties for %s: %s",
-			     device->priv->object_path, error_local->message);
-		g_error_free (error_local);
-		goto out;
-	}
-out:
-	return hash_table;
-}
-
-/**
- * urf_device_collect_props_cb:
- **/
-static void
-urf_device_collect_props_cb (const char   *key,
-			     const GValue *value,
-			     UrfDevice    *device)
-{
-	if (g_strcmp0 (key, "index") == 0) {
-		device->priv->index = g_value_get_uint (value);
-	} else if (g_strcmp0 (key, "type") == 0) {
-		device->priv->type = g_value_get_uint (value);
-	} else if (g_strcmp0 (key, "soft") == 0) {
-		device->priv->soft = g_value_get_boolean (value);
-	} else if (g_strcmp0 (key, "hard") == 0) {
-		device->priv->hard = g_value_get_boolean (value);
-	} else if (g_strcmp0 (key, "name") == 0) {
-		g_free (device->priv->name);
-		device->priv->name = g_strdup (g_value_get_string (value));
-	} else if (g_strcmp0 (key, "platform") == 0) {
-		device->priv->platform = g_value_get_boolean (value);
-	} else {
-		g_warning ("unhandled property '%s'", key);
-	}
-}
-
-/**
  * urf_device_refresh_private:
  **/
-static gboolean
+static void
 urf_device_refresh_private (UrfDevice *device,
 			    GError    **error)
 {
-	GHashTable *hash;
-	GError *error_local = NULL;
+	UrfDevicePrivate *priv = device->priv;
+	GVariant *value;
+	gsize length;
 
-	/* get all the properties */
-	hash = urf_device_get_device_properties (device, &error_local);
-	if (hash == NULL) {
-		g_set_error (error, 1, 0, "Cannot get device properties for %s: %s",
-			     device->priv->object_path, error_local->message);
-		g_error_free (error_local);
-		return FALSE;
-	}
-	g_hash_table_foreach (hash, (GHFunc) urf_device_collect_props_cb, device);
-	g_hash_table_unref (hash);
-	return TRUE;
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "index");
+	priv->index = g_variant_get_uint32 (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "type");
+	priv->type = g_variant_get_uint32 (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "soft");
+	priv->soft = g_variant_get_boolean (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "hard");
+	priv->hard = g_variant_get_boolean (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "name");
+	g_free (priv->name);
+	priv->name = g_variant_dup_string (value, &length);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "platform");
+	priv->platform = g_variant_get_boolean (value);
 }
 
 /**
  * urf_device_changed_cb:
  **/
 static void
-urf_device_changed_cb (DBusGProxy *proxy,
-		       UrfDevice  *device)
+urf_device_changed_cb (GDBusProxy *proxy,
+                       GVariant   *changed_properties,
+                       GStrv       invalidated_properties,
+		       gpointer    user_data)
 {
+	UrfDevice *device = URF_DEVICE (user_data);
+
 	urf_device_refresh_private (device, NULL);
 }
 
@@ -177,7 +134,6 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 	UrfDevicePrivate *priv = device->priv;
 	GError *error_local = NULL;
 	gboolean ret = FALSE;
-	DBusGProxy *proxy_props;
 
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
@@ -192,50 +148,27 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 		goto out;
 	}
 
-	/* connect to the bus */
-	priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error_local);
-	if (priv->bus == NULL) {
-		g_set_error (error, 1, 0, "Couldn't connect to system bus: %s", error_local->message);
-		g_error_free (error_local);
-		goto out;
+	priv->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                             G_DBUS_PROXY_FLAGS_NONE,
+	                                             NULL,
+	                                             "org.freedesktop.URfkill",
+	                                             object_path,
+	                                             "org.freedesktop.URfkill.Device",
+	                                             NULL,
+	                                             &error_local);
+	if (error_local) {
+		g_warning ("Couldn't connect to proxy: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		return FALSE;
 	}
 
-	/* connect to the correct path for properties */
-	proxy_props = dbus_g_proxy_new_for_name (priv->bus,
-						 "org.freedesktop.URfkill",
-						 object_path,
-						 "org.freedesktop.DBus.Properties");
-	if (proxy_props == NULL) {
-		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
-		goto out;
-	}
+        priv->object_path = g_strdup (object_path);
 
-	priv->proxy = dbus_g_proxy_new_for_name (priv->bus,
-						 "org.freedesktop.URfkill",
-						 object_path,
-						 "org.freedesktop.URfkill.Device");
-	if (priv->proxy == NULL) {
-		g_set_error_literal (error, 1, 0, "Couldn't connect to proxy");
-		goto out;
-	}
-
-        device->priv->proxy_props = proxy_props;
-        device->priv->object_path = g_strdup (object_path);
-
-	ret = urf_device_refresh_private (device, &error_local);
-
-	if (!ret) {
-		g_set_error (error, 1, 0, "cannot refresh: %s", error_local->message);
-		g_error_free (error_local);
-	}
+	urf_device_refresh_private (device, &error_local);
 
 	/* connect signals */
-	dbus_g_proxy_add_signal (priv->proxy, "Changed",
-				 G_TYPE_INVALID);
-
-	/* callbacks */
-	dbus_g_proxy_connect_signal (priv->proxy, "Changed",
-				     G_CALLBACK (urf_device_changed_cb), device, NULL);
+	g_signal_connect (priv->proxy, "g-properties-changed",
+	                  G_CALLBACK (urf_device_changed_cb), device);
 out:
 	return ret;
 }
@@ -262,18 +195,23 @@ urf_device_get_object_path (UrfDevice *device)
  * set_block_idx_cb:
  **/
 static void
-set_block_idx_cb (DBusGProxy     *proxy,
-		  DBusGProxyCall *call,
-		  gpointer        user_data)
+set_block_idx_cb (GDBusProxy     *proxy,
+                  GAsyncResult   *res,
+                  gpointer        user_data)
 {
+	GVariant *retval;
 	gboolean status;
 	GError *error = NULL;
 
-	if (!dbus_g_proxy_end_call (proxy, call, &error,
-				    G_TYPE_BOOLEAN, &status,
-				    G_TYPE_INVALID)) {
+	retval = g_dbus_proxy_call_finish (proxy, res, &error);
+	if (retval)
+		g_variant_get (retval, "(b)", &status);
+
+	if (error) {
 		g_warning ("Failed to set BLOCK: %s", error->message);
 		g_error_free (error);
+	} else if (!status) {
+		g_warning ("Failed to set BLOCK");
 	}
 
 	g_object_unref (proxy);
@@ -286,23 +224,32 @@ static void
 urf_device_set_block (UrfDevice *device,
 		      gboolean   block)
 {
-	DBusGProxy *proxy;
-	DBusGProxyCall *call;
+	GDBusProxy *proxy;
+	GError *error = NULL;
 
-	proxy = dbus_g_proxy_new_for_name (device->priv->bus,
-					   "org.freedesktop.URfkill",
-					   "/org/freedesktop/URfkill",
-					   "org.freedesktop.URfkill");
-	if (proxy == NULL) {
-		g_warning ("Couldn't connect to proxy to set block_idx");
+	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                       G_DBUS_PROXY_FLAGS_NONE,
+	                                       NULL,
+	                                       "org.freedesktop.URfkill",
+	                                       "/org/freedesktop/URfkill",
+	                                       "org.freedesktop.URfkill",
+	                                       NULL,
+	                                       &error);
+	if (error) {
+		g_warning ("Couldn't connect to proxy to set block: %s",
+		           error->message);
+		g_error_free (error);
 		return;
 	}
-	call = dbus_g_proxy_begin_call (proxy, "BlockIdx",
-					set_block_idx_cb,
-					NULL, NULL,
-					G_TYPE_UINT, device->priv->index,
-					G_TYPE_BOOLEAN, block,
-					G_TYPE_INVALID);
+
+	g_dbus_proxy_call (proxy, "BlockIdx",
+	                   g_variant_new ("(ub)",
+	                                  device->priv->index,
+	                                  block),
+	                   G_DBUS_CALL_FLAGS_NONE,
+	                   -1, NULL,
+	                   (GAsyncReadyCallback) set_block_idx_cb,
+	                   device);
 }
 
 /**
@@ -395,19 +342,9 @@ urf_device_dispose (GObject *object)
 
 	priv = URF_DEVICE (object)->priv;
 
-	if (priv->bus) {
-		dbus_g_connection_unref (priv->bus);
-		priv->bus = NULL;
-	}
-
 	if (priv->proxy) {
 		g_object_unref (priv->proxy);
 		priv->proxy = NULL;
-	}
-
-	if (priv->proxy_props) {
-		g_object_unref (priv->proxy_props);
-		priv->proxy_props = NULL;
 	}
 
 	G_OBJECT_CLASS(urf_device_parent_class)->dispose(object);
