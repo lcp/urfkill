@@ -74,16 +74,22 @@ main ()
 	if (wlan) {
 		show_state (wlan);
 		g_signal_connect (wlan, "state-changed", G_CALLBACK (state_changed_cb), NULL);
+	} else {
+		g_warning ("Failed to new wlan");
 	}
 
 	if (bluetooth) {
 		show_state (bluetooth);
 		g_signal_connect (bluetooth, "state-changed", G_CALLBACK (state_changed_cb), NULL);
+	} else {
+		g_warning ("Failed to new bluetooth");
 	}
 
 	if (wwan) {
 		show_state (wwan);
 		g_signal_connect (wwan, "state-changed", G_CALLBACK (state_changed_cb), NULL);
+	} else {
+		g_warning ("Failed to new wwan");
 	}
 
 	loop = g_main_loop_new (NULL, FALSE);
@@ -92,9 +98,12 @@ main ()
 
 	g_main_loop_run (loop);
 
-	g_object_unref (wlan);
-	g_object_unref (bluetooth);
-	g_object_unref (wwan);
+	if (wlan)
+		g_object_unref (wlan);
+	if (bluetooth)
+		g_object_unref (bluetooth);
+	if (wwan)
+		g_object_unref (wwan);
 
 	return 0;
 }
