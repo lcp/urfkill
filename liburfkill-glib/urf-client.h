@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2010 Gary Ching-Pang Lin <glin@suse.com>
+ * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@suse.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -40,8 +40,6 @@ G_BEGIN_DECLS
 #define URF_IS_CLIENT(o)		(G_TYPE_CHECK_INSTANCE_TYPE ((o), URF_TYPE_CLIENT))
 #define URF_IS_CLIENT_CLASS(k)		(G_TYPE_CHECK_CLASS_TYPE ((k), URF_TYPE_CLIENT))
 #define URF_CLIENT_GET_CLASS(o)		(G_TYPE_INSTANCE_GET_CLASS ((o), URF_TYPE_CLIENT, UrfClientClass))
-#define URF_CLIENT_ERROR		(urf_client_error_quark ())
-#define URF_CLIENT_TYPE_ERROR		(urf_client_error_get_type ())
 
 typedef struct _UrfClient UrfClient;
 typedef struct _UrfClientClass UrfClientClass;
@@ -79,17 +77,9 @@ struct _UrfClientClass
 							 const int	 keycode);
 };
 
-typedef enum
-{
-	URF_CLIENT_ERROR_GENERAL,
-	URF_CLIENT_NUM_ERRORS
-} UrfClientError;
-
 /* general */
 GType		 urf_client_get_type			(void);
 UrfClient	*urf_client_new				(void);
-GQuark		 urf_client_error_quark			(void);
-GType		 urf_client_error_get_type		(void);
 
 /* generic */
 gboolean	 urf_client_enumerate_devices_sync	(UrfClient	*client,

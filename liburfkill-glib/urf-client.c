@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2010 Gary Ching-Pang Lin <glin@suse.com>
+ * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@suse.com>
  *
  * Licensed under the GNU Lesser General Public License Version 2.1
  *
@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
-#include <dbus/dbus-glib.h>
+#include <gio/gio.h>
 
 #include "urf-client.h"
 
@@ -48,13 +48,12 @@ static void	urf_client_finalize	(GObject	*object);
 
 struct _UrfClientPrivate
 {
-	DBusGConnection	*bus;
-	DBusGProxy	*proxy;
-	DBusGProxy	*prop_proxy;
+	GDBusProxy	*proxy;
 	GList		*devices;
 	char		*daemon_version;
 	gboolean	 key_control;
 	gboolean	 have_properties;
+	gboolean	 is_enumerated;
 };
 
 enum {
@@ -118,12 +117,11 @@ urf_client_add (UrfClient  *client,
 }
 
 /**
- * urf_client_device_added_cb:
+ * urf_client_device_added:
  **/
 static void
-urf_client_device_added_cb (DBusGProxy  *proxy,
-			    const gchar *object_path,
-			    UrfClient   *client)
+urf_client_device_added (UrfClient   *client,
+			 const gchar *object_path)
 {
 	UrfDevice *device;
 
@@ -139,12 +137,11 @@ urf_client_device_added_cb (DBusGProxy  *proxy,
 }
 
 /**
- * urf_client_device_removed_cb:
+ * urf_client_device_removed:
  **/
 static void
-urf_client_device_removed_cb (DBusGProxy *proxy,
-			      const char *object_path,
-			      UrfClient  *client)
+urf_client_device_removed (UrfClient  *client,
+			   const char *object_path)
 {
 	UrfClientPrivate *priv = client->priv;
 	UrfDevice *device;
@@ -164,12 +161,11 @@ urf_client_device_removed_cb (DBusGProxy *proxy,
 }
 
 /**
- * urf_client_device_changed_cb:
+ * urf_client_device_changed:
  **/
 static void
-urf_client_device_changed_cb (DBusGProxy     *proxy,
-			      const char     *object_path,
-			      UrfClient      *client)
+urf_client_device_changed (UrfClient  *client,
+			   const char *object_path)
 {
 	UrfDevice *device;
 
@@ -190,38 +186,29 @@ static void
 urf_client_get_devices_private (UrfClient *client,
 				GError    **error)
 {
-	GError *error_local = NULL;
-	GType g_type_array;
-	GPtrArray *devices = NULL;
+	GVariant *retval;
+	GVariantIter *iter;
 	const char *object_path;
-	gboolean ret;
-	guint i;
+	GError *error_local = NULL;
 
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	g_type_array = dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
-	ret = dbus_g_proxy_call (client->priv->proxy, "EnumerateDevices", &error_local,
-				 G_TYPE_INVALID,
-				 g_type_array, &devices,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (client->priv->proxy, "EnumerateDevices",
+	                                 NULL,
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error_local);
+	if (error_local) {
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		g_error_free (error_local);
 		return;
 	}
 
-	/* no data */
-	if (devices == NULL) {
-		g_set_error_literal (error, 1, 0, "no data");
-		return;
-	}
-
-	/* convert */
-	for (i=0; i < devices->len; i++) {
-		object_path = (const char *) g_ptr_array_index (devices, i);
+	g_variant_get (retval, "(ao)", &iter);
+	while (g_variant_iter_loop (iter, "o", &object_path))
 		urf_client_add (client, object_path);
-	}
+	g_variant_iter_free (iter);
+	g_variant_unref (retval);
 }
 
 /**
@@ -252,23 +239,7 @@ urf_client_enumerate_devices_sync (UrfClient    *client,
 		goto out;
 	}
 
-	/* connect signals */
-	dbus_g_proxy_add_signal (priv->proxy, "DeviceAdded",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (priv->proxy, "DeviceRemoved",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (priv->proxy, "DeviceChanged",
-				 G_TYPE_STRING,
-				 G_TYPE_INVALID);
-	/* callbacks */
-	dbus_g_proxy_connect_signal (priv->proxy, "DeviceAdded",
-				     G_CALLBACK (urf_client_device_added_cb), client, NULL);
-	dbus_g_proxy_connect_signal (priv->proxy, "DeviceRemoved",
-				     G_CALLBACK (urf_client_device_removed_cb), client, NULL);
-	dbus_g_proxy_connect_signal (priv->proxy, "DeviceChanged",
-				     G_CALLBACK (urf_client_device_changed_cb), client, NULL);
+	priv->is_enumerated = TRUE;
 
 	ret = TRUE;
 out:
@@ -330,24 +301,27 @@ urf_client_set_block (UrfClient      *client,
 		      GCancellable   *cancellable,
 		      GError         **error)
 {
-	gboolean ret, status = FALSE;
+	GVariant *retval;
+	gboolean status = FALSE;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 	g_return_val_if_fail (type < NUM_URFSWITCH_TYPES, FALSE);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "Block", &error_local,
-				 G_TYPE_UINT, type,
-				 G_TYPE_BOOLEAN, block,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (client->priv->proxy, "Block",
+	                                 g_variant_new ("(ub)", type, block),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error_local);
+	if (error_local) {
 		g_warning ("Couldn't sent BLOCK: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
+		goto out;
 	}
+
+	g_variant_get (retval, "(b)", &status);
+	g_variant_unref (retval);
+out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return status;
@@ -382,23 +356,26 @@ urf_client_set_block_idx (UrfClient      *client,
 			  GCancellable   *cancellable,
 			  GError         **error)
 {
-	gboolean ret, status;
+	GVariant *retval;
+	gboolean status = FALSE;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "BlockIdx", &error_local,
-				 G_TYPE_UINT, index,
-				 G_TYPE_BOOLEAN, block,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &status,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (client->priv->proxy, "BlockIdx",
+	                                 g_variant_new ("(ub)", index, block),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error_local);
+	if (error_local) {
 		g_warning ("Couldn't sent BLOCKIDX: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
-		status = FALSE;
+		goto out;
 	}
+
+	g_variant_get (retval, "(b)", &status);
+	g_variant_unref (retval);
+out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return status;
@@ -419,21 +396,26 @@ gboolean
 urf_client_is_inhibited (UrfClient *client,
 			 GError    **error)
 {
-	gboolean ret, is_inhibited;
+	GVariant *retval;
+	gboolean is_inhibited = FALSE;
 	GError *error_local = NULL;
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "IsInhibited", &error_local,
-				 G_TYPE_INVALID,
-				 G_TYPE_BOOLEAN, &is_inhibited,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (client->priv->proxy, "IsInhibited",
+	                                 NULL,
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error_local);
+	if (error_local) {
 		g_warning ("Couldn't sent IsInhibited: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
-		is_inhibited = FALSE;
+		goto out;
 	}
+
+	g_variant_get (retval, "(b)", &is_inhibited);
+	g_variant_unref (retval);
+out:
 	if (error_local != NULL)
 		g_error_free (error_local);
 	return is_inhibited;
@@ -457,29 +439,25 @@ urf_client_inhibit (UrfClient  *client,
 		    const char *reason,
 		    GError     **error)
 {
-	GError *error_local = NULL;
-	gboolean ret;
+	GVariant *retval;
 	guint cookie = 0;
+	GError *error_local = NULL;
 
-	if (!URF_IS_CLIENT (client) || client->priv->proxy == NULL) {
-		error_local = g_error_new (URF_CLIENT_ERROR,
-					   URF_CLIENT_ERROR_GENERAL,
-					   "Not a vaild UrfClient instance");
-		g_warning ("Inhibit: %s", error_local->message);
-		g_set_error (error, 1, 0, "%s", error_local->message);
-		goto out;
-	}
+	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
 
-	ret = dbus_g_proxy_call (client->priv->proxy, "Inhibit", &error_local,
-				 G_TYPE_STRING, reason,
-				 G_TYPE_INVALID,
-				 G_TYPE_UINT, &cookie,
-				 G_TYPE_INVALID);
-	if (!ret) {
+	retval = g_dbus_proxy_call_sync (client->priv->proxy, "Inhibit",
+	                                 g_variant_new ("(s)", reason),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, &error_local);
+	if (error_local) {
 		g_warning ("Couldn't sent INHIBIT: %s", error_local->message);
 		g_set_error (error, 1, 0, "%s", error_local->message);
 		goto out;
 	}
+
+	g_variant_get (retval, "(u)", &cookie);
+	g_variant_unref (retval);
 out:
 	if (error_local != NULL)
 		g_error_free (error_local);
@@ -502,10 +480,10 @@ urf_client_uninhibit (UrfClient   *client,
 	g_return_if_fail (URF_IS_CLIENT (client));
 	g_return_if_fail (client->priv->proxy != NULL);
 
-	dbus_g_proxy_call_no_reply (client->priv->proxy, "Uninhibit",
-				    G_TYPE_UINT, cookie,
-				    G_TYPE_INVALID,
-				    G_TYPE_INVALID);
+	g_dbus_proxy_call (client->priv->proxy, "Uninhibit",
+	                   g_variant_new ("(u)", cookie),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1, NULL, NULL, NULL);
 }
 
 
@@ -569,52 +547,19 @@ urf_client_set_wwan_block (UrfClient     *client,
 /**
  * urf_client_get_properties_sync:
  **/
-static gboolean
-urf_client_get_properties_sync (UrfClient    *client,
-				GCancellable *cancellable,
-				GError       **error)
+static void
+urf_client_get_properties_sync (UrfClient *client)
 {
-	gboolean ret = TRUE;
-	GHashTable *props;
-	GValue *value;
+	UrfClientPrivate *priv = client->priv;
+	GVariant *value;
+	gsize length;
 
-	props = NULL;
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "DaemonVersion");
+	g_free (priv->daemon_version);
+	priv->daemon_version = g_variant_dup_string (value, &length);
 
-	if (client->priv->have_properties)
-		goto out;
-	if (!client->priv->prop_proxy)
-		goto out;
-
-	error = NULL;
-	ret = dbus_g_proxy_call (client->priv->prop_proxy, "GetAll", error,
-				 G_TYPE_STRING, "org.freedesktop.URfkill",
-				 G_TYPE_INVALID,
-				 dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE), &props,
-				 G_TYPE_INVALID);
-
-	if (!ret)
-		goto out;
-
-	value = g_hash_table_lookup (props, "DaemonVersion");
-	if (value == NULL) {
-		g_warning ("No 'DaemonVersion' property");
-		goto out;
-	}
-	client->priv->daemon_version = g_strdup (g_value_get_string (value));
-
-	value = g_hash_table_lookup (props, "KeyControl");
-	if (value == NULL) {
-		g_warning ("No 'KeyControl' property");
-		goto out;
-	}
-	client->priv->key_control = g_value_get_boolean (value);
-
-	/* All done */
-	client->priv->have_properties = TRUE;
-out:
-	if (props != NULL)
-		g_hash_table_unref (props);
-	return ret;
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "KeyControl");
+	priv->key_control = g_variant_get_boolean (value);
 }
 
 /**
@@ -631,7 +576,7 @@ const char *
 urf_client_get_daemon_version (UrfClient *client)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), NULL);
-	urf_client_get_properties_sync (client, NULL, NULL);
+	urf_client_get_properties_sync (client);
 	return client->priv->daemon_version;
 }
 
@@ -642,19 +587,8 @@ static gboolean
 urf_client_get_key_control (UrfClient *client)
 {
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
-	urf_client_get_properties_sync (client, NULL, NULL);
+	urf_client_get_properties_sync (client);
 	return client->priv->key_control;
-}
-
-/**
- * urf_client_rf_key_pressed_cb:
- **/
-static void
-urf_client_rf_key_pressed_cb (DBusGProxy *proxy,
-			      const int   keycode,
-			      UrfClient  *client)
-{
-	g_signal_emit (client, signals [URF_CLIENT_RF_KEY_PRESSED], 0, keycode);
 }
 
 /**
@@ -668,7 +602,7 @@ urf_client_get_property (GObject    *object,
 {
 	UrfClient *client = URF_CLIENT (object);
 
-	urf_client_get_properties_sync (client, NULL, NULL);
+	urf_client_get_properties_sync (client);
 
 	switch (prop_id) {
 	case PROP_DAEMON_VERSION:
@@ -681,38 +615,6 @@ urf_client_get_property (GObject    *object,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
-}
-
-/**
- * urf_client_error_quark:
- **/
-GQuark
-urf_client_error_quark (void)
-{
-	static GQuark ret = 0;
-	if (ret == 0)
-		ret = g_quark_from_static_string ("urf_client_error");
-	return ret;
-}
-
-#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
-/**
- * urf_client_error_get_type:
- **/
-GType
-urf_client_error_get_type (void)
-{
-	static GType etype = 0;
-
-	if (etype == 0) {
-		static const GEnumValue values[] = {
-			ENUM_ENTRY (URF_CLIENT_ERROR_GENERAL, "GeneralError"),
-			{ 0, 0, 0 }
-		};
-		g_assert (URF_CLIENT_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-		etype = g_enum_register_static ("UrfClientError", values);
-	}
-	return etype;
 }
 
 /**
@@ -827,6 +729,44 @@ urf_client_class_init (UrfClientClass *klass)
 }
 
 /**
+ * urf_client_proxy_signal_cb:
+ **/
+static void
+urf_client_proxy_signal_cb (GDBusProxy *proxy,
+                            gchar      *sender_name,
+                            gchar      *signal_name,
+                            GVariant   *parameters,
+                            gpointer    user_data)
+{
+	UrfClient *client = URF_CLIENT (user_data);
+
+	if (g_strcmp0 (signal_name, "UrfkeyPressed") == 0) {
+		int keycode;
+		g_variant_get (parameters, "(i)", &keycode);
+		g_signal_emit (client,
+		               signals [URF_CLIENT_RF_KEY_PRESSED],
+		               0, keycode);
+	}
+
+	if (!client->priv->is_enumerated)
+		return;
+
+	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
+		char *device_path;
+		g_variant_get (parameters, "(o)", &device_path);
+		urf_client_device_added (client, device_path);
+	} else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
+		char *device_path;
+		g_variant_get (parameters, "(o)", &device_path);
+		urf_client_device_removed (client, device_path);
+	} else if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
+		char *device_path;
+		g_variant_get (parameters, "(o)", &device_path);
+		urf_client_device_changed (client, device_path);
+	}
+}
+
+/**
  * urf_client_init:
  * @client: This class instance
  **/
@@ -839,44 +779,27 @@ urf_client_init (UrfClient *client)
 	client->priv->daemon_version = NULL;
 	client->priv->key_control = FALSE;
 	client->priv->have_properties = FALSE;
-
-	/* get on the bus */
-	client->priv->bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-	if (client->priv->bus == NULL) {
-		g_warning ("Couldn't connect to system bus: %s", error->message);
-		g_error_free (error);
-		goto out;
-	}
-
-	/* connect to main interface */
-	client->priv->proxy = dbus_g_proxy_new_for_name (client->priv->bus,
-							 "org.freedesktop.URfkill",
-							 "/org/freedesktop/URfkill",
-							 "org.freedesktop.URfkill");
-	if (client->priv->proxy == NULL) {
-		g_warning ("Couldn't connect to proxy");
-		goto out;
-	}
-
-	/* connect to main interface */
-	client->priv->prop_proxy = dbus_g_proxy_new_for_name (client->priv->bus,
-							      "org.freedesktop.URfkill",
-							      "/org/freedesktop/URfkill",
-							      "org.freedesktop.DBus.Properties");
-	if (client->priv->prop_proxy == NULL) {
-		g_warning ("Couldn't connect to proxy");
-		goto out;
-	}
-
+	client->priv->is_enumerated = FALSE;
 	client->priv->devices = NULL;
 
-	dbus_g_proxy_add_signal (client->priv->proxy, "UrfkeyPressed",
-				 G_TYPE_INT,
-				 G_TYPE_INVALID);
+	/* connect to main interface */
+	client->priv->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                                     G_DBUS_PROXY_FLAGS_NONE,
+	                                                     NULL,
+	                                                     "org.freedesktop.URfkill",
+	                                                     "/org/freedesktop/URfkill",
+	                                                     "org.freedesktop.URfkill",
+	                                                     NULL,
+	                                                     &error);
+	if (error) {
+		g_warning ("Couldn't connect to proxy: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+
 	/* callbacks */
-	dbus_g_proxy_connect_signal (client->priv->proxy, "UrfkeyPressed",
-				     G_CALLBACK (urf_client_rf_key_pressed_cb), client, NULL);
-out:
+	g_signal_connect (client->priv->proxy, "g-signal",
+	                  G_CALLBACK (urf_client_proxy_signal_cb), client);
 	return;
 }
 
@@ -892,19 +815,9 @@ urf_client_dispose (GObject *object)
 
 	client = URF_CLIENT (object);
 
-	if (client->priv->bus) {
-		dbus_g_connection_unref (client->priv->bus);
-		client->priv->bus = NULL;
-	}
-
 	if (client->priv->proxy) {
 		g_object_unref (client->priv->proxy);
 		client->priv->proxy = NULL;
-	}
-
-	if (client->priv->prop_proxy) {
-		g_object_unref (client->priv->prop_proxy);
-		client->priv->prop_proxy = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_client_parent_class)->dispose (object);
