@@ -30,6 +30,7 @@
 #include "urf-device.h"
 
 #define BASE_OBJECT_PATH "/org/freedesktop/URfkill/"
+#define URF_KILLSWITCH_INTERFACE "org.freedesktop.URfkill.Killswitch"
 
 static const char introspection_xml[] =
 "<node>"
@@ -45,14 +46,6 @@ enum
 	PROP_STATE,
 	PROP_LAST
 };
-
-enum
-{
-	SIGNAL_STATE_CHANGED,
-	SIGNAL_LAST,
-};
-
-static guint signals[SIGNAL_LAST] = { 0 };
 
 struct UrfKillswitchPrivate
 {
@@ -98,6 +91,7 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	gboolean platform_checked = FALSE;
 	UrfDevice *device;
 	GList *iter;
+	GError *error = NULL;
 
 	if (priv->devices == NULL) {
 		priv->state = KILLSWITCH_STATE_NO_ADAPTER;
@@ -129,10 +123,18 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	/* emit a signal for change */
 	if (priv->state != new_state) {
 		priv->state = new_state;
-		g_signal_emit (G_OBJECT (killswitch),
-			       signals[SIGNAL_STATE_CHANGED],
-			       0,
-			       priv->state);
+		g_dbus_connection_emit_signal (priv->connection,
+		                               NULL,
+		                               priv->object_path,
+		                               URF_KILLSWITCH_INTERFACE,
+		                               "StateChanged",
+		                               NULL,
+		                               &error);
+		if (error) {
+			g_warning ("Failed to emit StateChanged: %s",
+			           error->message);
+			g_error_free (error);
+		}
 	}
 }
 
@@ -258,14 +260,6 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	object_class->get_property = urf_killswitch_get_property;
 
 	g_type_class_add_private (klass, sizeof (UrfKillswitchPrivate));
-
-	signals[SIGNAL_STATE_CHANGED] =
-		g_signal_new ("state-changed",
-			      G_OBJECT_CLASS_TYPE (klass),
-			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-			      0, NULL, NULL,
-			      g_cclosure_marshal_VOID__INT,
-			      G_TYPE_NONE, 1, G_TYPE_INT);
 
 	g_object_class_install_property (object_class,
 					 PROP_STATE,
