@@ -44,14 +44,15 @@
 
 struct _UrfDevicePrivate
 {
-	GDBusProxy	*proxy;
-	char            *object_path;
-	guint            index;
-	guint            type;
-	gboolean         soft;
-	gboolean         hard;
-	char            *name;
-	gboolean         platform;
+	GDBusProxy *proxy;
+	char       *object_path;
+	guint       index;
+	guint       type;
+	gboolean    soft;
+	gboolean    hard;
+	char       *name;
+	gboolean    platform;
+	gboolean    is_initialized;
 };
 
 enum {
@@ -78,20 +79,22 @@ urf_device_refresh_private (UrfDevice *device,
 	GVariant *value;
 	gsize length;
 
-	value = g_dbus_proxy_get_cached_property (priv->proxy, "index");
-	priv->index = g_variant_get_uint32 (value);
-
-	value = g_dbus_proxy_get_cached_property (priv->proxy, "type");
-	priv->type = g_variant_get_uint32 (value);
-
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "soft");
 	priv->soft = g_variant_get_boolean (value);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "hard");
 	priv->hard = g_variant_get_boolean (value);
 
+	if (priv->is_initialized)
+		return;
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "index");
+	priv->index = g_variant_get_uint32 (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "type");
+	priv->type = g_variant_get_uint32 (value);
+
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "name");
-	g_free (priv->name);
 	priv->name = g_variant_dup_string (value, &length);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "platform");
@@ -105,7 +108,7 @@ static void
 urf_device_changed_cb (GDBusProxy *proxy,
                        GVariant   *changed_properties,
                        GStrv       invalidated_properties,
-		       gpointer    user_data)
+                       gpointer    user_data)
 {
 	UrfDevice *device = URF_DEVICE (user_data);
 
@@ -165,6 +168,7 @@ urf_device_set_object_path_sync (UrfDevice    *device,
         priv->object_path = g_strdup (object_path);
 
 	urf_device_refresh_private (device, &error_local);
+	priv->is_initialized = TRUE;
 
 	/* connect signals */
 	g_signal_connect (priv->proxy, "g-properties-changed",
@@ -457,6 +461,7 @@ urf_device_init (UrfDevice *device)
 	device->priv = URF_DEVICE_GET_PRIVATE (device);
 	device->priv->name = NULL;
 	device->priv->object_path = NULL;
+	device->priv->is_initialized = FALSE;
 }
 
 /**
