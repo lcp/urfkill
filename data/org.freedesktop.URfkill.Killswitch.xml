@@ -21,20 +21,13 @@
         <doc:para>
           <doc:example language="shell" title="simple example">
             <doc:code>
-$ dbus-send --print-reply \
-            --system \
-            --dest=org.freedesktop.URfkill \
-            /org/freedesktop/URfkill/WLAN \
-            org.freedesktop.DBus.Properties.GetAll \
-            string:"org.freedesktop.URfkill.Killswitch"
+$ gdbus call -y \
+             -d org.freedesktop.URfkill \
+             -o /org/freedesktop/URfkill/WLAN \
+             -m org.freedesktop.DBus.Properties.GetAll \
+             "org.freedesktop.URfkill.Killswitch"
 
-method return sender=:1.144 -> dest=:1.154 reply_serial=2
-   array [
-      dict entry(
-         string "state"
-         variant             int32 2
-      )
-   ]
+({'state': &lt;2&gt;},)
             </doc:code>
           </doc:example>
         </doc:para>
@@ -46,6 +39,10 @@ method return sender=:1.144 -> dest=:1.154 reply_serial=2
         <doc:description>
           <doc:para>
             Emitted when the state of the killswitch changed.
+          </doc:para>
+          <doc:para>
+	    Note: This signal is deprecated since 0.4.0. Use the standard signal,
+                  PropertiesChanged from org.freedesktop.DBus.Properties instead.
           </doc:para>
         </doc:description>
       </doc:doc>

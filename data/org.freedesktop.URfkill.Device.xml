@@ -19,36 +19,13 @@
         <doc:para>
           <doc:example language="shell" title="simple example">
             <doc:code>
-$ dbus-send --print-reply \
-            --system \
-            --dest=org.freedesktop.URfkill \
-            /org/freedesktop/URfkill/devices/0 \
-            org.freedesktop.DBus.Properties.GetAll \
-            string:org.freedesktop.URfkill.Device
+$ gdbus call -y \
+             -d org.freedesktop.URfkill \
+             -o /org/freedesktop/URfkill/devices/0 \
+             -m org.freedesktop.DBus.Properties.GetAll \
+             "org.freedesktop.URfkill.Device"
 
-method return sender=:1.164 -> dest=:1.169 reply_serial=2
-   array [
-      dict entry(
-         string "index"
-         variant             uint32 0
-      )
-      dict entry(
-         string "type"
-         variant             uint32 2
-      )
-      dict entry(
-         string "name"
-         variant             string "tpacpi_bluetooth_sw"
-      )
-      dict entry(
-         string "soft"
-         variant             boolean true
-      )
-      dict entry(
-         string "hard"
-         variant             boolean true
-      )
-   ]
+({'index': &lt;uint32 0&gt;, 'type': &lt;uint32 2&gt;, 'name': &lt;'tpacpi_bluetooth_sw'&gt;, 'soft': &lt;true&gt;, 'hard': &lt;true&gt;, 'platform': &lt;true&gt;},)
             </doc:code>
           </doc:example>
         </doc:para>
@@ -62,6 +39,10 @@ method return sender=:1.164 -> dest=:1.169 reply_serial=2
         <doc:description>
           <doc:para>
             Emitted when a property of the device is changed.
+          </doc:para>
+          <doc:para>
+	    Note: This signal is deprecated since 0.4.0. Use the standard signal,
+                  PropertiesChanged from org.freedesktop.DBus.Properties instead.
           </doc:para>
         </doc:description>
       </doc:doc>
