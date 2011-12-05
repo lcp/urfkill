@@ -99,6 +99,7 @@ urf_killswitch_proxy_signal_cb (GDBusProxy *proxy,
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (user_data);
 	UrfKillswitchPrivate *priv = killswitch->priv;
+	GVariant *value;
 
 	if (g_strcmp0 (signal_name, "StateChanged") == 0) {
 		int state;
