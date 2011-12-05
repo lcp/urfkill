@@ -88,29 +88,26 @@ urf_killswitch_get_switch_type (UrfKillswitch *killswitch)
 }
 
 /**
- * urf_killswitch_proxy_signal_cb:
+ * urf_killswitch_changed_cb:
  **/
 static void
-urf_killswitch_proxy_signal_cb (GDBusProxy *proxy,
-                                gchar      *sender_name,
-                                gchar      *signal_name,
-                                GVariant   *parameters,
-                                gpointer    user_data)
+urf_killswitch_changed_cb (GDBusProxy *proxy,
+                           GVariant   *changed_properties,
+                           GStrv       invalidated_properties,
+                           gpointer    user_data)
 {
 	UrfKillswitch *killswitch = URF_KILLSWITCH (user_data);
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	GVariant *value;
+	int state;
 
-	if (g_strcmp0 (signal_name, "StateChanged") == 0) {
-		int state;
-		value = g_dbus_proxy_get_cached_property (priv->proxy, "state");
-		state = g_variant_get_int32 (value);
-		if (priv->state != state) {
-			priv->state = state;
-			g_signal_emit (killswitch,
-			               signals[URF_KILLSWITCH_STATE_CHANGED],
-			               0, state);
-		}
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "state");
+	state = g_variant_get_int32 (value);
+	if (priv->state != state) {
+		priv->state = state;
+		g_signal_emit (killswitch,
+		               signals[URF_KILLSWITCH_STATE_CHANGED],
+		               0, state);
 	}
 }
 
@@ -158,8 +155,8 @@ urf_killswitch_set_object_path_sync (UrfKillswitch *killswitch,
 	priv->state = g_variant_get_int32 (value);
 
 	/* connect signals */
-	g_signal_connect (priv->proxy, "g-signal",
-	                  G_CALLBACK (urf_killswitch_proxy_signal_cb), killswitch);
+	g_signal_connect (priv->proxy, "g-properties-changed",
+	                  G_CALLBACK (urf_killswitch_changed_cb), killswitch);
 out:
 	return TRUE;
 }
