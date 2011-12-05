@@ -85,6 +85,42 @@ struct UrfDevicePrivate {
 G_DEFINE_TYPE(UrfDevice, urf_device, G_TYPE_OBJECT)
 
 /**
+ * emit_properites_changed
+ **/
+static void
+emit_properites_changed (UrfDevice *device)
+{
+	UrfDevicePrivate *priv = device->priv;
+	GVariantBuilder *builder;
+	GError *error = NULL;
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_add (builder,
+	                       "{sv}",
+	                       "soft",
+	                       g_variant_new_boolean (priv->soft));
+	g_variant_builder_add (builder,
+	                       "{sv}",
+	                       "hard",
+	                       g_variant_new_boolean (priv->hard));
+
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               priv->object_path,
+	                               "org.freedesktop.DBus.Properties",
+	                               "PropertiesChanged",
+	                               g_variant_new ("(sa{sv}as)",
+	                                              URF_DEVICE_INTERFACE,
+	                                              builder,
+	                                              NULL),
+	                                &error);
+	if (error) {
+		g_warning ("Failed to emit PropertiesChanged: %s", error->message);
+		g_error_free (error);
+	}
+}
+
+/**
  * urf_device_update_states:
  *
  * Return value: #TRUE if the states of the blocks are changed,
@@ -102,6 +138,7 @@ urf_device_update_states (UrfDevice      *device,
 		priv->soft = soft;
 		priv->hard = hard;
 		priv->state = event_to_state (priv->soft, priv->hard);
+		emit_properites_changed (device);
 		g_dbus_connection_emit_signal (priv->connection,
 		                               NULL,
 		                               priv->object_path,
@@ -417,8 +454,8 @@ urf_device_register_device (UrfDevice *device)
 {
 	UrfDevicePrivate *priv = device->priv;
 	GDBusInterfaceInfo **infos;
+	guint reg_id;
 	GError *error = NULL;
-	guint i;
 
 	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
 	g_assert (priv->introspection_data != NULL);
@@ -433,15 +470,14 @@ urf_device_register_device (UrfDevice *device)
 
 	priv->object_path = urf_device_compute_object_path (device);
 	infos = priv->introspection_data->interfaces;
-	for (i = 0; infos[i] != NULL; i++) {
-		g_dbus_connection_register_object (priv->connection,
-		                                   priv->object_path,
-		                                   infos[i],
-		                                   &interface_vtable,
-		                                   device,
-		                                   NULL,
-		                                   NULL);
-	}
+	reg_id = g_dbus_connection_register_object (priv->connection,
+		                                    priv->object_path,
+		                                    infos[0],
+		                                    &interface_vtable,
+		                                    device,
+		                                    NULL,
+		                                    NULL);
+	g_assert (reg_id > 0);
 
 	return TRUE;
 }
