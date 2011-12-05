@@ -98,7 +98,6 @@ urf_seat_object_path_sync (UrfSeat    *seat,
 	UrfSeatPrivate *priv = seat->priv;
 	GVariant *retval;
 	char *session;
-	gsize length;
 	GError *error;
 
 	priv->object_path = g_strdup (object_path);

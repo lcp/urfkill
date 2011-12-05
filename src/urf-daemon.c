@@ -468,7 +468,7 @@ urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
 		                                    NULL,
 		                                    NULL);
 	g_assert (reg_id > 0);
-out:
+
 	return TRUE;
 }
 

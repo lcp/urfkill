@@ -107,7 +107,6 @@ main (gint argc, gchar **argv)
 	const char *username = NULL;
 	const char *conf_file = NULL;
 	pid_t pid;
-	GError *error = NULL;
 
 	const GOptionEntry options[] = {
 		{ "timed-exit", '\0', 0, G_OPTION_ARG_NONE, &timed_exit,

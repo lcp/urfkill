@@ -175,7 +175,6 @@ get_session_id (UrfConsolekit *consolekit,
 	pid_t calling_pid;
 	char *session_id = NULL;
 	GVariant *retval;
-	gsize length;
 	GError *error;
 
         error = NULL;
@@ -427,8 +426,6 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 	const char *seat_name;
 	GVariant *retval;
 	GVariantIter *iter;
-	gsize length;
-	int i;
 
 	retval = g_dbus_proxy_call_sync (priv->proxy, "GetSeats",
 	                                 NULL,
