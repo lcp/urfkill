@@ -80,6 +80,38 @@ aggregate_states (KillswitchState platform,
 }
 
 /**
+ * send_properites_changed
+ **/
+static void
+emit_properites_changed (UrfKillswitch *killswitch)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GVariantBuilder *builder;
+	GError *error = NULL;
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_add (builder,
+	                       "{sv}",
+	                       "state",
+	                       g_variant_new_int32 (priv->state));
+
+	g_dbus_connection_emit_signal (priv->connection,
+	                               NULL,
+	                               priv->object_path,
+	                               "org.freedesktop.DBus.Properties",
+	                               "PropertiesChanged",
+	                               g_variant_new ("(sa{sv}as)",
+	                                              URF_KILLSWITCH_INTERFACE,
+	                                              builder,
+	                                              NULL),
+	                                &error);
+	if (error) {
+		g_warning ("Failed to emit PropertiesChanged: %s", error->message);
+		g_error_free (error);
+	}
+}
+
+/**
  * urf_killswitch_state_refresh:
  **/
 static void
@@ -123,6 +155,7 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	/* emit a signal for change */
 	if (priv->state != new_state) {
 		priv->state = new_state;
+		emit_properites_changed (killswitch);
 		g_dbus_connection_emit_signal (priv->connection,
 		                               NULL,
 		                               priv->object_path,
@@ -318,8 +351,8 @@ urf_killswitch_register_switch (UrfKillswitch *killswitch)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	GDBusInterfaceInfo **infos;
+	guint reg_id;
 	GError *error = NULL;
-	guint i;
 
 	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
 	g_assert (priv->introspection_data != NULL);
@@ -335,15 +368,14 @@ urf_killswitch_register_switch (UrfKillswitch *killswitch)
 	priv->object_path = g_strdup_printf (BASE_OBJECT_PATH"%s",
 					     type_to_string (priv->type));
 	infos = priv->introspection_data->interfaces;
-	for (i = 0; infos[i] != NULL; i++) {
-		g_dbus_connection_register_object (priv->connection,
-		                                   priv->object_path,
-		                                   infos[i],
-		                                   &interface_vtable,
-		                                   killswitch,
-		                                   NULL,
-		                                   NULL);
-	}
+	reg_id = g_dbus_connection_register_object (priv->connection,
+		                                    priv->object_path,
+		                                    infos[0],
+		                                    &interface_vtable,
+		                                    killswitch,
+		                                    NULL,
+		                                    NULL);
+	g_assert (reg_id > 0);
 
 	return TRUE;
 }
