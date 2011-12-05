@@ -1,8 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
+ * Copyright (C) 2010-2011 Gary Ching-Pang Lin <glin@suse.com>
  * Copyright (C) 2008 David Zeuthen <davidz@redhat.com>
  * Copyright (C) 2008 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2010 Gary Ching-Pang Lin <glin@suse.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -37,7 +37,6 @@
 
 struct UrfPolkitPrivate
 {
-	GDBusConnection	*connection;
 	PolkitAuthority	*authority;
 };
 
@@ -120,8 +119,6 @@ urf_polkit_finalize (GObject *object)
 	g_return_if_fail (URF_IS_POLKIT (object));
 	polkit = URF_POLKIT (object);
 
-	if (polkit->priv->connection != NULL)
-		g_object_unref (polkit->priv->connection);
 	g_object_unref (polkit->priv->authority);
 
 	G_OBJECT_CLASS (urf_polkit_parent_class)->finalize (object);
@@ -151,16 +148,6 @@ urf_polkit_init (UrfPolkit *polkit)
 	GError *error = NULL;
 
 	polkit->priv = URF_POLKIT_GET_PRIVATE (polkit);
-
-	/* TODO use g_bus_get */
-	polkit->priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
-	if (polkit->priv->connection == NULL) {
-		if (error != NULL) {
-			g_critical ("error getting system bus: %s", error->message);
-			g_error_free (error);
-		}
-		goto out;
-	}
 
 #ifdef USE_SECURITY_POLKIT_NEW
 	polkit->priv->authority = polkit_authority_get_sync (NULL, &error);
