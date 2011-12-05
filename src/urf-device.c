@@ -461,7 +461,7 @@ urf_device_register_device (UrfDevice *device)
 	g_assert (priv->introspection_data != NULL);
 
 	priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
-	if (device->priv->connection == NULL) {
+	if (priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
 		g_error_free (error);
 		return FALSE;
