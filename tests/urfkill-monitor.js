@@ -45,6 +45,7 @@ function printDevice (device) {
   print ("   Name:", device.name);
   print ("   Soft:", device.soft);
   print ("   Hard:", device.hard);
+  print ("   Platform:", device.platform);
 }
 
 function DeviceQuery () {
