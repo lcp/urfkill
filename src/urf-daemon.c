@@ -444,7 +444,7 @@ urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	GDBusInterfaceInfo **infos;
-	guint i;
+	guint reg_id;
 	GError *error = NULL;
 
 	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
@@ -460,16 +460,14 @@ urf_daemon_register_rfkill_daemon (UrfDaemon *daemon)
 
 	/* register GObject */
 	infos = priv->introspection_data->interfaces;
-	for (i = 0; infos[i] != NULL; i++) {
-		g_dbus_connection_register_object (priv->connection,
-		                                   URFKILL_OBJECT_PATH,
-		                                   infos[i],
-		                                   &interface_vtable,
-		                                   daemon,
-		                                   NULL,
-		                                   NULL);
-	}
-
+	reg_id = g_dbus_connection_register_object (priv->connection,
+		                                    URFKILL_OBJECT_PATH,
+		                                    infos[0],
+		                                    &interface_vtable,
+		                                    daemon,
+		                                    NULL,
+		                                    NULL);
+	g_assert (reg_id > 0);
 out:
 	return TRUE;
 }
