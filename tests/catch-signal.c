@@ -9,7 +9,7 @@ static void
 print_urf_device (UrfDevice *device)
 {
 	guint index, type;
-	gboolean soft, hard;
+	gboolean soft, hard, platform;
 	char *name;
 
 	g_object_get (device,
@@ -18,6 +18,7 @@ print_urf_device (UrfDevice *device)
 		      "soft", &soft,
 		      "hard", &hard,
 		      "name", &name,
+		      "platform", &platform,
 		      NULL);
 
 	printf ("index = %u\n", index);
@@ -25,6 +26,7 @@ print_urf_device (UrfDevice *device)
 	printf ("soft  = %d\n", soft);
 	printf ("hard  = %d\n", hard);
 	printf ("name  = %s\n", name);
+	printf ("platform = %d\n", platform);
 }
 
 static void
