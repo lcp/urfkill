@@ -460,7 +460,6 @@ urf_device_register_device (UrfDevice *device)
 	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
 	g_assert (priv->introspection_data != NULL);
 
-	/* TODO use g_bus_get */
 	priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (device->priv->connection == NULL) {
 		g_error ("error getting system bus: %s", error->message);
