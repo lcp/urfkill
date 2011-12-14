@@ -2,7 +2,7 @@ urfkill Release Notes
 
 1. Write NEWS entries for urfkill.
 
-git shortlog urfkill-0.3.0.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git log --no-merges --pretty=format:'- %s (%an)' urfkill-0.3.0.. | grep -i -v trivial > NEWS.new
 
 Version 0.4.0
 ~~~~~~~~~~~~~
