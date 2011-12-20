@@ -140,7 +140,7 @@ main (gint argc, gchar **argv)
 	config = urf_config_new ();
 	urf_config_load_from_file (config, conf_file);
 
-	/* aquire name */
+	/* acquire name */
 	owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
 	                           URFKILL_SERVICE_NAME,
 	                           G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -194,7 +194,7 @@ main (gint argc, gchar **argv)
 		g_source_set_name_by_id (timer_id, "[UrfMain] idle");
 	}
 
-	/* immediatly exit */
+	/* immediately exit */
 	if (immediate_exit)
 		g_timeout_add (50, (GSourceFunc) urf_main_timed_exit_cb, loop);
 

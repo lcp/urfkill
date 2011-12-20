@@ -122,7 +122,7 @@ urf_device_changed_cb (GDBusProxy *proxy,
  * @cancellable: a #GCancellable or %NULL
  * @error: a #GError, or %NULL
  *
- * Set the object path of the object and fill up the intial properties.
+ * Set the object path of the object and fill up the initial properties.
  *
  * Return value: #TRUE for success, else #FALSE and @error is used
  *
