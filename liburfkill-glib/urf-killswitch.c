@@ -382,7 +382,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	 *   <para>
 	 *     Writing the states other than #URF_ENUM_STATE_UNBLOCKED
 	 *     or #URF_ENUM_STATE_SOFT_BLOCKED will be ignored. Also,
-	 *     the state writing may not take effect, and it depends on
+	 *     the state writing may not take effect since it depends on
 	 *     the state of the hardware.
 	 *   </para>
 	 * </note>
