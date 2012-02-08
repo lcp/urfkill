@@ -87,7 +87,7 @@ gboolean	 urf_client_enumerate_devices_sync	(UrfClient	*client,
 							 GError		**error);
 GList		*urf_client_get_devices			(UrfClient	*client);
 gboolean	 urf_client_set_block 			(UrfClient	*client,
-							 UrfSwitchType	 type,
+							 UrfEnumType	 type,
 							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);

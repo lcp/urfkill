@@ -33,49 +33,49 @@
 #error "Only <urfkill.h> can be included directly."
 #endif
 
-#ifndef __URF_TYPE_H
-#define __URF_TYPE_H
+#ifndef __URF_ENUM_H
+#define __URF_ENUM_H
 
 /**
- * UrfSwitchType:
- * @URFSWITCH_TYPE_ALL: toggles all switches (requests only - not a switch type)
- * @URFSWITCH_TYPE_WLAN: switch is on a 802.11 wireless network device.
- * @URFSWITCH_TYPE_BLUETOOTH: switch is on a bluetooth device.
- * @URFSWITCH_TYPE_UWB: switch is on a ultra wideband device.
- * @URFSWITCH_TYPE_WIMAX: switch is on a WiMAX device.
- * @URFSWITCH_TYPE_WWAN: switch is on a wireless WAN device.
- * @URFSWITCH_TYPE_GPS: switch is on a GPS device.
- * @URFSWITCH_TYPE_FM: switch is on a FM radio device.
- * @NUM_URFSWITCH_TYPES: number of defined rfkill types
+ * UrfEnumType:
+ * @URF_ENUM_TYPE_ALL: toggles all switches (requests only - not a switch type)
+ * @URF_ENUM_TYPE_WLAN: switch is on a 802.11 wireless network device.
+ * @URF_ENUM_TYPE_BLUETOOTH: switch is on a bluetooth device.
+ * @URF_ENUM_TYPE_UWB: switch is on a ultra wideband device.
+ * @URF_ENUM_TYPE_WIMAX: switch is on a WiMAX device.
+ * @URF_ENUM_TYPE_WWAN: switch is on a wireless WAN device.
+ * @URF_ENUM_TYPE_GPS: switch is on a GPS device.
+ * @URF_ENUM_TYPE_FM: switch is on a FM radio device.
+ * @URF_ENUM_TYPE_NUM: number of defined rfkill types
  *
  * The type of the rfkill device following the definition in &lt;linux/rfkill.h&gt;
  */
 typedef enum {
-	URFSWITCH_TYPE_ALL = 0,
-	URFSWITCH_TYPE_WLAN,
-	URFSWITCH_TYPE_BLUETOOTH,
-	URFSWITCH_TYPE_UWB,
-	URFSWITCH_TYPE_WIMAX,
-	URFSWITCH_TYPE_WWAN,
-	URFSWITCH_TYPE_GPS,
-	URFSWITCH_TYPE_FM,
-	NUM_URFSWITCH_TYPES,
-} UrfSwitchType;
+	URF_ENUM_TYPE_ALL = 0,
+	URF_ENUM_TYPE_WLAN,
+	URF_ENUM_TYPE_BLUETOOTH,
+	URF_ENUM_TYPE_UWB,
+	URF_ENUM_TYPE_WIMAX,
+	URF_ENUM_TYPE_WWAN,
+	URF_ENUM_TYPE_GPS,
+	URF_ENUM_TYPE_FM,
+	URF_ENUM_TYPE_NUM,
+} UrfEnumType;
 
 /**
- * UrfSwitchState:
- * @URFSWITCH_STATE_NO_ADAPTER: switch doesn't exist
- * @URFSWITCH_STATE_UNBLOCKED: switch is unblocked
- * @URFSWITCH_STATE_SOFT_BLOCKED: switch is soft-blocked.
- * @URFSWITCH_STATE_HARD_BLOCKED: switch is hard-blocked.
+ * UrfEnumState:
+ * @URF_ENUM_STATE_NO_ADAPTER: switch doesn't exist
+ * @URF_ENUM_STATE_UNBLOCKED: switch is unblocked
+ * @URF_ENUM_STATE_SOFT_BLOCKED: switch is soft-blocked.
+ * @URF_ENUM_STATE_HARD_BLOCKED: switch is hard-blocked.
  *
  * The state of the switch
  */
 typedef enum {
-	URFSWITCH_STATE_NO_ADAPTER = -1,
-	URFSWITCH_STATE_UNBLOCKED = 0,
-	URFSWITCH_STATE_SOFT_BLOCKED,
-	URFSWITCH_STATE_HARD_BLOCKED,
-} UrfSwitchState;
+	URF_ENUM_STATE_NO_ADAPTER = -1,
+	URF_ENUM_STATE_UNBLOCKED = 0,
+	URF_ENUM_STATE_SOFT_BLOCKED,
+	URF_ENUM_STATE_HARD_BLOCKED,
+} UrfEnumState;
 
 #endif

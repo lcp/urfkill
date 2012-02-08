@@ -45,8 +45,8 @@ urf_device_get_type
 
 <SECTION>
 <FILE>urf-enum</FILE>
-UrfSwitchState
-UrfSwitchType
+UrfEnumState
+UrfEnumType
 </SECTION>
 
 <SECTION>

@@ -386,13 +386,13 @@ urf_device_class_init(UrfDeviceClass *klass)
 	/**
 	 * UrfDevice:type:
 	 *
-	 * The type of the rfkill device. See #UrfSwitchType.
+	 * The type of the rfkill device. See #UrfEnumType.
 	 *
 	 * Since: 0.2.0
 	 */
 	pspec = g_param_spec_uint ("type",
 				   "Type", "The type of the rfkill device",
-				   0, NUM_URFSWITCH_TYPES-1, 0,
+				   0, URF_ENUM_TYPE_NUM-1, 0,
 				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 

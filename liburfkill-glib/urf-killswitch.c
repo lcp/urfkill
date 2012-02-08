@@ -47,8 +47,8 @@
 struct _UrfKillswitchPrivate
 {
 	GDBusProxy	*proxy;
-	UrfSwitchType	 type;
-	UrfSwitchState	 state;
+	UrfEnumType	 type;
+	UrfEnumState	 state;
 	char		*object_path;
 };
 
@@ -64,7 +64,7 @@ enum {
 };
 
 static guint signals [URF_KILLSWITCH_LAST_SIGNAL] = { 0 };
-static gpointer urf_killswitch_object[NUM_URFSWITCH_TYPES] = {
+static gpointer urf_killswitch_object[URF_ENUM_TYPE_NUM] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
@@ -79,10 +79,10 @@ G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
  *
  * Since: 0.3.0
  **/
-UrfSwitchType
+UrfEnumType
 urf_killswitch_get_switch_type (UrfKillswitch *killswitch)
 {
-	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), NUM_URFSWITCH_TYPES);
+	g_return_val_if_fail (URF_IS_KILLSWITCH (killswitch), URF_ENUM_TYPE_NUM);
 
 	return killswitch->priv->type;
 }
@@ -172,25 +172,25 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 	gboolean ret = FALSE;
 
 	switch (killswitch->priv->type) {
-	case URFSWITCH_TYPE_WLAN:
+	case URF_ENUM_TYPE_WLAN:
 		object_path = BASE_OBJECT_PATH"WLAN";
 		break;
-	case URFSWITCH_TYPE_BLUETOOTH:
+	case URF_ENUM_TYPE_BLUETOOTH:
 		object_path = BASE_OBJECT_PATH"BLUETOOTH";
 		break;
-	case URFSWITCH_TYPE_UWB:
+	case URF_ENUM_TYPE_UWB:
 		object_path = BASE_OBJECT_PATH"UWB";
 		break;
-	case URFSWITCH_TYPE_WIMAX:
+	case URF_ENUM_TYPE_WIMAX:
 		object_path = BASE_OBJECT_PATH"WIMAX";
 		break;
-	case URFSWITCH_TYPE_WWAN:
+	case URF_ENUM_TYPE_WWAN:
 		object_path = BASE_OBJECT_PATH"WWAN";
 		break;
-	case URFSWITCH_TYPE_GPS:
+	case URF_ENUM_TYPE_GPS:
 		object_path = BASE_OBJECT_PATH"GPS";
 		break;
-	case URFSWITCH_TYPE_FM:
+	case URF_ENUM_TYPE_FM:
 		object_path = BASE_OBJECT_PATH"FM";
 		break;
 	default:
@@ -241,14 +241,14 @@ set_block_cb (GDBusProxy     *proxy,
  **/
 static void
 urf_killswitch_set_block (UrfKillswitch  *killswitch,
-			  UrfSwitchState  state)
+			  UrfEnumState    state)
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 	GDBusProxy *proxy;
 	gboolean block;
 	GError *error = NULL;
 
-	if (state == URFSWITCH_STATE_UNBLOCKED)
+	if (state == URF_ENUM_STATE_UNBLOCKED)
 		block = FALSE;
 	else
 		block = TRUE;
@@ -292,8 +292,8 @@ urf_killswitch_set_property (GObject      *object,
 	switch (prop_id) {
 	case PROP_KILLSWITCH_STATE:
 		state = g_value_get_int (value);
-		if (state == URFSWITCH_STATE_UNBLOCKED ||
-		    state == URFSWITCH_STATE_SOFT_BLOCKED)
+		if (state == URF_ENUM_STATE_UNBLOCKED ||
+		    state == URF_ENUM_STATE_SOFT_BLOCKED)
 			urf_killswitch_set_block (killswitch, state);
 		break;
 	default:
@@ -377,11 +377,11 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	/**
 	 * UrfKillswitch:state:
 	 *
-	 * The state of the killswitch. See #UrfSwitchState.
+	 * The state of the killswitch. See #UrfEnumState.
 	 * <note>
 	 *   <para>
-	 *     Writing the states other than #URFSWITCH_STATE_UNBLOCKED
-	 *     or #URFSWITCH_STATE_SOFT_BLOCKED will be ignored. Also,
+	 *     Writing the states other than #URF_ENUM_STATE_UNBLOCKED
+	 *     or #URF_ENUM_STATE_SOFT_BLOCKED will be ignored. Also,
 	 *     the state writing may not take effect, and it depends on
 	 *     the state of the hardware.
 	 *   </para>
@@ -391,9 +391,9 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	 */
 	pspec = g_param_spec_int ("state",
 				  "State", "The state of the killswitch",
-				  URFSWITCH_STATE_NO_ADAPTER,
-				  URFSWITCH_STATE_HARD_BLOCKED,
-				  URFSWITCH_STATE_NO_ADAPTER,
+				  URF_ENUM_STATE_NO_ADAPTER,
+				  URF_ENUM_STATE_HARD_BLOCKED,
+				  URF_ENUM_STATE_NO_ADAPTER,
 				  G_PARAM_READWRITE);
 	g_object_class_install_property (object_class, PROP_KILLSWITCH_STATE, pspec);
 
@@ -403,7 +403,7 @@ urf_killswitch_class_init (UrfKillswitchClass *klass)
 	 * @state: the new state
 	 *
 	 * The state-changed signal is emitted when the killswitch state is changed.
-	 * See #UrfSwitchState.
+	 * See #UrfEnumState.
 	 *
 	 * Since 0.3.0
 	 **/
@@ -439,11 +439,11 @@ urf_killswitch_init (UrfKillswitch *killswitch)
  * Since: 0.3.0
  **/
 UrfKillswitch *
-urf_killswitch_new (UrfSwitchType type)
+urf_killswitch_new (UrfEnumType type)
 {
 	UrfKillswitch *killswitch;
 
-	if (type == URFSWITCH_TYPE_ALL)
+	if (type == URF_ENUM_TYPE_ALL)
 		return NULL;
 
 	if (urf_killswitch_object[type] != NULL) {

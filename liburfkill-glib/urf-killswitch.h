@@ -67,13 +67,13 @@ struct _UrfKillswitchClass
 	/*< private>*/
 	GObjectClass		 parent_class;
 	void			(*state_changed)	(UrfKillswitch	*killswitch,
-							 UrfSwitchState	 state);
+							 UrfEnumState	 state);
 };
 
 /* general */
 GType			 urf_killswitch_get_type	(void);
-UrfKillswitch		*urf_killswitch_new		(UrfSwitchType	 type);
-UrfSwitchType		 urf_killswitch_get_switch_type	(UrfKillswitch	*killswitch);
+UrfKillswitch		*urf_killswitch_new		(UrfEnumType	 type);
+UrfEnumType		 urf_killswitch_get_switch_type	(UrfKillswitch	*killswitch);
 
 G_END_DECLS
 
