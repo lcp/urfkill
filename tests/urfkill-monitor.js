@@ -3,34 +3,23 @@ const Lang = imports.lang;
 const Urfkill = imports.gi.Urfkill;
 const Mainloop = imports.mainloop;
 
-const UrfDeviceType = {
-    ALL       : 0,
-    WLAN      : 1,
-    BLUETOOTH : 2,
-    UWB       : 3,
-    WIMAX     : 4,
-    WWAN      : 5,
-    GPS       : 6,
-    FM        : 7
-};
-
 function deviceTypeToString (type) {
   switch (type) {
-    case UrfDeviceType.ALL:
+    case Urfkill.EnumType.ALL:
       return "ALL";
-    case UrfDeviceType.WLAN:
+    case Urfkill.EnumType.WLAN:
       return "WLAN";
-    case UrfDeviceType.BLUETOOTH:
+    case Urfkill.EnumType.BLUETOOTH:
       return "BLUETOOTH";
-    case UrfDeviceType.UWB:
+    case Urfkill.EnumType.UWB:
       return "UWB";
-    case UrfDeviceType.WIMAX:
+    case Urfkill.EnumType.WIMAX:
       return "WIMAX";
-    case UrfDeviceType.WWAN:
+    case Urfkill.EnumType.WWAN:
       return "WWAN";
-    case UrfDeviceType.GPS:
+    case Urfkill.EnumType.GPS:
       return "GPS";
-    case UrfDeviceType.FM:
+    case Urfkill.EnumType.FM:
       return "FM";
     default:
       return "Unknown";

@@ -5,22 +5,22 @@
 static GMainLoop *loop = NULL;
 
 static const char *
-type_to_name (UrfSwitchType type)
+type_to_name (UrfEnumType type)
 {
 	switch (type) {
-	case URFSWITCH_TYPE_WLAN:
+	case URF_ENUM_TYPE_WLAN:
 		return "WLAN";
-	case URFSWITCH_TYPE_BLUETOOTH:
+	case URF_ENUM_TYPE_BLUETOOTH:
 		return "BLUETOOTH";
-	case URFSWITCH_TYPE_UWB:
+	case URF_ENUM_TYPE_UWB:
 		return "UWB";
-	case URFSWITCH_TYPE_WIMAX:
+	case URF_ENUM_TYPE_WIMAX:
 		return "WIMAX";
-	case URFSWITCH_TYPE_WWAN:
+	case URF_ENUM_TYPE_WWAN:
 		return "WWAN";
-	case URFSWITCH_TYPE_GPS:
+	case URF_ENUM_TYPE_GPS:
 		return "GPS";
-	case URFSWITCH_TYPE_FM:
+	case URF_ENUM_TYPE_FM:
 		return "FM";
 	default:
 		return NULL;
@@ -67,9 +67,9 @@ main ()
 
 	g_type_init();
 
-	wlan = urf_killswitch_new (URFSWITCH_TYPE_WLAN);
-	bluetooth = urf_killswitch_new (URFSWITCH_TYPE_BLUETOOTH);
-	wwan = urf_killswitch_new (URFSWITCH_TYPE_WWAN);
+	wlan = urf_killswitch_new (URF_ENUM_TYPE_WLAN);
+	bluetooth = urf_killswitch_new (URF_ENUM_TYPE_BLUETOOTH);
+	wwan = urf_killswitch_new (URF_ENUM_TYPE_WWAN);
 
 	if (wlan) {
 		show_state (wlan);

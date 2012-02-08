@@ -18,16 +18,16 @@ main ()
 
 	g_type_init();
 
-	wlan = urf_killswitch_new (URFSWITCH_TYPE_WLAN);
+	wlan = urf_killswitch_new (URF_ENUM_TYPE_WLAN);
 
 	g_object_set (wlan,
-		      "state", URFSWITCH_STATE_SOFT_BLOCKED,
+		      "state", URF_ENUM_STATE_SOFT_BLOCKED,
 		      NULL);
 
 	sleep (2);
 
 	g_object_set (wlan,
-		      "state", URFSWITCH_STATE_UNBLOCKED,
+		      "state", URF_ENUM_STATE_UNBLOCKED,
 		      NULL);
 
 	loop = g_main_loop_new (NULL, FALSE);
