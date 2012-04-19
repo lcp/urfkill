@@ -41,27 +41,12 @@
 static GMainLoop *loop = NULL;
 
 static void
-on_bus_acquired (GDBusConnection *connection,
-                 const gchar     *name,
-                 gpointer         user_data)
-{
-	/* This is where we'd export some objects on the bus */
-}
-
-static void
-on_name_acquired (GDBusConnection *connection,
-                  const gchar     *name,
-                  gpointer         user_data)
-{
-	g_debug ("Acquired the name %s on the system bus\n", name);
-}
-
-static void
 on_name_lost (GDBusConnection *connection,
               const gchar     *name,
               gpointer         user_data)
 {
-	g_debug ("Lost the name %s on the system bus\n", name);
+	g_warning ("Lost the name %s on the system bus\n", name);
+	g_main_loop_quit (loop);
 }
 
 /**
@@ -140,17 +125,17 @@ main (gint argc, gchar **argv)
 	config = urf_config_new ();
 	urf_config_load_from_file (config, conf_file);
 
+	loop = g_main_loop_new (NULL, FALSE);
+
 	/* acquire name */
 	owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
 	                           URFKILL_SERVICE_NAME,
 	                           G_BUS_NAME_OWNER_FLAGS_NONE,
-	                           on_bus_acquired,
-	                           on_name_acquired,
+	                           NULL,
+	                           NULL,
 	                           on_name_lost,
 	                           NULL,
 	                           NULL);
-
-	loop = g_main_loop_new (NULL, FALSE);
 
 	/* do stuff on ctrl-c */
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
