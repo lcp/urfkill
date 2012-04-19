@@ -584,7 +584,6 @@ urf_arbitrator_class_init(UrfArbitratorClass *klass)
 			      NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
-
 }
 
 /**
