@@ -198,6 +198,7 @@ urf_input_startup (UrfInput *input)
 
 	enumerate = udev_enumerate_new (udev);
 	udev_enumerate_add_match_subsystem (enumerate, "input");
+	udev_enumerate_add_match_property (enumerate, "ID_INPUT_KEY", "1");
 	udev_enumerate_scan_devices (enumerate);
 	devices = udev_enumerate_get_list_entry (enumerate);
 
