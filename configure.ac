@@ -144,7 +144,7 @@ AC_SUBST(WARNINGFLAGS_C)
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.30.1])
 PKG_CHECK_MODULES(GIO, [gio-unix-2.0 >= 2.30.1])
-PKG_CHECK_MODULES(LIBUDEV, [libudev >= 147])
+PKG_CHECK_MODULES(LIBUDEV, [libudev >= 148])
 
 # XML library
 AC_CHECK_LIB(expat, XML_ParserCreate,
