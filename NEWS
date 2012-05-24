@@ -1,3 +1,29 @@
+Version 0.4.0
+~~~~~~~~~~~~~
+Released: 2012-05-24
+
+New Features:
+- Migrate from dbus-glib to gdbus (Gary Lin)
+
+Bugfixes:
+- urf-input: Remove the unnecessary device match rules (Gary Lin)
+- urf-input: Match the property "ID_INPUT_KEY" (Gary Lin)
+- urf-input: Filter out the devices without the EV_KEY capability (David Härdeman)
+- urf-main: quit if the dbus name is already owned (Gary Lin)
+- urfkill-glib: Rename the enumerations (Gary Lin)
+- urf-polkit: Remove unused code (Gary Lin)
+- glib/urf-device: Refresh only 'soft' and 'hard' (Gary Lin)
+- urf-daemon: Remove the unused loop for the object registration (Gary Lin)
+- urf-daemon: Pass the right parameters back (Gary Lin)
+- urf-seat: Check error not proxy (Gary Lin)
+- urf-consolekit: correct object path array handling (Gary Lin)
+- urf-consolekit: correct error check (Gary Lin)
+- urf-device: correct the introspection xml (Gary Lin)
+- urf-consolekit: invoke DBus methods correctly (Gary Lin)
+- urf-device, killswitch: release the introspection data (Gary Lin)
+- urf-killswitch: unref connection properly (Gary Lin)
+- urf-config: Plug a memory leak (Gary Lin)
+
 Version 0.3.0
 ~~~~~~~~~~~~~
 Released: 2011-09-15
