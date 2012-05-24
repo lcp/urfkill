@@ -2,11 +2,11 @@ urfkill Release Notes
 
 1. Write NEWS entries for urfkill.
 
-git log --no-merges --pretty=format:'- %s (%an)' urfkill-0.3.0.. | grep -i -v trivial > NEWS.new
+git log --no-merges --pretty=format:'- %s (%an)' urfkill-0.4.0.. | grep -i -v trivial > NEWS.new
 
-Version 0.4.0
+Version 0.5.0
 ~~~~~~~~~~~~~
-Released: 2011-xx-xx
+Released: 2012-xx-xx
 
 Translations:
 New Features:
@@ -14,8 +14,8 @@ Bugfixes:
 
 2. Commit changes to git:
 
-git commit -a -m "Released urfkill 0.4.0"
-git tag -s -f -m "Released urfkill 0.4.0" urfkill-0.4.0
+git commit -a -m "Released urfkill 0.5.0"
+git tag -s -f -m "Released urfkill 0.5.0" urfkill-0.5.0
 <wait>
 git push --tags
 git push

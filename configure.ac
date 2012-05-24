@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 m4_define([urf_major_version], [0])
-m4_define([urf_minor_version], [4])
+m4_define([urf_minor_version], [5])
 m4_define([urf_micro_version], [0])
 m4_define([urf_version],
           [urf_major_version.urf_minor_version.urf_micro_version])
