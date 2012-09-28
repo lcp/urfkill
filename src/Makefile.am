@@ -48,6 +48,7 @@ urfkilld_SOURCES =						\
 urfkilld_CPPFLAGS =						\
 	-I$(top_srcdir)/src					\
 	-DG_LOG_DOMAIN=\"URfkill\"				\
+	$(WARNINGFLAGS_C)					\
 	$(AM_CPPFLAGS)
 
 urfkilld_LDADD =						\
