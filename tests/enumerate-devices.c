@@ -34,7 +34,9 @@ main ()
 	UrfDevice *device;
 	GList *devices, *item;
 
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	client = urf_client_new ();
 	urf_client_enumerate_devices_sync (client, NULL, NULL);

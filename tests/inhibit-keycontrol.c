@@ -11,7 +11,9 @@ main ()
 	UrfClient *client = NULL;
 	guint cookie;
 
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	client = urf_client_new ();
 
