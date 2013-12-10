@@ -21,12 +21,17 @@ get_dmi_info ()
 		return NULL;
 	}
 
-	info = g_new0 (DmiInfo, 1);
-
 	enumerate = udev_enumerate_new (udev);
 	udev_enumerate_add_match_subsystem (enumerate, "dmi");
 	udev_enumerate_scan_devices (enumerate);
 	devices = udev_enumerate_get_list_entry (enumerate);
+
+	if (devices == NULL) {
+		g_warning("No dmi devices found.");
+		return NULL;
+	}
+
+	info = g_new0 (DmiInfo, 1);
 
 	udev_list_entry_foreach (dev_list_entry, devices) {
 		const char *path;
