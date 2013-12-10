@@ -91,6 +91,9 @@ $ gdbus call -y \
             <doc:item>
               <doc:term>7</doc:term><doc:definition>FM</doc:definition>
             </doc:item>
+            <doc:item>
+              <doc:term>8</doc:term><doc:definition>NFC</doc:definition>
+            </doc:item>
           </doc:list>
         </doc:description>
       </doc:doc>

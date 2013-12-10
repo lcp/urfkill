@@ -46,6 +46,7 @@
  * @URF_ENUM_TYPE_WWAN: switch is on a wireless WAN device.
  * @URF_ENUM_TYPE_GPS: switch is on a GPS device.
  * @URF_ENUM_TYPE_FM: switch is on a FM radio device.
+ * @URF_ENUM_TYPE_NFC: switch is on a NFC device.
  * @URF_ENUM_TYPE_NUM: number of defined rfkill types
  *
  * The type of the rfkill device following the definition in &lt;linux/rfkill.h&gt;
@@ -59,6 +60,7 @@ typedef enum {
 	URF_ENUM_TYPE_WWAN,
 	URF_ENUM_TYPE_GPS,
 	URF_ENUM_TYPE_FM,
+	URF_ENUM_TYPE_NFC,
 	URF_ENUM_TYPE_NUM,
 } UrfEnumType;
 
