@@ -169,6 +169,8 @@ type_to_string (guint type)
 		return "GPS";
 	case RFKILL_TYPE_FM:
 		return "FM";
+	case RFKILL_TYPE_NFC:
+		return "NFC";
 	default:
 		g_assert_not_reached ();
 	}
