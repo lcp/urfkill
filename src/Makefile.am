@@ -36,10 +36,10 @@ urfkilld_SOURCES =						\
 	urf-polkit.c						\
 	urf-utils.h						\
 	urf-utils.c						\
-	urf-consolekit.h					\
-	urf-consolekit.c					\
-	urf-seat.h						\
-	urf-seat.c						\
+	urf-session-checker-consolekit.h			\
+	urf-session-checker-consolekit.c			\
+	urf-seat-consolekit.h					\
+	urf-seat-consolekit.c					\
 	urf-daemon.h						\
 	urf-daemon.c						\
 	urf-main.c						\
