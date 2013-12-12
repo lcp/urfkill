@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __URF_SEAT_H__
-#define __URF_SEAT_H__
+#ifndef __URF_SEAT_CONSOLEKIT_H__
+#define __URF_SEAT_CONSOLEKIT_H__
 
 #include <glib-object.h>
 
@@ -63,4 +63,4 @@ const char		*urf_seat_get_active		(UrfSeat	*seat);
 
 G_END_DECLS
 
-#endif /* __URF_SEAT_H__ */
+#endif /* __URF_SEAT_CONSOLEKIT_H__ */
