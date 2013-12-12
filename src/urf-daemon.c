@@ -36,7 +36,7 @@
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
-#include "urf-consolekit.h"
+#include "urf-session-checker-consolekit.h"
 
 #define URFKILL_DBUS_INTERFACE "org.freedesktop.URfkill"
 #define URFKILL_OBJECT_PATH "/org/freedesktop/URfkill"
@@ -110,15 +110,15 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 struct UrfDaemonPrivate
 {
-	UrfConfig	*config;
-	UrfPolkit	*polkit;
-	UrfArbitrator   *arbitrator;
-	UrfInput	*input;
-	UrfConsolekit	*consolekit;
-	gboolean	 key_control;
-	gboolean	 master_key;
-	GDBusConnection	*connection;
-	GDBusNodeInfo	*introspection_data;
+	UrfConfig		*config;
+	UrfPolkit		*polkit;
+	UrfArbitrator		*arbitrator;
+	UrfInput		*input;
+	UrfSessionChecker	*session_checker;
+	gboolean		 key_control;
+	gboolean		 master_key;
+	GDBusConnection		*connection;
+	GDBusNodeInfo		*introspection_data;
 };
 
 static void urf_daemon_dispose (GObject *object);
@@ -143,7 +143,7 @@ urf_daemon_input_event_cb (UrfInput *input,
 	gboolean block = FALSE;
 	GError *error = NULL;
 
-	if (urf_consolekit_is_inhibited (priv->consolekit))
+	if (urf_session_checker_is_inhibited (priv->session_checker))
 		goto out;
 
 	switch (code) {
@@ -311,7 +311,7 @@ urf_daemon_is_inhibited (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = daemon->priv;
 	GVariant *value;
 
-	value = g_variant_new ("(b)", urf_consolekit_is_inhibited (priv->consolekit));
+	value = g_variant_new ("(b)", urf_session_checker_is_inhibited (priv->session_checker));
 	g_dbus_method_invocation_return_value (invocation, value);
 
 	return TRUE;
@@ -330,7 +330,7 @@ urf_daemon_inhibit (UrfDaemon             *daemon,
 	guint cookie = 0;
 
 	bus_name = g_dbus_method_invocation_get_sender (invocation);
-	cookie = urf_consolekit_inhibit (priv->consolekit, bus_name, reason);
+	cookie = urf_session_checker_inhibit (priv->session_checker, bus_name, reason);
 	g_dbus_method_invocation_return_value (invocation,
 	                                       g_variant_new ("(u)", cookie));
 
@@ -345,7 +345,7 @@ urf_daemon_uninhibit (UrfDaemon             *daemon,
 		      const guint            cookie,
 		      GDBusMethodInvocation *invocation)
 {
-	urf_consolekit_uninhibit (daemon->priv->consolekit, cookie);
+	urf_session_checker_uninhibit (daemon->priv->session_checker, cookie);
 }
 
 static void
@@ -502,10 +502,10 @@ urf_daemon_startup (UrfDaemon *daemon)
 			goto out;
 		}
 
-		/* start up consolekit checker */
-		ret = urf_consolekit_startup (priv->consolekit);
+		/* start up session checker */
+		ret = urf_session_checker_startup (priv->session_checker);
 		if (!ret) {
-			g_warning ("failed to setup consolekit session checker");
+			g_warning ("failed to setup session checker");
 			goto out;
 		}
 	}
@@ -628,7 +628,7 @@ urf_daemon_init (UrfDaemon *daemon)
 	g_signal_connect (daemon->priv->input, "rf-key-pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
 
-	daemon->priv->consolekit = urf_consolekit_new ();
+	daemon->priv->session_checker = urf_session_checker_new ();
 }
 
 /**
@@ -760,9 +760,9 @@ urf_daemon_dispose (GObject *object)
 		priv->arbitrator = NULL;
 	}
 
-	if (priv->consolekit) {
-		g_object_unref (priv->consolekit);
-		priv->consolekit = NULL;
+	if (priv->session_checker) {
+		g_object_unref (priv->session_checker);
+		priv->session_checker = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);

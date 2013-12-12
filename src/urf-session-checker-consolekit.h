@@ -18,51 +18,51 @@
  *
  */
 
-#ifndef __URF_CONSOLEKIT_H__
-#define __URF_CONSOLEKIT_H__
+#ifndef __URF_SESSION_CHECKER_CONSOLEKIT_H__
+#define __URF_SESSION_CHECKER_CONSOLEKIT_H__
 
 #include <glib-object.h>
 
-#include "urf-seat.h"
+#include "urf-seat-consolekit.h"
 
 G_BEGIN_DECLS
 
-#define URF_TYPE_CONSOLEKIT (urf_consolekit_get_type())
-#define URF_CONSOLEKIT(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-					URF_TYPE_CONSOLEKIT, UrfConsolekit))
-#define URF_CONSOLEKIT_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), \
-					URF_TYPE_CONSOLEKIT, UrfConsolekitClass))
-#define URF_IS_CONSOLEKIT(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), \
-					URF_TYPE_CONSOLEKIT))
-#define URF_IS_CONSOLEKIT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), \
-					URF_TYPE_CONSOLEKIT))
-#define URF_GET_CONSOLEKIT_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
-					URF_TYPE_CONSOLEKIT, UrfConsolekitClass))
+#define URF_TYPE_SESSION_CHECKER (urf_session_checker_get_type())
+#define URF_SESSION_CHECKER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
+					URF_TYPE_SESSION_CHECKER, UrfSessionChecker))
+#define URF_SESSION_CHECKER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), \
+					URF_TYPE_SESSION_CHECKER, UrfSessionCheckerClass))
+#define URF_IS_SESSION_CHECKER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), \
+					URF_TYPE_SESSION_CHECKER))
+#define URF_IS_SESSION_CHECKER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), \
+					URF_TYPE_SESSION_CHECKER))
+#define URF_GET_SESSION_CHECKER_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
+					URF_TYPE_SESSION_CHECKER, UrfSessionCheckerClass))
 
 typedef struct UrfConsolekitPrivate UrfConsolekitPrivate;
 
 typedef struct {
 	GObject 		 parent;
 	UrfConsolekitPrivate 	*priv;
-} UrfConsolekit;
+} UrfSessionChecker;
 
 typedef struct {
         GObjectClass	 	 parent_class;
-} UrfConsolekitClass;
+} UrfSessionCheckerClass;
 
-GType			 urf_consolekit_get_type	(void);
+GType			 urf_session_checker_get_type		(void);
 
-UrfConsolekit		*urf_consolekit_new		(void);
+UrfSessionChecker	*urf_session_checker_new		(void);
 
-gboolean		 urf_consolekit_startup		(UrfConsolekit	*consolekit);
+gboolean		 urf_session_checker_startup		(UrfSessionChecker *consolekit);
 
-gboolean		 urf_consolekit_is_inhibited	(UrfConsolekit	*consolekit);
-guint			 urf_consolekit_inhibit		(UrfConsolekit	*consolekit,
-							 const char	*bus_name,
-							 const char	*reason);
-void			 urf_consolekit_uninhibit	(UrfConsolekit	*consolekit,
-							 const guint	 cookie);
+gboolean		 urf_session_checker_is_inhibited	(UrfSessionChecker *consolekit);
+guint			 urf_session_checker_inhibit		(UrfSessionChecker *consolekit,
+								 const char	*bus_name,
+								 const char	*reason);
+void			 urf_session_checker_uninhibit		(UrfSessionChecker *consolekit,
+								 const guint	 cookie);
 
 G_END_DECLS
 
-#endif /* __URF_CONSOLEKIT_H__ */
+#endif /* __URF_SESSION_CHECKER_CONSOLEKIT_H__ */
