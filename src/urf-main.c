@@ -112,7 +112,9 @@ main (gint argc, gchar **argv)
 		{ NULL }
 	};
 
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init ();
+#endif
 
 	context = g_option_context_new ("urfkill daemon");
 	g_option_context_add_main_entries (context, options, NULL);

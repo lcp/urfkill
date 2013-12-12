@@ -16,7 +16,9 @@ main ()
 {
 	UrfKillswitch *wlan = NULL;
 
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	wlan = urf_killswitch_new (URF_ENUM_TYPE_WLAN);
 

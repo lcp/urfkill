@@ -357,7 +357,7 @@ parse_xml_start_element (void       *data,
 		}
 
 		match_key = get_match_key (info->hardware_info, key);
-		if (!match_rule (match_key, operator, match_body))
+		if (match_key && !match_rule (match_key, operator, match_body))
 			return;
 	} else if (g_strcmp0 (name, "option") == 0) {
 		for (i = 0; atts[i]; i++) {
