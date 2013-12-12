@@ -22,6 +22,8 @@ type_to_name (UrfEnumType type)
 		return "GPS";
 	case URF_ENUM_TYPE_FM:
 		return "FM";
+	case URF_ENUM_TYPE_NFC:
+		return "NFC";
 	default:
 		return NULL;
 	}
@@ -65,7 +67,9 @@ main ()
 	UrfKillswitch *bluetooth = NULL;
 	UrfKillswitch *wwan = NULL;
 
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 
 	wlan = urf_killswitch_new (URF_ENUM_TYPE_WLAN);
 	bluetooth = urf_killswitch_new (URF_ENUM_TYPE_BLUETOOTH);

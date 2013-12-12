@@ -15,8 +15,8 @@
           name <doc:tt>org.freedesktop.URfkill</doc:tt>. The TYPENAME
           could be <doc:tt>"WLAN"</doc:tt>, <doc:tt>"BLUETOOTH"</doc:tt>,
           <doc:tt>"UWB"</doc:tt>, <doc:tt>"WIMAX"</doc:tt>,
-          <doc:tt>"WWAN"</doc:tt>, <doc:tt>"GPS"</doc:tt>, or
-          <doc:tt>"FM"</doc:tt>.
+          <doc:tt>"WWAN"</doc:tt>, <doc:tt>"GPS"</doc:tt>,
+          <doc:tt>"FM"</doc:tt>, or <doc:tt>"NFC"</doc:tt>.
         </doc:para>
         <doc:para>
           <doc:example language="shell" title="simple example">

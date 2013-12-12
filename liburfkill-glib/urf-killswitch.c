@@ -162,7 +162,7 @@ out:
 }
 
 /**
- * urf_killswitch_startup
+ * urf_killswitch_startup:
  **/
 static gboolean
 urf_killswitch_startup (UrfKillswitch *killswitch)
@@ -192,6 +192,9 @@ urf_killswitch_startup (UrfKillswitch *killswitch)
 		break;
 	case URF_ENUM_TYPE_FM:
 		object_path = BASE_OBJECT_PATH"FM";
+		break;
+	case URF_ENUM_TYPE_NFC:
+		object_path = BASE_OBJECT_PATH"NFC";
 		break;
 	default:
 		object_path = NULL;
