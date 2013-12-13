@@ -202,7 +202,7 @@ get_session_id (UrfSessionChecker *logind,
 		goto out;
 	}
 
-	g_variant_get (retval, "(s)", &session_id);
+	g_variant_get (retval, "(o)", &session_id);
 	session_id = g_strdup (session_id);
 	g_variant_unref (retval);
 out:
@@ -363,7 +363,7 @@ urf_session_checker_proxy_signal_cb (GDBusProxy *proxy,
                                      gpointer user_data)
 {
 	UrfSessionChecker *logind = URF_SESSION_CHECKER (user_data);
-	const char *seat_string;
+	const char *seat_name;
 	char *seat_path;
 
 	if (g_strcmp0 (signal_name, "SeatNew") == 0) {
@@ -446,7 +446,7 @@ urf_session_checker_get_seats (UrfSessionChecker *logind)
 	}
 
 	g_variant_get (retval, "(a(so))", &iter);
-	while (g_variant_iter_loop (iter, "so", &seat_name, &seat_path)) {
+	while (g_variant_iter_loop (iter, "(so)", &seat_name, &seat_path)) {
 		urf_session_checker_add_seat (logind, seat_path);
 		g_debug ("Added seat: %s", seat_name);
 	}
@@ -471,7 +471,7 @@ urf_session_checker_startup (UrfSessionChecker *logind)
 	                                             G_DBUS_PROXY_FLAGS_NONE,
 	                                             NULL,
 	                                             "org.freedesktop.login1",
-	                                             "/org/freedesktop/login1/Manager",
+	                                             "/org/freedesktop/login1",
 	                                             "org.freedesktop.login1.Manager",
 	                                             NULL,
 	                                             &error);

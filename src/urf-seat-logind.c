@@ -69,9 +69,10 @@ urf_seat_get_active (UrfSeat *seat)
  * urf_seat_proxy_signal_cb:
  **/
 static void
-urf_seat_proxy_property_changed_cb (GDBusProxy *proxy,
-                                    gchar *property,
-                                    GVariant *value)
+urf_seat_proxy_properties_changed (GDBusProxy *proxy,
+                                   gchar *property,
+                                   GVariant *value,
+                                   gpointer user_data)
 {
 	UrfSeat *seat = URF_SEAT (user_data);
 	char *session_name, *session_path;
@@ -121,8 +122,8 @@ urf_seat_object_path_sync (UrfSeat *seat,
 		return FALSE;
 	}
 
-	g_variant_get (retval, "(so)", &session_name, &session);
-	priv->active = g_strdup (session);
+	g_variant_get (retval, "(so)", &session_name, &session_path);
+	priv->active = g_strdup (session_path);
 	g_variant_unref (retval);
 
 	/* connect signals */
