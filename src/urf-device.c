@@ -138,6 +138,8 @@ urf_device_update_states (UrfDevice      *device,
 		priv->soft = soft;
 		priv->hard = hard;
 		priv->state = event_to_state (priv->soft, priv->hard);
+
+		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
 		emit_properites_changed (device);
 		g_dbus_connection_emit_signal (priv->connection,
 		                               NULL,
