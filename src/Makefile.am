@@ -36,15 +36,33 @@ urfkilld_SOURCES =						\
 	urf-polkit.c						\
 	urf-utils.h						\
 	urf-utils.c						\
-	urf-session-checker-consolekit.h			\
-	urf-session-checker-consolekit.c			\
-	urf-seat-consolekit.h					\
-	urf-seat-consolekit.c					\
 	urf-daemon.h						\
 	urf-daemon.c						\
 	urf-main.c						\
 	$(NULL)
 
+if SESSION_TRACKING_SYSTEMD
+urfkilld_SOURCES += \
+	urf-session-checker-logind.h				\
+	urf-session-checker-logind.c				\
+	urf-seat-logind.h					\
+	urf-seat-logind.c					\
+	$(NULL)
+else
+if SESSION_TRACKING_CK
+urfkilld_SOURCES += \
+	urf-session-checker-consolekit.h			\
+	urf-session-checker-consolekit.c			\
+	urf-seat-consolekit.h					\
+	urf-seat-consolekit.c					\
+	$(NULL)
+else
+urfkilld_SOURCES += \
+	urf-session-checker-none.h				\
+	urf-session-checker-none.c				\
+	$(NULL)
+endif
+endif
 urfkilld_CPPFLAGS =						\
 	-I$(top_srcdir)/src					\
 	-DG_LOG_DOMAIN=\"URfkill\"				\

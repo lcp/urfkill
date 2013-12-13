@@ -36,7 +36,14 @@
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
+
+#if defined SESSION_TRACKING_CK
 #include "urf-session-checker-consolekit.h"
+#elif defined SESSION_TRACKING_SYSTEMD
+#include "urf-session-checker-logind.h"
+#else
+#include "urf-session-checker-none.h"
+#endif
 
 #define URFKILL_DBUS_INTERFACE "org.freedesktop.URfkill"
 #define URFKILL_OBJECT_PATH "/org/freedesktop/URfkill"

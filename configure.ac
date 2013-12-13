@@ -174,6 +174,27 @@ else
 	AC_DEFINE(USE_SECURITY_POLKIT_NEW, 1, [if we should use PolicyKit new API])
 fi
 
+# session tracking support
+AC_MSG_CHECKING([Session tracking support])
+AC_ARG_WITH(session-tracking, AS_HELP_STRING([--with-session-tracking=systemd|consolekit|no],
+        [Select session tracking support (default: consolekit)]))
+# default to consolekit
+AS_IF([test -z "$with_session_tracking"], with_session_tracking=consolekit)
+AS_IF([test "$with_session_tracking" = "ck"], with_session_tracking=consolekit)
+AS_IF([test "$with_session_tracking" = "none"], with_session_tracking=no)
+# check value
+AS_IF([! (echo "$with_session_tracking" | grep -q -E "^(systemd|consolekit|no)$")],
+        AC_MSG_ERROR([--with-session-tracking must be systemd/consolekit/no, not $with_session_tracking]))
+# add conditionals and subtitution
+AM_CONDITIONAL(SESSION_TRACKING_CK, test "$with_session_tracking" = "consolekit")
+AM_CONDITIONAL(SESSION_TRACKING_SYSTEMD, test "$with_session_tracking" = "systemd")
+AC_DEFINE(SESSION_TRACKING_CK,
+ test "$with_session_tracking" = "consolekit",
+ [Define if you want to use consolekit for session tracking])
+AC_DEFINE(SESSION_TRACKING_SYSTEMD,
+ test "$with_session_tracking" = "systemd",
+ [Define if you want to use systemd/logind for session tracking])
+
 GOBJECT_INTROSPECTION_CHECK([0.6.7])
 
 dnl ---------------------------------------------------------------------------
@@ -236,6 +257,7 @@ echo "        cppflags:                   ${CPPFLAGS}"
 echo "        xsltproc:                   ${XSLTPROC}"
 echo ""
 echo "        Maintainer mode:            ${USE_MAINTAINER_MODE}"
+echo "        Session tracking using:     ${with_session_tracking}"
 echo "        Building api docs:          ${enable_gtk_doc}"
 echo "        Building man pages:         ${enable_man_pages}"
 echo "        Building unit tests:        ${enable_tests}"
