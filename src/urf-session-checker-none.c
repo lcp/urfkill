@@ -52,7 +52,7 @@ G_DEFINE_TYPE (UrfSessionChecker, urf_session_checker, G_TYPE_OBJECT)
  * urf_session_checker_is_inhibited:
  **/
 gboolean
-urf_session_checker_is_inhibited (UrfSessionChecker *logind)
+urf_session_checker_is_inhibited (UrfSessionChecker *session_checker)
 {
 	return FALSE;
 }
@@ -61,7 +61,7 @@ urf_session_checker_is_inhibited (UrfSessionChecker *logind)
  * urf_session_checker_inhibit:
  **/
 guint
-urf_session_checker_inhibit (UrfSessionChecker *logind,
+urf_session_checker_inhibit (UrfSessionChecker *session_checker,
                              const char *bus_name,
                              const char *reason)
 {
@@ -72,17 +72,8 @@ urf_session_checker_inhibit (UrfSessionChecker *logind,
  * urf_session_checker_uninhibit:
  **/
 void
-urf_session_checker_uninhibit (UrfSessionChecker *logind,
+urf_session_checker_uninhibit (UrfSessionChecker *session_checker,
                                const guint    cookie)
-{
-}
-
-/**
- * urf_session_checker_add_seat:
- **/
-static void
-urf_session_checker_add_seat (UrfSessionChecker *logind,
-                              const char *object_path)
 {
 }
 
@@ -90,9 +81,25 @@ urf_session_checker_add_seat (UrfSessionChecker *logind,
  * urf_session_checker_startup:
  **/
 gboolean
-urf_session_checker_startup (UrfSessionChecker *logind)
+urf_session_checker_startup (UrfSessionChecker *session_checker)
 {
 	return TRUE;
+}
+
+/**
+ * urf_session_checker_init:
+ */
+static void
+urf_session_checker_init (UrfSessionChecker *session_checker)
+{
+}
+
+/**
+ * urf_session_checker_class_init
+ */
+static void
+urf_session_checker_class_init (UrfSessionCheckerClass *klass)
+{
 }
 
 /**
@@ -101,7 +108,7 @@ urf_session_checker_startup (UrfSessionChecker *logind)
 UrfSessionChecker *
 urf_session_checker_new (void)
 {
-	UrfSessionChecker *logind;
-	logind = URF_SESSION_CHECKER (g_object_new (URF_TYPE_SESSION_CHECKER, NULL));
-	return logind;
+	UrfSessionChecker *session_checker;
+	session_checker = URF_SESSION_CHECKER (g_object_new (URF_TYPE_SESSION_CHECKER, NULL));
+	return session_checker;
 }

@@ -49,13 +49,13 @@ GType			 urf_session_checker_get_type		(void);
 
 UrfSessionChecker	*urf_session_checker_new		(void);
 
-gboolean		 urf_session_checker_startup		(UrfSessionChecker *logind);
+gboolean		 urf_session_checker_startup		(UrfSessionChecker *session_checker);
 
-gboolean		 urf_session_checker_is_inhibited	(UrfSessionChecker *logind);
-guint			 urf_session_checker_inhibit		(UrfSessionChecker *logind,
+gboolean		 urf_session_checker_is_inhibited	(UrfSessionChecker *session_checker);
+guint			 urf_session_checker_inhibit		(UrfSessionChecker *session_checker,
 								 const char	*bus_name,
 								 const char	*reason);
-void			 urf_session_checker_uninhibit		(UrfSessionChecker *logind,
+void			 urf_session_checker_uninhibit		(UrfSessionChecker *session_checker,
 								 const guint	 cookie);
 
 G_END_DECLS
