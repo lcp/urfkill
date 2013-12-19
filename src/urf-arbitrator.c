@@ -151,6 +151,50 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 }
 
 /**
+ * urf_arbitrator_set_flight_mode:
+ **/
+gboolean
+urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
+				const gboolean  block)
+{
+	UrfArbitratorPrivate *priv = arbitrator->priv;
+	KillswitchState state = KILLSWITCH_STATE_NO_ADAPTER;
+	KillswitchState saved_state = KILLSWITCH_STATE_NO_ADAPTER;
+	KillswitchState want_state = KILLSWITCH_STATE_NO_ADAPTER;
+	gboolean ret = FALSE;
+	int i;
+
+	g_message("set_flight_mode: %d:", (int) block);
+
+	for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+		state = urf_killswitch_get_state (priv->killswitch[i]);
+
+		if (state != KILLSWITCH_STATE_NO_ADAPTER) {
+			g_message("killswitch[%s] state: %s", type_to_string(i),
+				  state_to_string(state));
+
+			saved_state = urf_killswitch_get_saved_state(priv->killswitch[i]);
+			g_debug("saved_state is: %s", state_to_string(saved_state));
+
+			if (block)
+				urf_killswitch_set_saved_state(priv->killswitch[i], state);
+
+			if (!block && state == saved_state)
+				want_state = saved_state;
+			else
+				want_state = block;
+
+			g_debug ("calling set_block %d", (int) want_state);
+			ret = urf_arbitrator_set_block (arbitrator, i, want_state);
+
+			//urf_killswitch_set_saved_state(priv->killswitch[i], want_state);
+		}
+	}
+
+	return ret;
+}
+
+/**
  * urf_arbitrator_get_state:
  **/
 KillswitchState

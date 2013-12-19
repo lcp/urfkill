@@ -77,6 +77,8 @@ gboolean		 urf_arbitrator_set_block		(UrfArbitrator	*arbitrator,
 gboolean		 urf_arbitrator_set_block_idx		(UrfArbitrator	*arbitrator,
 								 const guint	 index,
 								 const gboolean	 block);
+gboolean		 urf_arbitrator_set_flight_mode		(UrfArbitrator	*arbitrator,
+								 const gboolean	 block);
 KillswitchState		 urf_arbitrator_get_state		(UrfArbitrator	*arbitrator,
 								 guint 		 type);
 KillswitchState		 urf_arbitrator_get_state_idx		(UrfArbitrator	*arbitrator,
