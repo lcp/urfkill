@@ -26,7 +26,7 @@
 #include <string.h>
 #include <gio/gio.h>
 
-#include "urf-consolekit.h"
+#include "urf-session-checker-consolekit.h"
 
 typedef struct {
 	guint		 cookie;
@@ -43,25 +43,25 @@ struct UrfConsolekitPrivate {
 	gboolean	 inhibit;
 };
 
-G_DEFINE_TYPE (UrfConsolekit, urf_consolekit, G_TYPE_OBJECT)
+G_DEFINE_TYPE (UrfSessionChecker, urf_session_checker, G_TYPE_OBJECT)
 
-#define URF_CONSOLEKIT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
-				URF_TYPE_CONSOLEKIT, UrfConsolekitPrivate))
+#define URF_SESSION_CHECKER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), \
+				URF_TYPE_SESSION_CHECKER, UrfConsolekitPrivate))
 
 /**
- * urf_consolekit_is_inhibited:
+ * urf_session_checker_is_inhibited:
  **/
 gboolean
-urf_consolekit_is_inhibited (UrfConsolekit *consolekit)
+urf_session_checker_is_inhibited (UrfSessionChecker *consolekit)
 {
 	return consolekit->priv->inhibit;
 }
 
 /**
- * urf_consolekit_find_seat:
+ * urf_session_checker_find_seat:
  **/
 static UrfSeat *
-urf_consolekit_find_seat (UrfConsolekit *consolekit,
+urf_session_checker_find_seat (UrfSessionChecker *consolekit,
 			  const char    *object_path)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -78,7 +78,7 @@ urf_consolekit_find_seat (UrfConsolekit *consolekit,
 }
 
 static UrfInhibitor *
-find_inhibitor_by_sid (UrfConsolekit *consolekit,
+find_inhibitor_by_sid (UrfSessionChecker *consolekit,
 		       const char    *session_id)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -94,7 +94,7 @@ find_inhibitor_by_sid (UrfConsolekit *consolekit,
 }
 
 static UrfInhibitor *
-find_inhibitor_by_bus_name (UrfConsolekit *consolekit,
+find_inhibitor_by_bus_name (UrfSessionChecker *consolekit,
 			    const char    *bus_name)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -110,7 +110,7 @@ find_inhibitor_by_bus_name (UrfConsolekit *consolekit,
 }
 
 static UrfInhibitor *
-find_inhibitor_by_cookie (UrfConsolekit *consolekit,
+find_inhibitor_by_cookie (UrfSessionChecker *consolekit,
 			  const guint    cookie)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -129,7 +129,7 @@ find_inhibitor_by_cookie (UrfConsolekit *consolekit,
 }
 
 static gboolean
-is_inhibited (UrfConsolekit *consolekit)
+is_inhibited (UrfSessionChecker *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfSeat *seat;
@@ -156,19 +156,19 @@ free_inhibitor (UrfInhibitor *inhibitor)
 }
 
 /**
- * urf_consolekit_seat_active_changed:
+ * urf_session_checker_seat_active_changed:
  **/
 static void
-urf_consolekit_seat_active_changed (UrfSeat       *seat,
+urf_session_checker_seat_active_changed (UrfSeat       *seat,
 				    const char    *session_id,
-				    UrfConsolekit *consolekit)
+				    UrfSessionChecker *consolekit)
 {
 	consolekit->priv->inhibit = is_inhibited (consolekit);
 	g_debug ("Active Session changed: %s", session_id);
 }
 
 static char *
-get_session_id (UrfConsolekit *consolekit,
+get_session_id (UrfSessionChecker *consolekit,
 		const char    *bus_name)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -210,7 +210,7 @@ out:
 }
 
 static guint
-generate_unique_cookie (UrfConsolekit *consolekit)
+generate_unique_cookie (UrfSessionChecker *consolekit)
 {
 	UrfInhibitor *inhibitor;
 	guint cookie;
@@ -224,10 +224,10 @@ generate_unique_cookie (UrfConsolekit *consolekit)
 }
 
 /**
- * urf_consolekit_inhibit:
+ * urf_session_checker_inhibit:
  **/
 guint
-urf_consolekit_inhibit (UrfConsolekit *consolekit,
+urf_session_checker_inhibit (UrfSessionChecker *consolekit,
 			const char    *bus_name,
 			const char    *reason)
 {
@@ -260,7 +260,7 @@ urf_consolekit_inhibit (UrfConsolekit *consolekit,
 }
 
 static void
-remove_inhibitor (UrfConsolekit *consolekit,
+remove_inhibitor (UrfSessionChecker *consolekit,
 		  UrfInhibitor  *inhibitor)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -274,10 +274,10 @@ remove_inhibitor (UrfConsolekit *consolekit,
 }
 
 /**
- * urf_consolekit_uninhibit:
+ * urf_session_checker_uninhibit:
  **/
 void
-urf_consolekit_uninhibit (UrfConsolekit *consolekit,
+urf_session_checker_uninhibit (UrfSessionChecker *consolekit,
 			  const guint    cookie)
 {
 	UrfInhibitor *inhibitor;
@@ -291,10 +291,10 @@ urf_consolekit_uninhibit (UrfConsolekit *consolekit,
 }
 
 /**
- * urf_consolekit_add_seat:
+ * urf_session_checker_add_seat:
  **/
 static void
-urf_consolekit_add_seat (UrfConsolekit *consolekit,
+urf_session_checker_add_seat (UrfSessionChecker *consolekit,
 			 const char    *object_path)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
@@ -312,37 +312,37 @@ urf_consolekit_add_seat (UrfConsolekit *consolekit,
 
 	/* connect signal */
 	g_signal_connect (seat, "active-changed",
-			  G_CALLBACK (urf_consolekit_seat_active_changed),
+			  G_CALLBACK (urf_session_checker_seat_active_changed),
 			  consolekit);
 }
 
 /**
- * urf_consolekit_seat_added:
+ * urf_session_checker_seat_added:
  **/
 static void
-urf_consolekit_seat_added (UrfConsolekit *consolekit,
+urf_session_checker_seat_added (UrfSessionChecker *consolekit,
                            const char    *object_path)
 {
-	if (urf_consolekit_find_seat (consolekit, object_path) != NULL) {
+	if (urf_session_checker_find_seat (consolekit, object_path) != NULL) {
 		g_debug ("Already added seat: %s", object_path);
 		return;
 	}
 
-	urf_consolekit_add_seat (consolekit, object_path);
+	urf_session_checker_add_seat (consolekit, object_path);
 	g_debug ("Monitor seat: %s", object_path);
 }
 
 /**
- * urf_consolekit_seat_removed:
+ * urf_session_checker_seat_removed:
  **/
 static void
-urf_consolekit_seat_removed (UrfConsolekit *consolekit,
+urf_session_checker_seat_removed (UrfSessionChecker *consolekit,
                              const char    *object_path)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	UrfSeat *seat;
 
-	seat = urf_consolekit_find_seat (consolekit, object_path);
+	seat = urf_session_checker_find_seat (consolekit, object_path);
 	if (seat == NULL)
 		return;
 
@@ -353,32 +353,32 @@ urf_consolekit_seat_removed (UrfConsolekit *consolekit,
 }
 
 /**
- * urf_consolekit_proxy_signal_cb
+ * urf_session_checker_proxy_signal_cb
  **/
 static void
-urf_consolekit_proxy_signal_cb (GDBusProxy *proxy,
+urf_session_checker_proxy_signal_cb (GDBusProxy *proxy,
                                 gchar      *sender_name,
                                 gchar      *signal_name,
                                 GVariant   *parameters,
                                 gpointer    user_data)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
+	UrfSessionChecker *consolekit = URF_SESSION_CHECKER (user_data);
 	char *seat_path;
 
 	if (g_strcmp0 (signal_name, "SeatAdded") == 0) {
 		g_variant_get (parameters, "(o)", &seat_path);
-		urf_consolekit_seat_added (consolekit, seat_path);
+		urf_session_checker_seat_added (consolekit, seat_path);
 	} else if (g_strcmp0 (signal_name, "SeatRemoved") == 0) {
 		g_variant_get (parameters, "(o)", &seat_path);
-		urf_consolekit_seat_removed (consolekit, seat_path);
+		urf_session_checker_seat_removed (consolekit, seat_path);
 	}
 }
 
 /**
- * urf_consolekit_bus_owner_changed:
+ * urf_session_checker_bus_owner_changed:
  **/
 static void
-urf_consolekit_bus_owner_changed (UrfConsolekit *consolekit,
+urf_session_checker_bus_owner_changed (UrfSessionChecker *consolekit,
                                   const char    *old_owner,
                                   const char    *new_owner)
 {
@@ -395,31 +395,31 @@ urf_consolekit_bus_owner_changed (UrfConsolekit *consolekit,
 }
 
 /**
- * urf_consolekit_bus_proxy_signal_cb
+ * urf_session_checker_bus_proxy_signal_cb
  **/
 static void
-urf_consolekit_bus_proxy_signal_cb (GDBusProxy *proxy,
+urf_session_checker_bus_proxy_signal_cb (GDBusProxy *proxy,
                                     gchar      *sender_name,
                                     gchar      *signal_name,
                                     GVariant   *parameters,
                                     gpointer    user_data)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (user_data);
+	UrfSessionChecker *consolekit = URF_SESSION_CHECKER (user_data);
 	char *name;
 	char *old_owner;
 	char *new_owner;
 
 	if (g_strcmp0 (signal_name, "NameOwnerChanged") == 0) {
 		g_variant_get (parameters, "(sss)", &name, &old_owner, &new_owner);
-		urf_consolekit_bus_owner_changed (consolekit, old_owner, new_owner);
+		urf_session_checker_bus_owner_changed (consolekit, old_owner, new_owner);
 	}
 }
 
 /**
- * urf_consolekit_get_seats:
+ * urf_session_checker_get_seats:
  **/
 static gboolean
-urf_consolekit_get_seats (UrfConsolekit *consolekit)
+urf_session_checker_get_seats (UrfSessionChecker *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	GError *error = NULL;
@@ -444,7 +444,7 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 
 	g_variant_get (retval, "(ao)", &iter);
 	while (g_variant_iter_loop (iter, "o", &seat_name)) {
-		urf_consolekit_add_seat (consolekit, seat_name);
+		urf_session_checker_add_seat (consolekit, seat_name);
 		g_debug ("Added seat: %s", seat_name);
 	}
 	g_variant_iter_free (iter);
@@ -454,10 +454,10 @@ urf_consolekit_get_seats (UrfConsolekit *consolekit)
 }
 
 /**
- * urf_consolekit_startup:
+ * urf_session_checker_startup:
  **/
 gboolean
-urf_consolekit_startup (UrfConsolekit *consolekit)
+urf_session_checker_startup (UrfSessionChecker *consolekit)
 {
 	UrfConsolekitPrivate *priv = consolekit->priv;
 	GError *error;
@@ -494,26 +494,26 @@ urf_consolekit_startup (UrfConsolekit *consolekit)
 	}
 
 	/* Get seats */
-	ret = urf_consolekit_get_seats (consolekit);
+	ret = urf_session_checker_get_seats (consolekit);
 	if (!ret)
 		return FALSE;
 
 	/* connect signals */
 	g_signal_connect (G_OBJECT (priv->proxy), "g-signal",
-	                  G_CALLBACK (urf_consolekit_proxy_signal_cb), consolekit);
+	                  G_CALLBACK (urf_session_checker_proxy_signal_cb), consolekit);
 	g_signal_connect (G_CALLBACK (priv->bus_proxy), "g-signal",
-	                  G_CALLBACK (urf_consolekit_bus_proxy_signal_cb), consolekit);
+	                  G_CALLBACK (urf_session_checker_bus_proxy_signal_cb), consolekit);
 
 	return TRUE;
 }
 
 /**
- * urf_consolekit_dispose:
+ * urf_session_checker_dispose:
  **/
 static void
-urf_consolekit_dispose (GObject *object)
+urf_session_checker_dispose (GObject *object)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT(object);
+	UrfSessionChecker *consolekit = URF_SESSION_CHECKER(object);
 
 	if (consolekit->priv->proxy) {
 		g_object_unref (consolekit->priv->proxy);
@@ -524,16 +524,16 @@ urf_consolekit_dispose (GObject *object)
 		consolekit->priv->bus_proxy = NULL;
 	}
 
-	G_OBJECT_CLASS (urf_consolekit_parent_class)->dispose (object);
+	G_OBJECT_CLASS (urf_session_checker_parent_class)->dispose (object);
 }
 
 /**
- * urf_consolekit_finalize:
+ * urf_session_checker_finalize:
  **/
 static void
-urf_consolekit_finalize (GObject *object)
+urf_session_checker_finalize (GObject *object)
 {
-	UrfConsolekit *consolekit = URF_CONSOLEKIT (object);
+	UrfSessionChecker *consolekit = URF_SESSION_CHECKER (object);
 	GList *item;
 
 	if (consolekit->priv->seats) {
@@ -549,30 +549,30 @@ urf_consolekit_finalize (GObject *object)
 		consolekit->priv->inhibitors = NULL;
 	}
 
-	G_OBJECT_CLASS (urf_consolekit_parent_class)->finalize (object);
+	G_OBJECT_CLASS (urf_session_checker_parent_class)->finalize (object);
 }
 
 /**
- * urf_consolekit_class_init:
+ * urf_session_checker_class_init:
  **/
 static void
-urf_consolekit_class_init (UrfConsolekitClass *klass)
+urf_session_checker_class_init (UrfSessionCheckerClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->dispose = urf_consolekit_dispose;
-	object_class->finalize = urf_consolekit_finalize;
+	object_class->dispose = urf_session_checker_dispose;
+	object_class->finalize = urf_session_checker_finalize;
 
 	g_type_class_add_private (klass, sizeof (UrfConsolekitPrivate));
 }
 
 /**
- * urf_consolekit_init:
+ * urf_session_checker_init:
  **/
 static void
-urf_consolekit_init (UrfConsolekit *consolekit)
+urf_session_checker_init (UrfSessionChecker *consolekit)
 {
-	consolekit->priv = URF_CONSOLEKIT_GET_PRIVATE (consolekit);
+	consolekit->priv = URF_SESSION_CHECKER_GET_PRIVATE (consolekit);
 	consolekit->priv->seats = NULL;
 	consolekit->priv->inhibitors = NULL;
 	consolekit->priv->inhibit = FALSE;
@@ -581,12 +581,12 @@ urf_consolekit_init (UrfConsolekit *consolekit)
 }
 
 /**
- * urf_consolekit_new:
+ * urf_session_checker_new:
  **/
-UrfConsolekit *
-urf_consolekit_new (void)
+UrfSessionChecker *
+urf_session_checker_new (void)
 {
-	UrfConsolekit *consolekit;
-	consolekit = URF_CONSOLEKIT (g_object_new (URF_TYPE_CONSOLEKIT, NULL));
+	UrfSessionChecker *consolekit;
+	consolekit = URF_SESSION_CHECKER (g_object_new (URF_TYPE_SESSION_CHECKER, NULL));
 	return consolekit;
 }

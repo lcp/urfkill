@@ -25,7 +25,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include "urf-seat.h"
+#include "urf-seat-consolekit.h"
 
 enum {
 	SIGNAL_ACTIVE_CHANGED,

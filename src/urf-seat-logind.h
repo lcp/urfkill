@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
- * Copyright (C) 2011 Gary Ching-Pang Lin <glin@suse.com>
+ * Copyright (C) 2013 Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __URF_SEAT_H__
-#define __URF_SEAT_H__
+#ifndef __URF_SEAT_LOGIND_H__
+#define __URF_SEAT_LOGIND_H__
 
 #include <glib-object.h>
 
@@ -63,4 +63,4 @@ const char		*urf_seat_get_active		(UrfSeat	*seat);
 
 G_END_DECLS
 
-#endif /* __URF_SEAT_H__ */
+#endif /* __URF_SEAT_LOGIND_H__ */
