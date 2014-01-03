@@ -59,6 +59,7 @@ const char	*urf_config_get_user		(UrfConfig	*config);
 gboolean	 urf_config_get_key_control	(UrfConfig	*config);
 gboolean	 urf_config_get_master_key	(UrfConfig	*config);
 gboolean	 urf_config_get_force_sync	(UrfConfig	*config);
+gboolean	 urf_config_get_persist		(UrfConfig	*config);
 
 G_END_DECLS
 

@@ -39,6 +39,7 @@ enum
 	OPT_KEY_CONTROL,
 	OPT_MASTER_KEY,
 	OPT_FORCE_SYNC,
+	OPT_PERSIST,
 	OPT_UNKNOWN,
 };
 
@@ -70,6 +71,7 @@ typedef struct {
 	gboolean key_control;
 	gboolean master_key;
 	gboolean force_sync;
+	gboolean persist;
 } Options;
 
 typedef struct {
@@ -101,6 +103,8 @@ get_option (const char *option)
 		return OPT_MASTER_KEY;
 	else if (g_strcmp0 (option, "force_sync") == 0)
 		return OPT_FORCE_SYNC;
+	else if (g_strcmp0 (option, "persist") == 0)
+		return OPT_PERSIST;
 	return OPT_UNKNOWN;
 }
 
@@ -311,6 +315,12 @@ parse_xml_cdata_handler (void       *data,
 		else if (g_ascii_strcasecmp (str, "FALSE") == 0)
 			info->options.force_sync = FALSE;
 		break;
+	case OPT_PERSIST:
+		if (g_ascii_strcasecmp (str, "TRUE") == 0)
+			info->options.persist = TRUE;
+		else if (g_ascii_strcasecmp (str, "FALSE") == 0)
+			info->options.persist = FALSE;
+		break;
 	default:
 		break;
 	}
@@ -421,6 +431,7 @@ profile_xml_parse (DmiInfo    *hardware_info,
 	info->options.key_control = options->key_control;
 	info->options.master_key = options->master_key;
 	info->options.force_sync = options->force_sync;
+	info->options.persist = options->persist;
 
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, (void *)info);
@@ -443,6 +454,7 @@ profile_xml_parse (DmiInfo    *hardware_info,
 	options->key_control = info->options.key_control;
 	options->master_key = info->options.master_key;
 	options->force_sync = info->options.force_sync;
+	options->persist = info->options.persist;
 
 	g_free (info);
 	return TRUE;
@@ -492,6 +504,13 @@ load_configured_settings (UrfConfig *config)
 		g_error_free (error);
 	error = NULL;
 
+	ret = g_key_file_get_boolean (profile, "Profile", "persist", &error);
+	if (!error)
+		priv->options.persist = ret;
+	else
+		g_error_free (error);
+	error = NULL;
+
 	g_key_file_free (profile);
 
 	return TRUE;
@@ -531,6 +550,10 @@ save_configured_profile (UrfConfig *config)
 
 	value = priv->options.force_sync;
 	g_key_file_set_value (profile, "Profile", "force_sync",
+			      value?"true":"false");
+
+	value = priv->options.persist;
+	g_key_file_set_value (profile, "Profile", "persist",
 			      value?"true":"false");
 
 	content = g_key_file_to_data (profile, NULL, NULL);
@@ -584,6 +607,7 @@ urf_config_load_profile (UrfConfig *config)
 	options->key_control = priv->options.key_control;
 	options->master_key = priv->options.master_key;
 	options->force_sync = priv->options.force_sync;
+	options->persist = priv->options.persist;
 
 	profile_dir = g_dir_open (URFKILL_PROFILE_DIR, 0, NULL);
 	while ((file = g_dir_read_name (profile_dir))) {
@@ -615,6 +639,7 @@ urf_config_load_profile (UrfConfig *config)
 	priv->options.key_control = options->key_control;
 	priv->options.master_key = options->master_key;
 	priv->options.force_sync = options->force_sync;
+	priv->options.persist = options->persist;
 
 	save_configured_profile (config);
 
@@ -668,6 +693,13 @@ urf_config_load_from_file (UrfConfig  *config,
 		g_error_free (error);
 	error = NULL;
 
+	ret = g_key_file_get_boolean (key_file, "general", "persist", &error);
+	if (!error)
+		priv->options.persist = ret;
+	else
+		g_error_free (error);
+	error = NULL;
+
 	g_key_file_free (key_file);
 }
 
@@ -708,6 +740,15 @@ urf_config_get_force_sync (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_persist:
+ **/
+gboolean
+urf_config_get_persist (UrfConfig *config)
+{
+	return config->priv->options.persist;
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -718,6 +759,7 @@ urf_config_init (UrfConfig *config)
 	priv->options.key_control = TRUE;
 	priv->options.master_key = FALSE;
 	priv->options.force_sync = FALSE;
+	priv->options.persist = TRUE;
 	config->priv = priv;
 }
 
