@@ -40,6 +40,7 @@
 #define RFKILL_EVENT_SIZE_V1    8
 #endif
 
+#include "urf-config.h"
 #include "urf-arbitrator.h"
 #include "urf-killswitch.h"
 #include "urf-utils.h"
@@ -58,7 +59,9 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct UrfArbitratorPrivate {
 	int		 fd;
+	UrfConfig	*config;
 	gboolean	 force_sync;
+	gboolean	 persist;
 	GIOChannel	*channel;
 	guint		 watch_id;
 	GList		*devices; /* a GList of UrfDevice */
@@ -478,8 +481,11 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	struct rfkill_event event;
 	int fd;
+	int i;
 
+	priv->config = g_object_ref (config);
 	priv->force_sync = urf_config_get_force_sync (config);
+	priv->persist =	urf_config_get_persist (config);
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
@@ -524,6 +530,14 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 					 G_IO_IN | G_IO_HUP | G_IO_ERR,
 					 (GIOFunc) event_cb,
 					 arbitrator);
+
+	if (priv->persist) {
+		/* Set all the devices that had saved state to what was saved */ 
+		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+			urf_arbitrator_set_block (arbitrator, i, urf_config_get_persist_state (config, i));
+		}
+	}
+
 	return TRUE;
 }
 
@@ -552,7 +566,15 @@ static void
 urf_arbitrator_dispose (GObject *object)
 {
 	UrfArbitratorPrivate *priv = URF_ARBITRATOR_GET_PRIVATE (object);
+	KillswitchState state;
 	int i;
+
+	if (priv->persist) {
+		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+			state = urf_killswitch_get_state (priv->killswitch[i]);
+			urf_config_set_persist_state (priv->config, i, state);
+		}
+	}
 
 	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
 		if (priv->killswitch[i]) {
@@ -565,6 +587,11 @@ urf_arbitrator_dispose (GObject *object)
 		g_list_foreach (priv->devices, (GFunc) g_object_unref, NULL);
 		g_list_free (priv->devices);
 		priv->devices = NULL;
+	}
+
+	if (priv->config) {
+		g_object_unref (priv->config);
+		priv->config = NULL;
 	}
 
 	G_OBJECT_CLASS(urf_arbitrator_parent_class)->dispose(object);
