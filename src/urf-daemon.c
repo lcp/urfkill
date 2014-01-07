@@ -815,11 +815,6 @@ urf_daemon_dispose (GObject *object)
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
 
-	if (priv->config) {
-		g_object_unref (priv->config);
-		priv->config = NULL;
-	}
-
 	if (priv->connection) {
 		g_object_unref (priv->connection);
 		priv->connection = NULL;
@@ -838,6 +833,11 @@ urf_daemon_dispose (GObject *object)
 	if (priv->session_checker) {
 		g_object_unref (priv->session_checker);
 		priv->session_checker = NULL;
+	}
+
+	if (priv->config) {
+		g_object_unref (priv->config);
+		priv->config = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
