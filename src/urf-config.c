@@ -32,6 +32,7 @@
 
 #define URFKILL_PROFILE_DIR URFKILL_CONFIG_DIR"profile/"
 #define URFKILL_CONFIGURED_PROFILE URFKILL_CONFIG_DIR"hardware.conf"
+#define URFKILL_PERSISTENCE_FILENAME "/lib/urfkill/saved-states"
 
 enum
 {
@@ -88,6 +89,7 @@ typedef struct {
 struct UrfConfigPrivate {
 	char 	*user;
 	Options	 options;
+	GKeyFile *persistence_file;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -749,6 +751,82 @@ urf_config_get_persist (UrfConfig *config)
 }
 
 /**
+ * urf_persist_get_persist_state:
+ **/
+gboolean
+urf_config_get_persist_state (UrfConfig *config,
+                              const guint type)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	gboolean state = FALSE;
+	GError *error = NULL;
+
+	state = g_key_file_get_boolean (priv->persistence_file, type_to_string(type), "soft", &error);
+
+	if (error) {
+			/* Debug only; there can be devices disappearing when some killswitches
+			 * are triggered.
+			 */
+			g_debug ("Could not get state for device %s: %s", type_to_string(type), error->message);
+			g_error_free (error);
+	}
+
+	g_debug ("saved state for device %s: %s", type_to_string(type), state ? "blocked" : "unblocked");
+
+	return state;
+}
+
+/**
+ * urf_persist_set_persist_state:
+ **/
+void
+urf_config_set_persist_state (UrfConfig *config,
+                              const guint type,
+                              const KillswitchState state)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+
+	g_debug ("setting state for device %s: %s", type_to_string(type), state > 0 ? "blocked" : "unblocked");
+
+	g_key_file_set_boolean (priv->persistence_file, type_to_string (type), "soft", state > 0);
+}
+
+static void
+urf_config_save_persistence_file (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	GError *error = NULL;
+
+	g_key_file_save_to_file (priv->persistence_file,
+	                               PACKAGE_LOCALSTATE_DIR URFKILL_PERSISTENCE_FILENAME,
+	                               &error);
+
+	if (error) {
+		g_warning ("Failed to write persistence data: %s", error->message);
+		g_error_free (error);
+	}
+
+}
+
+static void
+urf_config_get_persistence_file (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	GError *error = NULL;
+
+	priv->persistence_file = g_key_file_new ();
+	g_key_file_load_from_file (priv->persistence_file,
+	                           PACKAGE_LOCALSTATE_DIR URFKILL_PERSISTENCE_FILENAME,
+	                           G_KEY_FILE_NONE,
+	                           &error);
+
+	if (error) {
+		g_warning ("Persistence file could not be loaded: %s", error->message);
+		g_error_free (error);
+	}
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -761,6 +839,25 @@ urf_config_init (UrfConfig *config)
 	priv->options.force_sync = FALSE;
 	priv->options.persist = TRUE;
 	config->priv = priv;
+
+	urf_config_get_persistence_file (config);
+}
+
+/**
+ * urf_config_dispose:
+ **/
+static void
+urf_config_dispose (GObject *object)
+{
+	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
+
+	if (priv->persistence_file) {
+		urf_config_save_persistence_file (URF_CONFIG (object));
+		g_key_file_free (priv->persistence_file);
+		priv->persistence_file = NULL;
+	}
+
+	G_OBJECT_CLASS(urf_config_parent_class)->dispose(object);
 }
 
 /**
@@ -785,6 +882,7 @@ urf_config_class_init(UrfConfigClass *klass)
 	GObjectClass *object_class = (GObjectClass *) klass;
 
 	g_type_class_add_private(klass, sizeof(UrfConfigPrivate));
+	object_class->dispose = urf_config_dispose;
 	object_class->finalize = urf_config_finalize;
 }
 
