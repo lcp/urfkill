@@ -53,9 +53,9 @@ on_name_lost (GDBusConnection *connection,
  * urf_main_sigint_cb:
  **/
 static gboolean
-urf_main_sigint_cb (gpointer user_data)
+urf_main_signal_cb (gpointer user_data)
 {
-	g_debug ("Handling SIGINT");
+	g_debug ("Handling shutdown signal...");
 	g_main_loop_quit (loop);
 	return FALSE;
 }
@@ -139,10 +139,15 @@ main (gint argc, gchar **argv)
 	                           NULL,
 	                           NULL);
 
-	/* do stuff on ctrl-c */
+	/* do stuff on ctrl-c and for SIGTERM */
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT,
-				urf_main_sigint_cb,
+				urf_main_signal_cb,
+				loop,
+				NULL);
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGTERM,
+				urf_main_signal_cb,
 				loop,
 				NULL);
 
