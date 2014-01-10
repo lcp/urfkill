@@ -163,7 +163,7 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	KillswitchState state = KILLSWITCH_STATE_NO_ADAPTER;
 	KillswitchState saved_state = KILLSWITCH_STATE_NO_ADAPTER;
-	KillswitchState want_state = KILLSWITCH_STATE_NO_ADAPTER;
+	gboolean want_state = FALSE;
 	gboolean ret = FALSE;
 	int i;
 
@@ -183,14 +183,15 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
 				urf_killswitch_set_saved_state(priv->killswitch[i], state);
 
 			if (!block && state == saved_state)
-				want_state = saved_state;
+				want_state = (gboolean)(saved_state > KILLSWITCH_STATE_UNBLOCKED);
 			else
 				want_state = block;
 
-			g_debug ("calling set_block %d", (int) want_state);
-			ret = urf_arbitrator_set_block (arbitrator, i, want_state);
+			g_debug ("calling set_block %s %s",
+				 type_to_string(i),
+				 want_state ? "TRUE" : "FALSE");
 
-			//urf_killswitch_set_saved_state(priv->killswitch[i], want_state);
+			ret = urf_arbitrator_set_block (arbitrator, i, want_state);
 		}
 	}
 
