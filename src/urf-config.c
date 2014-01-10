@@ -32,7 +32,7 @@
 
 #define URFKILL_PROFILE_DIR URFKILL_CONFIG_DIR"profile/"
 #define URFKILL_CONFIGURED_PROFILE URFKILL_CONFIG_DIR"hardware.conf"
-#define URFKILL_PERSISTENCE_FILENAME "/lib/urfkill/saved-states"
+#define URFKILL_PERSISTENCE_FILENAME PACKAGE_LOCALSTATE_DIR "/lib/urfkill/saved-states"
 
 enum
 {
@@ -795,17 +795,27 @@ static void
 urf_config_save_persistence_file (UrfConfig *config)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	char *content = NULL;
+	gboolean ret = FALSE;
 	GError *error = NULL;
 
-	g_key_file_save_to_file (priv->persistence_file,
-	                               PACKAGE_LOCALSTATE_DIR URFKILL_PERSISTENCE_FILENAME,
-	                               &error);
+	content = g_key_file_to_data (priv->persistence_file, NULL, NULL);
 
-	if (error) {
-		g_warning ("Failed to write persistence data: %s", error->message);
-		g_error_free (error);
+	if (content) {
+		ret = g_file_set_contents (URFKILL_PERSISTENCE_FILENAME,
+					   content, -1, &error);
+		if (!ret) {
+			if (error) {
+				g_warning ("Failed to write persistence data: %s", error->message);
+				g_error_free (error);
+			}
+		} else {
+			g_chmod (URFKILL_PERSISTENCE_FILENAME,
+				 S_IRUSR | S_IRGRP | S_IROTH);
+		}
+
+		g_free (content);
 	}
-
 }
 
 static void
@@ -816,7 +826,7 @@ urf_config_get_persistence_file (UrfConfig *config)
 
 	priv->persistence_file = g_key_file_new ();
 	g_key_file_load_from_file (priv->persistence_file,
-	                           PACKAGE_LOCALSTATE_DIR URFKILL_PERSISTENCE_FILENAME,
+	                           URFKILL_PERSISTENCE_FILENAME,
 	                           G_KEY_FILE_NONE,
 	                           &error);
 
