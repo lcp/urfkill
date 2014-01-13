@@ -577,6 +577,13 @@ urf_config_load_profile (UrfConfig *config)
 	hardware_info = get_dmi_info ();
 	if (hardware_info == NULL) {
 		g_debug ("Failed to get DMI information");
+
+		/* If we don't have hardware info, then we can't assume key
+		 * control to be enabled: there would not be a way to disable
+		 * it for devices that don't have it.
+		 */
+		options->key_control = FALSE;
+
 		return;
 	}
 
