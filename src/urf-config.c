@@ -408,7 +408,7 @@ profile_xml_parse (DmiInfo    *hardware_info,
 	int len;
 
 	if (!g_file_get_contents (filename, &content, &length, NULL)) {
-		g_debug ("Failed to read profile: %s", filename);
+		g_warning ("Failed to read profile: %s", filename);
 		return FALSE;
 	}
 
@@ -461,13 +461,13 @@ load_configured_settings (UrfConfig *config)
 					 G_KEY_FILE_NONE,
 					 NULL);
 	if (!ret) {
-		g_debug ("No configured profile found");
+		g_info ("No configured profile found");
 		g_key_file_free (profile);
 		return FALSE;
 	}
 
 	if (!g_key_file_has_group (profile, "Profile")) {
-		g_debug ("No valid group in the configured profile");
+		g_warning ("No valid group in the configured profile");
 		return FALSE;
 	}
 
@@ -541,7 +541,7 @@ save_configured_profile (UrfConfig *config)
 		ret = g_file_set_contents (URFKILL_CONFIGURED_PROFILE,
 					   content, -1, NULL);
 		if (!ret)
-			g_debug ("Failed to save configured profile: %s",
+			g_warning ("Failed to save configured profile: %s",
 				 URFKILL_CONFIGURED_PROFILE);
 		g_free (content);
 		g_chmod (URFKILL_CONFIGURED_PROFILE,
@@ -576,7 +576,7 @@ urf_config_load_profile (UrfConfig *config)
 
 	hardware_info = get_dmi_info ();
 	if (hardware_info == NULL) {
-		g_debug ("Failed to get DMI information");
+		g_warning ("Failed to get DMI information");
 
 		/* If we don't have hardware info, then we can't assume key
 		 * control to be enabled: there would not be a way to disable
