@@ -60,7 +60,7 @@ on_name_lost (GDBusConnection *connection,
 static gboolean
 urf_main_signal_cb (gpointer user_data)
 {
-	g_info ("Shutting down...");
+	g_message ("Shutting down...");
 	g_main_loop_quit (loop);
 	return FALSE;
 }
@@ -211,7 +211,7 @@ main (gint argc, gchar **argv)
 				loop,
 				NULL);
 
-	g_info ("Starting urfkilld version %s", PACKAGE_VERSION);
+	g_message ("Starting urfkilld version %s", PACKAGE_VERSION);
 
 	/* start the daemon */
 	daemon = urf_daemon_new (config);

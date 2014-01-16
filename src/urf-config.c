@@ -461,7 +461,7 @@ load_configured_settings (UrfConfig *config)
 					 G_KEY_FILE_NONE,
 					 NULL);
 	if (!ret) {
-		g_info ("No configured profile found");
+		g_message ("No configured profile found");
 		g_key_file_free (profile);
 		return FALSE;
 	}

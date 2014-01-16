@@ -106,7 +106,7 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
 	event.type = type;
 	event.soft = block;
 
-	g_info ("Setting %s to %s", type_to_string (type), block?"blocked":"unblocked");
+	g_message ("Setting %s to %s", type_to_string (type), block?"blocked":"unblocked");
 	len = write (priv->fd, &event, sizeof(event));
 	if (len < 0) {
 		g_warning ("Failed to change RFKILL state: %s",
@@ -140,7 +140,7 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 	event.idx = index;
 	event.soft = block;
 
-	g_info ("Setting device %u (%s) to %s",
+	g_message ("Setting device %u (%s) to %s",
 		index,
 		type_to_string (urf_device_get_rf_type (device)),
 		block ? "block" : "unblock");
@@ -310,7 +310,7 @@ remove_killswitch (UrfArbitrator *arbitrator,
 	object_path = g_strdup (urf_device_get_object_path(device));
 
 	name = urf_device_get_name (device);
-	g_info ("removing killswitch idx %d %s", index, name);
+	g_message ("removing killswitch idx %d %s", index, name);
 
 	urf_killswitch_del_device (priv->killswitch[type], device);
 	g_object_unref (device);
@@ -339,7 +339,7 @@ add_killswitch (UrfArbitrator *arbitrator,
 		return;
 	}
 
-	g_info ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
+	g_message ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 
 	device = urf_device_new (index, type, soft, hard);
 	priv->devices = g_list_append (priv->devices, device);
