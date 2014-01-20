@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <syslog.h>
 
 #include <glib-unix.h>
 #include <glib/gi18n-lib.h>
@@ -38,6 +39,10 @@
 
 #define URFKILL_SERVICE_NAME "org.freedesktop.URfkill"
 #define URFKILL_CONFIG_FILE URFKILL_CONFIG_DIR"urfkill.conf"
+
+#define URFKILL_DEFAULT_LOG_LEVEL \
+	(G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO)
+
 static GMainLoop *loop = NULL;
 
 static void
@@ -55,7 +60,7 @@ on_name_lost (GDBusConnection *connection,
 static gboolean
 urf_main_signal_cb (gpointer user_data)
 {
-	g_debug ("Handling shutdown signal...");
+	g_message ("Shutting down...");
 	g_main_loop_quit (loop);
 	return FALSE;
 }
@@ -72,6 +77,46 @@ urf_main_timed_exit_cb (GMainLoop *loop)
 	return FALSE;
 }
 
+static void
+urf_log_handler (const gchar *log_domain,
+                GLogLevelFlags level,
+                const gchar *message,
+                gpointer ignored)
+{
+	const char *level_string;
+	int syslog_priority;
+
+	switch (level) {
+	case G_LOG_LEVEL_ERROR:
+		syslog_priority = LOG_CRIT;
+		level_string = "<error> ";
+		break;
+	case G_LOG_LEVEL_CRITICAL:
+		syslog_priority = LOG_ERR;
+		level_string = "<critical> ";
+		break;
+	case G_LOG_LEVEL_WARNING:
+		syslog_priority = LOG_WARNING;
+		level_string = "<warning> ";
+		break;
+	case G_LOG_LEVEL_MESSAGE:
+		syslog_priority = LOG_NOTICE;
+		level_string = "";
+		break;
+	case G_LOG_LEVEL_DEBUG:
+		syslog_priority = LOG_DEBUG;
+		level_string = "<debug> ";
+		break;
+	case G_LOG_LEVEL_INFO:
+	default:
+		syslog_priority = LOG_INFO;
+		level_string = "";
+		break;
+	}
+
+	syslog (syslog_priority, "%s%s", level_string, message);
+}
+
 /**
  * main:
  **/
@@ -86,8 +131,10 @@ main (gint argc, gchar **argv)
 	gboolean timed_exit = FALSE;
 	gboolean immediate_exit = FALSE;
 	gboolean fork_daemon = FALSE;
+	gboolean debug = FALSE;
 	guint owner_id;
 	guint timer_id = 0;
+	guint log_level = URFKILL_DEFAULT_LOG_LEVEL;
 	struct passwd *user;
 	const char *username = NULL;
 	const char *conf_file = NULL;
@@ -109,6 +156,9 @@ main (gint argc, gchar **argv)
 		{ "config", 'c', 0, G_OPTION_ARG_STRING, &conf_file,
 		  /* TRANSLATORS: use another config file instead of the default one */
 		  _("Use a specific config file"), NULL },
+		{ "debug", 'd', 0, G_OPTION_ARG_NONE, &debug,
+		  /* TRANSLATORS: enable debug logging */
+		  _("Enable debug logging"), NULL },
 		{ NULL }
 	};
 
@@ -120,6 +170,16 @@ main (gint argc, gchar **argv)
 	g_option_context_add_main_entries (context, options, NULL);
 	g_option_context_parse (context, &argc, &argv, NULL);
 	g_option_context_free (context);
+
+	openlog (G_LOG_DOMAIN, LOG_PID | LOG_CONS, LOG_DAEMON);
+
+	if (debug)
+		log_level |= G_LOG_LEVEL_DEBUG;
+
+	g_log_set_handler (G_LOG_DOMAIN,
+	                   log_level | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION,
+	                   (GLogFunc) urf_log_handler,
+	                   NULL);
 
 	if (conf_file == NULL)
 		conf_file = URFKILL_CONFIG_FILE;
@@ -151,7 +211,7 @@ main (gint argc, gchar **argv)
 				loop,
 				NULL);
 
-	g_debug ("Starting urfkilld version %s", PACKAGE_VERSION);
+	g_message ("Starting urfkilld version %s", PACKAGE_VERSION);
 
 	/* start the daemon */
 	daemon = urf_daemon_new (config);
@@ -221,5 +281,8 @@ out:
 		g_object_unref (config);
 	if (loop != NULL)
 		g_main_loop_unref (loop);
+
+	closelog();
+
 	return retval;
 }
