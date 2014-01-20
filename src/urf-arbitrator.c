@@ -40,6 +40,7 @@
 #define RFKILL_EVENT_SIZE_V1    8
 #endif
 
+#include "urf-config.h"
 #include "urf-arbitrator.h"
 #include "urf-killswitch.h"
 #include "urf-utils.h"
@@ -58,7 +59,9 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct UrfArbitratorPrivate {
 	int		 fd;
+	UrfConfig	*config;
 	gboolean	 force_sync;
+	gboolean	 persist;
 	GIOChannel	*channel;
 	guint		 watch_id;
 	GList		*devices; /* a GList of UrfDevice */
@@ -148,6 +151,51 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/**
+ * urf_arbitrator_set_flight_mode:
+ **/
+gboolean
+urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
+				const gboolean  block)
+{
+	UrfArbitratorPrivate *priv = arbitrator->priv;
+	KillswitchState state = KILLSWITCH_STATE_NO_ADAPTER;
+	KillswitchState saved_state = KILLSWITCH_STATE_NO_ADAPTER;
+	gboolean want_state = FALSE;
+	gboolean ret = FALSE;
+	int i;
+
+	g_message("set_flight_mode: %d:", (int) block);
+
+	for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+		state = urf_killswitch_get_state (priv->killswitch[i]);
+
+		if (state != KILLSWITCH_STATE_NO_ADAPTER) {
+			g_message("killswitch[%s] state: %s", type_to_string(i),
+				  state_to_string(state));
+
+			saved_state = urf_killswitch_get_saved_state(priv->killswitch[i]);
+			g_debug("saved_state is: %s", state_to_string(saved_state));
+
+			if (block)
+				urf_killswitch_set_saved_state(priv->killswitch[i], state);
+
+			if (!block && state == saved_state)
+				want_state = (gboolean)(saved_state > KILLSWITCH_STATE_UNBLOCKED);
+			else
+				want_state = block;
+
+			g_debug ("calling set_block %s %s",
+				 type_to_string(i),
+				 want_state ? "TRUE" : "FALSE");
+
+			ret = urf_arbitrator_set_block (arbitrator, i, want_state);
+		}
+	}
+
+	return ret;
 }
 
 /**
@@ -328,6 +376,7 @@ add_killswitch (UrfArbitrator *arbitrator,
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
+	KillswitchState state;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device != NULL) {
@@ -344,8 +393,25 @@ add_killswitch (UrfArbitrator *arbitrator,
 
 	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
 		       urf_device_get_object_path (device));
+
 	if (priv->force_sync && !urf_device_is_platform (device)) {
 		urf_arbitrator_set_block_idx (arbitrator, index, soft);
+	}
+
+	if (priv->persist) {
+		/* If the global state for a killswitch type is not unblocked,
+		 * use the saved persistence state as a default state to
+		 * use for the new killswitch.
+		 *
+		 * This makes sure devices that appear after urfkill has
+		 * started still get to the right state from what was saved
+		 * to the persistence file.
+		 */
+		state = urf_killswitch_get_state (priv->killswitch[type]);
+		if (state != RFKILL_STATE_UNBLOCKED) {
+			soft = urf_config_get_persist_state (priv->config, type);
+			urf_arbitrator_set_block_idx (arbitrator, index, soft);
+		}
 	}
 }
 
@@ -434,8 +500,11 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	struct rfkill_event event;
 	int fd;
+	int i;
 
+	priv->config = g_object_ref (config);
 	priv->force_sync = urf_config_get_force_sync (config);
+	priv->persist =	urf_config_get_persist (config);
 
 	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
@@ -480,6 +549,14 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 					 G_IO_IN | G_IO_HUP | G_IO_ERR,
 					 (GIOFunc) event_cb,
 					 arbitrator);
+
+	if (priv->persist) {
+		/* Set all the devices that had saved state to what was saved */ 
+		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+			urf_arbitrator_set_block (arbitrator, i, urf_config_get_persist_state (config, i));
+		}
+	}
+
 	return TRUE;
 }
 
@@ -508,7 +585,15 @@ static void
 urf_arbitrator_dispose (GObject *object)
 {
 	UrfArbitratorPrivate *priv = URF_ARBITRATOR_GET_PRIVATE (object);
+	KillswitchState state;
 	int i;
+
+	if (priv->persist) {
+		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
+			state = urf_killswitch_get_state (priv->killswitch[i]);
+			urf_config_set_persist_state (priv->config, i, state);
+		}
+	}
 
 	for (i = 0; i < NUM_RFKILL_TYPES; i++) {
 		if (priv->killswitch[i]) {
@@ -521,6 +606,11 @@ urf_arbitrator_dispose (GObject *object)
 		g_list_foreach (priv->devices, (GFunc) g_object_unref, NULL);
 		g_list_free (priv->devices);
 		priv->devices = NULL;
+	}
+
+	if (priv->config) {
+		g_object_unref (priv->config);
+		priv->config = NULL;
 	}
 
 	G_OBJECT_CLASS(urf_arbitrator_parent_class)->dispose(object);

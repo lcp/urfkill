@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#include <urf-utils.h>
+
 #define URFKILL_CONFIG_DIR PACKAGE_SYSCONF_DIR"/urfkill/"
 
 G_BEGIN_DECLS
@@ -59,6 +61,13 @@ const char	*urf_config_get_user		(UrfConfig	*config);
 gboolean	 urf_config_get_key_control	(UrfConfig	*config);
 gboolean	 urf_config_get_master_key	(UrfConfig	*config);
 gboolean	 urf_config_get_force_sync	(UrfConfig	*config);
+gboolean	 urf_config_get_persist		(UrfConfig	*config);
+
+gboolean	 urf_config_get_persist_state	(UrfConfig	*config,
+						 const guint type);
+void		 urf_config_set_persist_state	(UrfConfig *config,
+						 const guint type,
+						 const KillswitchState state);
 
 G_END_DECLS
 

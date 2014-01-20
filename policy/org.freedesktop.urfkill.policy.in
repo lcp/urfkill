@@ -35,4 +35,14 @@ file are instantly applied.
     </defaults>
   </action>
 
+  <action id="org.freedesktop.urfkill.flight_mode">
+    <_description>Enable flight mode</_description>
+    <_message>Authentication is required to enable/disable flight mode</_message>
+    <defaults>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+
 </policyconfig>

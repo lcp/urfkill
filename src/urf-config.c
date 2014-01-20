@@ -32,6 +32,7 @@
 
 #define URFKILL_PROFILE_DIR URFKILL_CONFIG_DIR"profile/"
 #define URFKILL_CONFIGURED_PROFILE URFKILL_CONFIG_DIR"hardware.conf"
+#define URFKILL_PERSISTENCE_FILENAME PACKAGE_LOCALSTATE_DIR "/lib/urfkill/saved-states"
 
 enum
 {
@@ -39,6 +40,7 @@ enum
 	OPT_KEY_CONTROL,
 	OPT_MASTER_KEY,
 	OPT_FORCE_SYNC,
+	OPT_PERSIST,
 	OPT_UNKNOWN,
 };
 
@@ -70,6 +72,7 @@ typedef struct {
 	gboolean key_control;
 	gboolean master_key;
 	gboolean force_sync;
+	gboolean persist;
 } Options;
 
 typedef struct {
@@ -86,6 +89,7 @@ typedef struct {
 struct UrfConfigPrivate {
 	char 	*user;
 	Options	 options;
+	GKeyFile *persistence_file;
 };
 
 G_DEFINE_TYPE(UrfConfig, urf_config, G_TYPE_OBJECT)
@@ -101,6 +105,8 @@ get_option (const char *option)
 		return OPT_MASTER_KEY;
 	else if (g_strcmp0 (option, "force_sync") == 0)
 		return OPT_FORCE_SYNC;
+	else if (g_strcmp0 (option, "persist") == 0)
+		return OPT_PERSIST;
 	return OPT_UNKNOWN;
 }
 
@@ -311,6 +317,12 @@ parse_xml_cdata_handler (void       *data,
 		else if (g_ascii_strcasecmp (str, "FALSE") == 0)
 			info->options.force_sync = FALSE;
 		break;
+	case OPT_PERSIST:
+		if (g_ascii_strcasecmp (str, "TRUE") == 0)
+			info->options.persist = TRUE;
+		else if (g_ascii_strcasecmp (str, "FALSE") == 0)
+			info->options.persist = FALSE;
+		break;
 	default:
 		break;
 	}
@@ -421,6 +433,7 @@ profile_xml_parse (DmiInfo    *hardware_info,
 	info->options.key_control = options->key_control;
 	info->options.master_key = options->master_key;
 	info->options.force_sync = options->force_sync;
+	info->options.persist = options->persist;
 
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, (void *)info);
@@ -443,6 +456,7 @@ profile_xml_parse (DmiInfo    *hardware_info,
 	options->key_control = info->options.key_control;
 	options->master_key = info->options.master_key;
 	options->force_sync = info->options.force_sync;
+	options->persist = info->options.persist;
 
 	g_free (info);
 	return TRUE;
@@ -492,6 +506,13 @@ load_configured_settings (UrfConfig *config)
 		g_error_free (error);
 	error = NULL;
 
+	ret = g_key_file_get_boolean (profile, "Profile", "persist", &error);
+	if (!error)
+		priv->options.persist = ret;
+	else
+		g_error_free (error);
+	error = NULL;
+
 	g_key_file_free (profile);
 
 	return TRUE;
@@ -531,6 +552,10 @@ save_configured_profile (UrfConfig *config)
 
 	value = priv->options.force_sync;
 	g_key_file_set_value (profile, "Profile", "force_sync",
+			      value?"true":"false");
+
+	value = priv->options.persist;
+	g_key_file_set_value (profile, "Profile", "persist",
 			      value?"true":"false");
 
 	content = g_key_file_to_data (profile, NULL, NULL);
@@ -591,6 +616,7 @@ urf_config_load_profile (UrfConfig *config)
 	options->key_control = priv->options.key_control;
 	options->master_key = priv->options.master_key;
 	options->force_sync = priv->options.force_sync;
+	options->persist = priv->options.persist;
 
 	profile_dir = g_dir_open (URFKILL_PROFILE_DIR, 0, NULL);
 	while ((file = g_dir_read_name (profile_dir))) {
@@ -622,6 +648,7 @@ urf_config_load_profile (UrfConfig *config)
 	priv->options.key_control = options->key_control;
 	priv->options.master_key = options->master_key;
 	priv->options.force_sync = options->force_sync;
+	priv->options.persist = options->persist;
 
 	save_configured_profile (config);
 
@@ -675,6 +702,13 @@ urf_config_load_from_file (UrfConfig  *config,
 		g_error_free (error);
 	error = NULL;
 
+	ret = g_key_file_get_boolean (key_file, "general", "persist", &error);
+	if (!error)
+		priv->options.persist = ret;
+	else
+		g_error_free (error);
+	error = NULL;
+
 	g_key_file_free (key_file);
 }
 
@@ -715,6 +749,101 @@ urf_config_get_force_sync (UrfConfig *config)
 }
 
 /**
+ * urf_config_get_persist:
+ **/
+gboolean
+urf_config_get_persist (UrfConfig *config)
+{
+	return config->priv->options.persist;
+}
+
+/**
+ * urf_persist_get_persist_state:
+ **/
+gboolean
+urf_config_get_persist_state (UrfConfig *config,
+                              const guint type)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	gboolean state = FALSE;
+	GError *error = NULL;
+
+	state = g_key_file_get_boolean (priv->persistence_file, type_to_string(type), "soft", &error);
+
+	if (error) {
+			/* Debug only; there can be devices disappearing when some killswitches
+			 * are triggered.
+			 */
+			g_debug ("Could not get state for device %s: %s", type_to_string(type), error->message);
+			g_error_free (error);
+	}
+
+	g_debug ("saved state for device %s: %s", type_to_string(type), state ? "blocked" : "unblocked");
+
+	return state;
+}
+
+/**
+ * urf_persist_set_persist_state:
+ **/
+void
+urf_config_set_persist_state (UrfConfig *config,
+                              const guint type,
+                              const KillswitchState state)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+
+	g_debug ("setting state for device %s: %s", type_to_string(type), state > 0 ? "blocked" : "unblocked");
+
+	g_key_file_set_boolean (priv->persistence_file, type_to_string (type), "soft", state > 0);
+}
+
+static void
+urf_config_save_persistence_file (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	char *content = NULL;
+	gboolean ret = FALSE;
+	GError *error = NULL;
+
+	content = g_key_file_to_data (priv->persistence_file, NULL, NULL);
+
+	if (content) {
+		ret = g_file_set_contents (URFKILL_PERSISTENCE_FILENAME,
+					   content, -1, &error);
+		if (!ret) {
+			if (error) {
+				g_warning ("Failed to write persistence data: %s", error->message);
+				g_error_free (error);
+			}
+		} else {
+			g_chmod (URFKILL_PERSISTENCE_FILENAME,
+				 S_IRUSR | S_IRGRP | S_IROTH);
+		}
+
+		g_free (content);
+	}
+}
+
+static void
+urf_config_get_persistence_file (UrfConfig *config)
+{
+	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+	GError *error = NULL;
+
+	priv->persistence_file = g_key_file_new ();
+	g_key_file_load_from_file (priv->persistence_file,
+	                           URFKILL_PERSISTENCE_FILENAME,
+	                           G_KEY_FILE_NONE,
+	                           &error);
+
+	if (error) {
+		g_warning ("Persistence file could not be loaded: %s", error->message);
+		g_error_free (error);
+	}
+}
+
+/**
  * urf_config_init:
  **/
 static void
@@ -725,7 +854,27 @@ urf_config_init (UrfConfig *config)
 	priv->options.key_control = TRUE;
 	priv->options.master_key = FALSE;
 	priv->options.force_sync = FALSE;
+	priv->options.persist = TRUE;
 	config->priv = priv;
+
+	urf_config_get_persistence_file (config);
+}
+
+/**
+ * urf_config_dispose:
+ **/
+static void
+urf_config_dispose (GObject *object)
+{
+	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
+
+	if (priv->persistence_file) {
+		urf_config_save_persistence_file (URF_CONFIG (object));
+		g_key_file_free (priv->persistence_file);
+		priv->persistence_file = NULL;
+	}
+
+	G_OBJECT_CLASS(urf_config_parent_class)->dispose(object);
 }
 
 /**
@@ -750,6 +899,7 @@ urf_config_class_init(UrfConfigClass *klass)
 	GObjectClass *object_class = (GObjectClass *) klass;
 
 	g_type_class_add_private(klass, sizeof(UrfConfigPrivate));
+	object_class->dispose = urf_config_dispose;
 	object_class->finalize = urf_config_finalize;
 }
 

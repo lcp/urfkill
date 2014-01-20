@@ -51,6 +51,7 @@ struct UrfKillswitchPrivate
 {
 	GList		 *devices;
 	enum rfkill_type  type;
+	KillswitchState   saved_state;
 	KillswitchState   state;
 	char		 *object_path;
 	GDBusConnection	 *connection;
@@ -66,6 +67,20 @@ KillswitchState
 urf_killswitch_get_state (UrfKillswitch *killswitch)
 {
 	return killswitch->priv->state;
+}
+
+KillswitchState
+urf_killswitch_get_saved_state (UrfKillswitch *killswitch)
+
+{
+	return killswitch->priv->saved_state;
+}
+
+void
+urf_killswitch_set_saved_state (UrfKillswitch *killswitch,
+				KillswitchState state)
+{
+	killswitch->priv->saved_state = state;
 }
 
 KillswitchState
@@ -127,6 +142,7 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 
 	if (priv->devices == NULL) {
 		priv->state = KILLSWITCH_STATE_NO_ADAPTER;
+		priv->saved_state = KILLSWITCH_STATE_NO_ADAPTER;
 		return;
 	}
 
@@ -152,6 +168,9 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 
 	if (platform_checked)
 		new_state = aggregate_states (platform, new_state);
+
+	g_message("killswitch state: %s new_state: %s",
+		  state_to_string(priv->state), state_to_string(new_state));
 	/* emit a signal for change */
 	if (priv->state != new_state) {
 		priv->state = new_state;
@@ -175,6 +194,7 @@ static void
 device_changed_cb (UrfDevice     *device,
 		   UrfKillswitch *killswitch)
 {
+	g_message("device_changed_cb: %s", urf_device_get_name(device));
 	urf_killswitch_state_refresh (killswitch);
 }
 
@@ -315,6 +335,7 @@ urf_killswitch_init (UrfKillswitch *killswitch)
 	killswitch->priv->devices = NULL;
 	killswitch->priv->object_path = NULL;
 	killswitch->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
+	killswitch->priv->saved_state = KILLSWITCH_STATE_NO_ADAPTER;
 }
 
 static GVariant *

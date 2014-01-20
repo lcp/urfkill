@@ -64,6 +64,13 @@ static const char introspection_xml[] =
 "    <method name='EnumerateDevices'>"
 "      <arg type='ao' name='array' direction='out'/>"
 "    </method>"
+"    <method name='IsFlightMode'>"
+"      <arg type='b' name='is_flight_mode' direction='out'/>"
+"    </method>"
+"    <method name='FlightMode'>"
+"      <arg type='b' name='block' direction='in'/>"
+"      <arg type='b' name='ret' direction='out'/>"
+"    </method>"
 "    <method name='IsInhibited'>"
 "      <arg type='b' name='is_inhibited' direction='out'/>"
 "    </method>"
@@ -123,6 +130,7 @@ struct UrfDaemonPrivate
 	UrfInput		*input;
 	UrfSessionChecker	*session_checker;
 	gboolean		 key_control;
+	gboolean		 flight_mode;
 	gboolean		 master_key;
 	GDBusConnection		*connection;
 	GDBusNodeInfo		*introspection_data;
@@ -309,6 +317,58 @@ urf_daemon_enumerate_devices (UrfDaemon             *daemon,
 }
 
 /**
+ * urf_daemon_is_flight_mode:
+ **/
+gboolean
+urf_daemon_is_flight_mode (UrfDaemon             *daemon,
+			   GDBusMethodInvocation *invocation)
+{
+	UrfDaemonPrivate *priv = daemon->priv;
+	GVariant *value;
+
+	value = g_variant_new ("(b)", priv->flight_mode);
+	g_dbus_method_invocation_return_value (invocation, value);
+
+	return TRUE;
+}
+
+/**
+ * urf_daemon_flight_mode:
+ **/
+gboolean
+urf_daemon_flight_mode (UrfDaemon             *daemon,
+			const gboolean         block,
+			GDBusMethodInvocation *invocation)
+{
+	UrfDaemonPrivate *priv = daemon->priv;
+	PolkitSubject *subject = NULL;
+	gboolean ret = FALSE;
+
+	if (!urf_arbitrator_has_devices (priv->arbitrator))
+		goto out;
+
+	subject = urf_polkit_get_subject (priv->polkit, invocation);
+	if (subject == NULL)
+		goto out;
+
+	if (!urf_polkit_check_auth (priv->polkit, subject, "org.freedesktop.urfkill.flight_mode", invocation))
+		goto out;
+
+	ret = urf_arbitrator_set_flight_mode (priv->arbitrator, block);
+
+	if (ret == TRUE)
+		priv->flight_mode = block;
+
+	g_dbus_method_invocation_return_value (invocation,
+	                                       g_variant_new ("(b)", ret));
+out:
+	if (subject != NULL)
+		g_object_unref (subject);
+
+	return ret;
+}
+
+/**
  * urf_daemon_is_inhibited:
  **/
 gboolean
@@ -375,6 +435,14 @@ handle_method_call_main (UrfDaemon             *daemon,
 		return;
 	} else if (g_strcmp0 (method_name, "EnumerateDevices") == 0) {
 		urf_daemon_enumerate_devices (daemon, invocation);
+		return;
+	} else if (g_strcmp0 (method_name, "IsFlightMode") == 0) {
+		urf_daemon_is_flight_mode (daemon, invocation);
+		return;
+	} else if (g_strcmp0 (method_name, "FlightMode") == 0) {
+		gboolean block;
+		g_variant_get (parameters, "(b)", &block);
+		urf_daemon_flight_mode (daemon, block, invocation);
 		return;
 	} else if (g_strcmp0 (method_name, "IsInhibited") == 0) {
 		urf_daemon_is_inhibited (daemon, invocation);
@@ -747,11 +815,6 @@ urf_daemon_dispose (GObject *object)
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
 
-	if (priv->config) {
-		g_object_unref (priv->config);
-		priv->config = NULL;
-	}
-
 	if (priv->connection) {
 		g_object_unref (priv->connection);
 		priv->connection = NULL;
@@ -770,6 +833,11 @@ urf_daemon_dispose (GObject *object)
 	if (priv->session_checker) {
 		g_object_unref (priv->session_checker);
 		priv->session_checker = NULL;
+	}
+
+	if (priv->config) {
+		g_object_unref (priv->config);
+		priv->config = NULL;
 	}
 
 	G_OBJECT_CLASS (urf_daemon_parent_class)->dispose (object);
