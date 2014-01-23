@@ -1,3 +1,39 @@
+Version 0.5.0
+~~~~~~~~~~~~~
+Released: 2014-01-23
+
+New Features:
+- config: implement persistence via an ini file in /var/lib/urfkill (Mathieu Trudel-Lapierre)
+- Implement flight mode (applying patches from Tony Espy) (Mathieu Trudel-Lapierre)
+- Add stubs for no session checking (breaks inhibit). (Mathieu Trudel-Lapierre)
+- Simplistic port of UrfSessionChecker and UrfSeat to logind (Mathieu Trudel-Lapierre)
+- Add new rfkill type: NFC (Tony Espy)
+
+Bugfixes:
+- Use g_message() rather than g_info() for standard messages. (Mathieu Trudel-Lapierre)
+- Update log levels to only display relevant killswitch addition/removal and important warnings (Mathieu Trudel-Lapierre)
+- Enable logging to syslog, optionally with debug (Mathieu Trudel-Lapierre)
+- arbitrator: set newly found devices to the saved persistent state (Mathieu Trudel-Lapierre)
+- config: can't assume key_control to be enabled if there is no DMI information (Mathieu Trudel-Lapierre)
+- Update default config file for persistence. (Mathieu Trudel-Lapierre)
+- UrfArbitrator: apply review from lcp for flight mode (Mathieu Trudel-Lapierre)
+- UrfConfig: apply review from lcp for persistence (Mathieu Trudel-Lapierre)
+- main: handle SIGTERM (Mathieu Trudel-Lapierre)
+- arbitrator: save/restore per-type killswitch state on startup, dispose. (Mathieu Trudel-Lapierre)
+- daemon: clean up UrfConfig later (Mathieu Trudel-Lapierre)
+- Add persist option to UrfConfig. (Mathieu Trudel-Lapierre)
+- Fix build for no session tracking. (Mathieu Trudel-Lapierre)
+- Propagate/notify device state changes to UrfKillswitch objects (Mathieu Trudel-Lapierre)
+- Fix errors/typos in LoginD port. (Mathieu Trudel-Lapierre)
+- Allow selecting the session tracking method at build time (Mathieu Trudel-Lapierre)
+- Fix include for UrfSeat (Mathieu Trudel-Lapierre)
+- Rename UrfConsolekit to UrfSessionChecker (Mathieu Trudel-Lapierre)
+- Rename urf-seat and urf-consolekit for generalization (Mathieu Trudel-Lapierre)
+- Check glib version for g_type_init() (Gary Lin)
+- Add NFC to glib and docs (Gary Lin)
+- Don't crash for missing DMI (Tony Espy)
+- Add gcc warnings to urfkilld and adjust warning types (Gary Lin)
+
 Version 0.4.0
 ~~~~~~~~~~~~~
 Released: 2012-05-24
