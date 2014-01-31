@@ -207,7 +207,7 @@ urf_killswitch_add_device (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
-	if (urf_device_get_rf_type (device) != priv->type ||
+	if (urf_device_get_device_type (device) != priv->type ||
 	    g_list_find (priv->devices, (gconstpointer)device) != NULL)
 		return;
 
@@ -228,7 +228,7 @@ urf_killswitch_del_device (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
-	if (urf_device_get_rf_type (device) != priv->type ||
+	if (urf_device_get_device_type (device) != priv->type ||
 	    g_list_find (priv->devices, (gconstpointer)device) == NULL)
 		return;
 

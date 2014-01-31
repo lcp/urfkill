@@ -34,18 +34,6 @@
 
 #define URF_DEVICE_INTERFACE "org.freedesktop.URfkill.Device"
 
-static const char introspection_xml[] =
-"<node>"
-"  <interface name='org.freedesktop.URfkill.Device'>"
-"    <signal name='Changed'/>"
-"    <property name='index' type='u' access='read'/>"
-"    <property name='type' type='u' access='read'/>"
-"    <property name='name' type='s' access='read'/>"
-"    <property name='soft' type='b' access='read'/>"
-"    <property name='hard' type='b' access='read'/>"
-"    <property name='platform' type='b' access='read'/>"
-"  </interface>"
-"</node>";
 
 enum
 {
@@ -53,8 +41,7 @@ enum
 	PROP_DEVICE_INDEX,
 	PROP_DEVICE_TYPE,
 	PROP_DEVICE_NAME,
-	PROP_DEVICE_SOFT,
-	PROP_DEVICE_HARD,
+	PROP_DEVICE_STATE,
 	PROP_DEVICE_PLATFORM,
 	PROP_LAST
 };
@@ -70,54 +57,154 @@ static int signals[LAST_SIGNAL] = { 0 };
                                 URF_TYPE_DEVICE, UrfDevicePrivate))
 
 struct UrfDevicePrivate {
-	guint		 index;
-	guint		 type;
-	char		*name;
-	gboolean	 soft;
-	gboolean	 hard;
-	gboolean	 platform;
-	KillswitchState	 state;
 	char		*object_path;
 	GDBusConnection	*connection;
 	GDBusNodeInfo	*introspection_data;
 };
 
-G_DEFINE_TYPE(UrfDevice, urf_device, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (UrfDevice, urf_device, G_TYPE_OBJECT)
 
 /**
- * emit_properites_changed
+ * urf_device_get_index:
  **/
-static void
-emit_properites_changed (UrfDevice *device)
+guint
+urf_device_get_index (UrfDevice *device)
 {
-	UrfDevicePrivate *priv = device->priv;
-	GVariantBuilder *builder;
-	GError *error = NULL;
+	g_return_val_if_fail (URF_IS_DEVICE (device), -1);
 
-	builder = g_variant_builder_new (G_VARIANT_TYPE_ARRAY);
-	g_variant_builder_add (builder,
-	                       "{sv}",
-	                       "soft",
-	                       g_variant_new_boolean (priv->soft));
-	g_variant_builder_add (builder,
-	                       "{sv}",
-	                       "hard",
-	                       g_variant_new_boolean (priv->hard));
+	if (URF_GET_DEVICE_CLASS (device)->get_index)
+		return URF_GET_DEVICE_CLASS (device)->get_index (device);
 
-	g_dbus_connection_emit_signal (priv->connection,
-	                               NULL,
-	                               priv->object_path,
-	                               "org.freedesktop.DBus.Properties",
-	                               "PropertiesChanged",
-	                               g_variant_new ("(sa{sv}as)",
-	                                              URF_DEVICE_INTERFACE,
-	                                              builder,
-	                                              NULL),
-	                                &error);
-	if (error) {
-		g_warning ("Failed to emit PropertiesChanged: %s", error->message);
-		g_error_free (error);
-	}
+	return -1;
+}
+
+/**
+ * urf_device_get_device_type:
+ **/
+guint
+urf_device_get_device_type (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	if (URF_GET_DEVICE_CLASS (device)->get_device_type)
+		return URF_GET_DEVICE_CLASS (device)->get_device_type (device);
+
+	return TRUE;
+}
+
+/**
+ * urf_device_get_name:
+ **/
+const char *
+urf_device_get_name (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), NULL);
+
+	if (URF_GET_DEVICE_CLASS (device)->get_name)
+		return URF_GET_DEVICE_CLASS (device)->get_name (device);
+
+	return NULL;
+}
+
+/**
+ * urf_device_is_hardware_blocked:
+ **/
+gboolean
+urf_device_is_hardware_blocked (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	if (URF_GET_DEVICE_CLASS (device)->is_hardware_blocked)
+		return URF_GET_DEVICE_CLASS (device)->is_hardware_blocked (device);
+
+	return FALSE;
+}
+
+/**
+ * urf_device_is_software_blocked:
+ **/
+gboolean
+urf_device_is_software_blocked (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	if (URF_GET_DEVICE_CLASS (device)->is_software_blocked)
+		return URF_GET_DEVICE_CLASS (device)->is_software_blocked (device);
+
+	return FALSE;
+}
+
+/**
+ * urf_device_set_hardware_blocked:
+ **/
+void
+urf_device_set_hardware_blocked (UrfDevice *device, gboolean blocked)
+{
+	g_return_if_fail (URF_IS_DEVICE (device));
+
+	if (URF_GET_DEVICE_CLASS (device)->set_hardware_blocked)
+		URF_GET_DEVICE_CLASS (device)->set_hardware_blocked (device, blocked);
+}
+
+/**
+ * urf_device_set_software_blocked:
+ **/
+void
+urf_device_set_software_blocked (UrfDevice *device, gboolean blocked)
+{
+	g_return_if_fail (URF_IS_DEVICE (device));
+
+	if (URF_GET_DEVICE_CLASS (device)->set_software_blocked)
+		URF_GET_DEVICE_CLASS (device)->set_software_blocked (device, blocked);
+}
+
+/**
+ * urf_device_get_state:
+ **/
+KillswitchState
+urf_device_get_state (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), -1);
+
+	if (URF_GET_DEVICE_CLASS (device)->get_state)
+		return URF_GET_DEVICE_CLASS (device)->get_state (device);
+
+	return -1;
+}
+
+/**
+ * urf_device_set_state:
+ **/
+void
+urf_device_set_state (UrfDevice *device, KillswitchState state)
+{
+	g_return_if_fail (URF_IS_DEVICE (device));
+
+	if (URF_GET_DEVICE_CLASS (device)->set_state)
+		URF_GET_DEVICE_CLASS (device)->set_state (device, state);
+}
+
+/**
+ * urf_device_get_object_path:
+ **/
+const char *
+urf_device_get_object_path (UrfDevice *device)
+{
+	return device->priv->object_path;
+}
+
+/**
+ * urf_device_is_platform:
+ */
+gboolean
+urf_device_is_platform (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	if (URF_GET_DEVICE_CLASS (device)->is_platform)
+		return URF_GET_DEVICE_CLASS (device)->is_platform (device);
+
+	return TRUE;
 }
 
 /**
@@ -134,13 +221,14 @@ urf_device_update_states (UrfDevice      *device,
 	UrfDevicePrivate *priv = device->priv;
 	GError *error = NULL;
 
-	if (priv->soft != soft || priv->hard != hard) {
-		priv->soft = soft;
-		priv->hard = hard;
-		priv->state = event_to_state (priv->soft, priv->hard);
+	if (urf_device_is_software_blocked (device) != soft
+	    || urf_device_is_hardware_blocked (device) != hard) {
+		urf_device_set_software_blocked (device, soft);
+		urf_device_set_hardware_blocked (device, hard);
+		urf_device_set_state (device, event_to_state (soft, hard));
 
 		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
-		emit_properites_changed (device);
+		//emit_properites_changed (device);
 		g_dbus_connection_emit_signal (priv->connection,
 		                               NULL,
 		                               priv->object_path,
@@ -161,78 +249,6 @@ urf_device_update_states (UrfDevice      *device,
 }
 
 /**
- * urf_device_get_index:
- **/
-guint
-urf_device_get_index (UrfDevice *device)
-{
-	return device->priv->index;
-}
-
-/**
- * urf_device_get_rf_type:
- **/
-guint
-urf_device_get_rf_type (UrfDevice *device)
-{
-	return device->priv->type;
-}
-
-/**
- * urf_device_get_name:
- **/
-const char *
-urf_device_get_name (UrfDevice *device)
-{
-	return device->priv->name;
-}
-
-/**
- * urf_device_get_soft:
- **/
-gboolean
-urf_device_get_soft (UrfDevice *device)
-{
-	return device->priv->soft;
-}
-
-/**
- * urf_device_get_hard:
- **/
-gboolean
-urf_device_get_hard (UrfDevice *device)
-{
-	return device->priv->hard;
-}
-
-/**
- * urf_device_get_state:
- **/
-KillswitchState
-urf_device_get_state (UrfDevice *device)
-{
-	return device->priv->state;
-}
-
-/**
- * urf_device_get_object_path:
- **/
-const char *
-urf_device_get_object_path (UrfDevice *device)
-{
-	return device->priv->object_path;
-}
-
-/**
- * urf_device_is_platform:
- */
-gboolean
-urf_device_is_platform (UrfDevice *device)
-{
-	return device->priv->platform;
-}
-
-/**
  * urf_device_get_property:
  **/
 static void
@@ -242,31 +258,55 @@ urf_device_get_property (GObject    *object,
 			 GParamSpec *pspec)
 {
 	UrfDevice *device = URF_DEVICE (object);
-	UrfDevicePrivate *priv = device->priv;
 
 	switch (prop_id) {
 	case PROP_DEVICE_INDEX:
-		g_value_set_uint (value, priv->index);
+		g_value_set_uint (value, urf_device_get_index (device));
 		break;
 	case PROP_DEVICE_TYPE:
-		g_value_set_uint (value, priv->type);
-		break;
-	case PROP_DEVICE_SOFT:
-		g_value_set_boolean (value, priv->soft);
-		break;
-	case PROP_DEVICE_HARD:
-		g_value_set_boolean (value, priv->hard);
+		g_value_set_uint (value, urf_device_get_device_type (device));
 		break;
 	case PROP_DEVICE_NAME:
-		g_value_set_string (value, priv->name);
+		g_value_set_string (value, urf_device_get_name (device));
 		break;
 	case PROP_DEVICE_PLATFORM:
-		g_value_set_boolean (value, priv->platform);
+		g_value_set_boolean (value, urf_device_is_platform (device));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+static GObject*
+constructor (GType type,
+             guint n_construct_params,
+             GObjectConstructParam *construct_params)
+{
+	GObject *object;
+	UrfDevice *self;
+	UrfDevicePrivate *priv;
+
+	object = G_OBJECT_CLASS (urf_device_parent_class)->constructor (type,
+	                         n_construct_params,
+	                         construct_params);
+
+	if (!object)
+		return NULL;
+
+	self = URF_DEVICE (object);
+	priv = self->priv;
+
+	g_warning ("(%s) device constructor", priv->object_path);
+
+	return object;
+}
+
+static void
+constructed (GObject *object)
+{
+	if (G_OBJECT_CLASS (urf_device_parent_class)->constructed)
+		G_OBJECT_CLASS (urf_device_parent_class)->constructed (object);
 }
 
 /**
@@ -303,25 +343,10 @@ urf_device_finalize (GObject *object)
 {
 	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (object);
 
-	if (priv->name)
-		g_free (priv->name);
 	if (priv->object_path)
 		g_free (priv->object_path);
 
 	G_OBJECT_CLASS(urf_device_parent_class)->finalize(object);
-}
-
-/**
- * urf_device_init:
- **/
-static void
-urf_device_init (UrfDevice *device)
-{
-	device->priv = URF_DEVICE_GET_PRIVATE (device);
-	device->priv->name = NULL;
-	device->priv->platform = FALSE;
-	device->priv->state = KILLSWITCH_STATE_NO_ADAPTER;
-	device->priv->object_path = NULL;
 }
 
 /**
@@ -334,9 +359,12 @@ urf_device_class_init(UrfDeviceClass *klass)
 	GParamSpec *pspec;
 
 	g_type_class_add_private(klass, sizeof(UrfDevicePrivate));
+
 	object_class->get_property = urf_device_get_property;
 	object_class->dispose = urf_device_dispose;
 	object_class->finalize = urf_device_finalize;
+	object_class->constructor = constructor;
+	object_class->constructed = constructed;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",
@@ -362,24 +390,6 @@ urf_device_class_init(UrfDeviceClass *klass)
 				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_TYPE,
-					 pspec);
-
-	pspec = g_param_spec_boolean ("soft",
-				      "Killswitch Soft Block",
-				      "The soft block of the killswitch device",
-				      FALSE,
-				      G_PARAM_READABLE);
-	g_object_class_install_property (object_class,
-					 PROP_DEVICE_SOFT,
-					 pspec);
-
-	pspec = g_param_spec_boolean ("hard",
-				      "Killswitch Hard Block",
-				      "The hard block of the killswitch device",
-				      FALSE,
-				      G_PARAM_READABLE);
-	g_object_class_install_property (object_class,
-					 PROP_DEVICE_HARD,
 					 pspec);
 
 	pspec = g_param_spec_string ("name",
@@ -411,22 +421,17 @@ handle_get_property (GDBusConnection *connection,
                      gpointer user_data)
 {
 	UrfDevice *device = URF_DEVICE (user_data);
-	UrfDevicePrivate *priv = device->priv;
 
 	GVariant *retval = NULL;
 
 	if (g_strcmp0 (property_name, "index") == 0)
-		retval = g_variant_new_uint32 (priv->index);
+		retval = g_variant_new_uint32 (urf_device_get_index (device));
 	else if (g_strcmp0 (property_name, "type") == 0)
-		retval = g_variant_new_uint32 (priv->type);
-	else if (g_strcmp0 (property_name, "soft") == 0)
-		retval = g_variant_new_boolean (priv->soft);
-	else if (g_strcmp0 (property_name, "hard") == 0)
-		retval = g_variant_new_boolean (priv->hard);
+		retval = g_variant_new_uint32 (urf_device_get_device_type (device));
 	else if (g_strcmp0 (property_name, "name") == 0)
-		retval = g_variant_new_string (priv->name);
+		retval = g_variant_new_string (urf_device_get_name (device));
 	else if (g_strcmp0 (property_name, "platform") == 0)
-		retval = g_variant_new_boolean (priv->platform);
+		retval = g_variant_new_boolean (urf_device_is_platform (device));
 
 	return retval;
 }
@@ -445,14 +450,16 @@ static char *
 urf_device_compute_object_path (UrfDevice *device)
 {
 	const char *path_template = "/org/freedesktop/URfkill/devices/%u";
-	return g_strdup_printf (path_template, device->priv->index);
+	static int index = 0;
+
+	return g_strdup_printf (path_template, index++);
 }
 
 /**
  * urf_device_register_device:
  **/
-static gboolean
-urf_device_register_device (UrfDevice *device)
+gboolean
+urf_device_register_device (UrfDevice *device, const char *introspection_xml)
 {
 	UrfDevicePrivate *priv = device->priv;
 	GDBusInterfaceInfo **infos;
@@ -484,62 +491,24 @@ urf_device_register_device (UrfDevice *device)
 }
 
 /**
- * urf_device_get_udev_attrs
- */
+ * urf_device_init:
+ **/
 static void
-urf_device_get_udev_attrs (UrfDevice *device)
+urf_device_init (UrfDevice *device)
 {
-	UrfDevicePrivate *priv = device->priv;
-	struct udev *udev;
-	struct udev_device *dev;
-	struct udev_device *parent_dev;
+	device->priv = URF_DEVICE_GET_PRIVATE (device);
+	device->priv->object_path = NULL;
 
-	udev = udev_new ();
-	if (udev == NULL) {
-		g_warning ("udev_new() failed");
-		return;
-	}
-	dev = get_rfkill_device_by_index (udev, priv->index);
-	if (!dev) {
-		g_warning ("Failed to get udev device for index %u", priv->index);
-		udev_unref (udev);
-		return;
-	}
-
-	priv->name = g_strdup (udev_device_get_sysattr_value (dev, "name"));
-
-	parent_dev = udev_device_get_parent_with_subsystem_devtype (dev, "platform", NULL);
-	if (parent_dev)
-		priv->platform = TRUE;
-
-	udev_device_unref (dev);
-	udev_unref (udev);
+	const char introspection_xml[] =
+		"<node>"
+		"  <interface name='org.freedesktop.URfkill.Device'>"
+		"    <signal name='Changed'/>"
+		"    <property name='index' type='u' access='read'/>"
+		"    <property name='type' type='u' access='read'/>"
+		"    <property name='name' type='s' access='read'/>"
+		"    <property name='state' type='u' access='read'/>"
+		"  </interface>"
+		"</node>";
+	urf_device_register_device (device, introspection_xml);
 }
 
-/**
- * urf_device_new:
- */
-UrfDevice *
-urf_device_new (guint    index,
-		guint    type,
-		gboolean soft,
-		gboolean hard)
-{
-	UrfDevice *device = URF_DEVICE(g_object_new (URF_TYPE_DEVICE, NULL));
-	UrfDevicePrivate *priv = device->priv;
-
-	priv->index = index;
-	priv->type = type;
-	priv->soft = soft;
-	priv->hard = hard;
-	priv->state = event_to_state (soft, hard);
-
-	urf_device_get_udev_attrs (device);
-
-	if (!urf_device_register_device (device)) {
-		g_object_unref (device);
-		return NULL;
-	}
-
-	return device;
-}

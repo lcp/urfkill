@@ -45,6 +45,8 @@
 #include "urf-killswitch.h"
 #include "urf-utils.h"
 
+#include "urf-device-kernel.h"
+
 enum {
 	DEVICE_ADDED,
 	DEVICE_REMOVED,
@@ -145,7 +147,7 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 
 	g_message ("Setting device %u (%s) to %s",
 		index,
-		type_to_string (urf_device_get_rf_type (device)),
+		type_to_string (urf_device_get_device_type (device)),
 		block ? "block" : "unblock");
 
 	len = write (priv->fd, &event, sizeof(event));
@@ -305,7 +307,7 @@ update_killswitch (UrfArbitrator *arbitrator,
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	gboolean changed, old_hard;
+	gboolean changed, old_hard = FALSE;
 	char *object_path;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
@@ -314,7 +316,8 @@ update_killswitch (UrfArbitrator *arbitrator,
 		return;
 	}
 
-	old_hard = urf_device_get_hard (device);
+	old_hard = urf_device_is_hardware_blocked (device);
+
 	changed = urf_device_update_states (device, soft, hard);
 
 	if (changed == TRUE) {
@@ -354,7 +357,7 @@ remove_killswitch (UrfArbitrator *arbitrator,
 	}
 
 	priv->devices = g_list_remove (priv->devices, device);
-	type = urf_device_get_rf_type (device);
+	type = urf_device_get_device_type (device);
 	object_path = g_strdup (urf_device_get_object_path(device));
 
 	name = urf_device_get_name (device);
@@ -390,7 +393,7 @@ add_killswitch (UrfArbitrator *arbitrator,
 
 	g_message ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 
-	device = urf_device_new (index, type, soft, hard);
+	device = urf_device_kernel_new (index, type, soft, hard);
 	priv->devices = g_list_append (priv->devices, device);
 
 	urf_killswitch_add_device (priv->killswitch[type], device);

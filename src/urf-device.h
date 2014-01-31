@@ -38,6 +38,13 @@ G_BEGIN_DECLS
 #define URF_GET_DEVICE_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
 					URF_TYPE_DEVICE, UrfDeviceClass))
 
+typedef enum {
+	URF_DEVICE_TYPE_UNKNOWN		= -1,
+	URF_DEVICE_TYPE_KERNEL		= 0,
+	URF_DEVICE_TYPE_DBUS		= 1,
+	URF_DEVICE_TYPE_MAX,
+} UrfDeviceType;
+
 typedef struct UrfDevicePrivate UrfDevicePrivate;
 
 typedef struct {
@@ -46,7 +53,20 @@ typedef struct {
 } UrfDevice;
 
 typedef struct {
-        GObjectClass parent_class;
+	GObjectClass parent;
+	guint			 (*get_index)			(UrfDevice	*device);
+	guint			 (*get_device_type)		(UrfDevice	*device);
+	const char		*(*get_name)			(UrfDevice	*device);
+	KillswitchState		 (*get_state)			(UrfDevice	*device);
+	void			 (*set_state)			(UrfDevice	*device,
+								 KillswitchState state);
+	gboolean		 (*is_platform)			(UrfDevice	*device);
+	void			 (*set_hardware_blocked)	(UrfDevice	*device,
+								 gboolean blocked);
+	gboolean		 (*is_hardware_blocked)		(UrfDevice	*device);
+	void			 (*set_software_blocked)	(UrfDevice	*device,
+								 gboolean blocked);
+	gboolean		 (*is_software_blocked)		(UrfDevice	*device);
 } UrfDeviceClass;
 
 GType			 urf_device_get_type		(void);
@@ -61,13 +81,16 @@ gboolean		 urf_device_update_states	(UrfDevice	*device,
 							 const gboolean	 hard);
 
 guint			 urf_device_get_index		(UrfDevice	*device);
-guint			 urf_device_get_rf_type		(UrfDevice	*device);
-const char 		*urf_device_get_name		(UrfDevice	*device);
-gboolean		 urf_device_get_soft		(UrfDevice	*device);
-gboolean		 urf_device_get_hard		(UrfDevice	*device);
 const char		*urf_device_get_object_path	(UrfDevice	*device);
+guint			 urf_device_get_device_type	(UrfDevice	*device);
+const char		*urf_device_get_name		(UrfDevice	*device);
 KillswitchState		 urf_device_get_state		(UrfDevice	*device);
 gboolean		 urf_device_is_platform		(UrfDevice	*device);
+gboolean		 urf_device_is_hardware_blocked	(UrfDevice	*device);
+gboolean		 urf_device_is_software_blocked	(UrfDevice	*device);
+
+gboolean		 urf_device_register_device	(UrfDevice	*device,
+							 const char	*introspection_xml);
 
 G_END_DECLS
 
