@@ -29,11 +29,11 @@ G_BEGIN_DECLS
 #define URF_TYPE_DEVICE (urf_device_get_type())
 #define URF_DEVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), \
 					URF_TYPE_DEVICE, UrfDevice))
-#define URF_DEVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), \
+#define URF_DEVICE_CLASS(class) (G_TYPE_CHECK_CLASS_CAST((class), \
 					URF_TYPE_DEVICE, UrfDeviceClass))
 #define URF_IS_DEVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), \
 					URF_TYPE_DEVICE))
-#define URF_IS_DEVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), \
+#define URF_IS_DEVICE_CLASS(class) (G_TYPE_CHECK_CLASS_TYPE((class), \
 					URF_TYPE_DEVICE))
 #define URF_GET_DEVICE_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
 					URF_TYPE_DEVICE, UrfDeviceClass))
@@ -45,16 +45,15 @@ typedef enum {
 	URF_DEVICE_TYPE_MAX,
 } UrfDeviceType;
 
-typedef struct UrfDevicePrivate UrfDevicePrivate;
+typedef struct _UrfDevicePrivate UrfDevicePrivate;
 
 typedef struct {
 	GObject parent;
-	UrfDevicePrivate *priv;
 } UrfDevice;
 
 typedef struct {
 	GObjectClass parent;
-	guint			 (*get_index)			(UrfDevice	*device);
+	gint			 (*get_index)			(UrfDevice	*device);
 	guint			 (*get_device_type)		(UrfDevice	*device);
 	const char		*(*get_name)			(UrfDevice	*device);
 	KillswitchState		 (*get_state)			(UrfDevice	*device);
@@ -80,7 +79,7 @@ gboolean		 urf_device_update_states	(UrfDevice	*device,
 							 const gboolean	 soft,
 							 const gboolean	 hard);
 
-guint			 urf_device_get_index		(UrfDevice	*device);
+gint			 urf_device_get_index		(UrfDevice	*device);
 const char		*urf_device_get_object_path	(UrfDevice	*device);
 guint			 urf_device_get_device_type	(UrfDevice	*device);
 const char		*urf_device_get_name		(UrfDevice	*device);

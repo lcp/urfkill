@@ -213,7 +213,7 @@ urf_killswitch_add_device (UrfKillswitch *killswitch,
 
 	priv->devices = g_list_prepend (priv->devices,
 					(gpointer)g_object_ref (device));
-	g_signal_connect (G_OBJECT (device), "changed",
+	g_signal_connect (G_OBJECT (device), "state-changed",
 			  G_CALLBACK (device_changed_cb), killswitch);
 
 	urf_killswitch_state_refresh (killswitch);

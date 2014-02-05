@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 #define URF_GET_DEVICE_KERNEL_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
 					URF_TYPE_DEVICE_KERNEL, UrfDeviceKernelClass))
 
-typedef struct UrfDeviceKernelPrivate UrfDeviceKernelPrivate;
+typedef struct _UrfDeviceKernelPrivate UrfDeviceKernelPrivate;
 
 typedef struct {
 	UrfDevice parent;
@@ -51,7 +51,7 @@ typedef struct {
 
 GType			 urf_device_kernel_get_type		(void);
 
-UrfDevice		*urf_device_kernel_new			(guint			 index,
+UrfDevice		*urf_device_kernel_new			(gint			 index,
 								 guint			 type,
 								 gboolean		 soft,
 								 gboolean		 hard);

@@ -38,7 +38,7 @@ static const char introspection_xml[] =
 "<node>"
 "  <interface name='org.freedesktop.URfkill.Device.Kernel'>"
 "    <signal name='Changed'/>"
-"    <property name='index' type='u' access='read'/>"
+"    <property name='index' type='i' access='read'/>"
 "    <property name='type' type='u' access='read'/>"
 "    <property name='name' type='s' access='read'/>"
 "    <property name='soft' type='b' access='read'/>"
@@ -66,23 +66,22 @@ enum {
 
 static int signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (UrfDeviceKernel, urf_device_kernel, URF_TYPE_DEVICE)
-
 #define URF_DEVICE_KERNEL_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), \
                                 URF_TYPE_DEVICE_KERNEL, UrfDeviceKernelPrivate))
 
-struct UrfDeviceKernelPrivate {
-	guint		 index;
+struct _UrfDeviceKernelPrivate {
+	gint		 index;
 	guint		 type;
 	char		*name;
 	gboolean	 soft;
 	gboolean	 hard;
 	gboolean	 platform;
-	KillswitchState	 state;
 	char		*object_path;
 	GDBusConnection	*connection;
 	GDBusNodeInfo	*introspection_data;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (UrfDeviceKernel, urf_device_kernel, URF_TYPE_DEVICE)
 
 
 /**
@@ -129,8 +128,8 @@ emit_properites_changed (UrfDeviceKernel *device)
  **/
 gboolean
 urf_device_kernel_update_states (UrfDeviceKernel      *device,
-			  const gboolean  soft,
-			  const gboolean  hard)
+                                 const gboolean  soft,
+                                 const gboolean  hard)
 {
 	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (device);
 	GError *error = NULL;
@@ -138,7 +137,6 @@ urf_device_kernel_update_states (UrfDeviceKernel      *device,
 	if (priv->soft != soft || priv->hard != hard) {
 		priv->soft = soft;
 		priv->hard = hard;
-		priv->state = event_to_state (priv->soft, priv->hard);
 
 		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
 		emit_properites_changed (device);
@@ -159,6 +157,15 @@ urf_device_kernel_update_states (UrfDeviceKernel      *device,
 	}
 
 	return FALSE;
+}
+
+/**
+ * get_index:
+ **/
+static gint
+get_index (UrfDevice *device)
+{
+	return URF_DEVICE_KERNEL_GET_PRIVATE (device)->index;
 }
 
 /**
@@ -227,7 +234,11 @@ set_hard (UrfDevice *device, gboolean blocked)
 static KillswitchState
 get_state (UrfDevice *device)
 {
-	return URF_DEVICE_KERNEL_GET_PRIVATE (device)->state;
+	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (device);
+
+	g_return_val_if_fail (URF_IS_DEVICE_KERNEL (device), -1);
+
+	return event_to_state (priv->soft, priv->hard);
 }
 
 /**
@@ -253,7 +264,7 @@ get_property (GObject    *object,
 
 	switch (prop_id) {
 	case PROP_DEVICE_INDEX:
-		g_value_set_uint (value, priv->index);
+		g_value_set_int (value, priv->index);
 		break;
 	case PROP_DEVICE_TYPE:
 		g_value_set_uint (value, priv->type);
@@ -273,6 +284,25 @@ get_property (GObject    *object,
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
+	}
+}
+
+static void
+set_property (GObject *object,
+              guint prop_id,
+              const GValue *value,
+              GParamSpec *pspec)
+{
+	switch (prop_id) {
+	case PROP_DEVICE_INDEX:
+	case PROP_DEVICE_TYPE:
+	case PROP_DEVICE_NAME:
+	case PROP_DEVICE_SOFT:
+	case PROP_DEVICE_HARD:
+	case PROP_DEVICE_PLATFORM:
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	}
 }
 
@@ -330,7 +360,6 @@ urf_device_kernel_init (UrfDeviceKernel *device)
 
 	priv->name = NULL;
 	priv->platform = FALSE;
-	priv->state = KILLSWITCH_STATE_NO_ADAPTER;
 	priv->object_path = NULL;
 }
 
@@ -338,18 +367,18 @@ urf_device_kernel_init (UrfDeviceKernel *device)
  * urf_device_kernel_class_init:
  **/
 static void
-urf_device_kernel_class_init(UrfDeviceKernelClass *klass)
+urf_device_kernel_class_init(UrfDeviceKernelClass *class)
 {
-	GObjectClass *object_class = (GObjectClass *) klass;
-	UrfDeviceClass *parent_class = URF_DEVICE_CLASS (klass);
+	GObjectClass *object_class = (GObjectClass *) class;
+	UrfDeviceClass *parent_class = URF_DEVICE_CLASS (class);
 	GParamSpec *pspec;
-
-        g_type_class_add_private (object_class, sizeof (UrfDeviceKernelPrivate));
 
 	object_class->constructor = constructor;
 	object_class->get_property = get_property;
+	object_class->set_property = set_property;
 	object_class->dispose = dispose;
 
+	parent_class->get_index = get_index;
 	parent_class->get_state = get_state;
 	parent_class->get_name = get_name;
 	parent_class->get_device_type = get_rf_type;
@@ -361,17 +390,17 @@ urf_device_kernel_class_init(UrfDeviceKernelClass *klass)
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",
-			      G_OBJECT_CLASS_TYPE (klass),
+			      G_OBJECT_CLASS_TYPE (class),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
 			      0, NULL, NULL,
 			      g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0, G_TYPE_NONE);
 
-	pspec = g_param_spec_uint ("index",
-				   "Killswitch Index",
-				   "The Index of the killswitch device",
-				   0, G_MAXUINT, 0,
-				   G_PARAM_READABLE);
+	pspec = g_param_spec_int ("index",
+			 	  "Killswitch Index",
+				  "The Index of the killswitch device",
+				  0, G_MAXINT, 0,
+				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_INDEX,
 					 pspec);
@@ -452,11 +481,24 @@ handle_get_property (GDBusConnection *connection,
 	return retval;
 }
 
+static gboolean
+handle_set_property (GDBusConnection *connection,
+                     const gchar *sender,
+                     const gchar *object_path,
+                     const gchar *interface_name,
+                     const gchar *property_name,
+                     GVariant *value,
+                     GError **error,
+                     gpointer user_data)
+{
+	return TRUE;
+}
+
 static const GDBusInterfaceVTable interface_vtable =
 {
 	NULL, /* handle method_call */
 	handle_get_property,
-	NULL, /* handle set_property */
+	handle_set_property,
 };
 
 /**
@@ -496,10 +538,10 @@ get_udev_attrs (UrfDeviceKernel *device)
  * urf_device_kernel_new:
  */
 UrfDevice *
-urf_device_kernel_new (guint    index,
-		guint    type,
-		gboolean soft,
-		gboolean hard)
+urf_device_kernel_new (gint    index,
+                       guint    type,
+                       gboolean soft,
+                       gboolean hard)
 {
 	UrfDeviceKernel *device = g_object_new (URF_TYPE_DEVICE_KERNEL, NULL);
 	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (device);
@@ -508,7 +550,6 @@ urf_device_kernel_new (guint    index,
 	priv->type = type;
 	priv->soft = soft;
 	priv->hard = hard;
-	priv->state = event_to_state (soft, hard);
 
 	get_udev_attrs (device);
 
