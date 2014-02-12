@@ -34,8 +34,6 @@
 
 #include <glib.h>
 
-#include <linux/rfkill.h>
-
 #ifndef RFKILL_EVENT_SIZE_V1
 #define RFKILL_EVENT_SIZE_V1    8
 #endif
@@ -77,7 +75,7 @@ G_DEFINE_TYPE(UrfArbitrator, urf_arbitrator, G_TYPE_OBJECT)
  **/
 static UrfDevice *
 urf_arbitrator_find_device (UrfArbitrator *arbitrator,
-			    guint          index)
+                            guint          index)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
@@ -101,24 +99,22 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
 			  const gboolean  block)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
-	struct rfkill_event event;
-	ssize_t len;
+	GSList *devices;
+	gboolean result = FALSE;
 
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE_ALL;
-	event.type = type;
-	event.soft = block;
+	if (device) {
+		g_message ("Setting %s devices to %s",
+                           type_to_string (type),
+                           block ? "blocked" : "unblocked");
 
-	g_message ("Setting %s to %s", type_to_string (type), block?"blocked":"unblocked");
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
+		result = urf_killswitch_set_software_blocked (priv->killswitch[type], block);
+	} else {
+		g_warning ("No device with type %u to block", type);
 	}
-	return TRUE;
+
+	return result;
 }
 
 /**
@@ -131,32 +127,22 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	struct rfkill_event event;
-	ssize_t len;
+	gboolean result = FALSE;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
-	if (device == NULL) {
+
+	if (device) {
+		g_message ("Setting device %u (%s) to %s",
+                           index,
+                           type_to_string (urf_device_get_device_type (device)),
+                           block ? "blocked" : "unblocked");
+
+		result = urf_device_set_software_blocked (device, block);
+	} else {
 		g_warning ("Block index: No device with index %u", index);
-		return FALSE;
 	}
 
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE;
-	event.idx = index;
-	event.soft = block;
-
-	g_message ("Setting device %u (%s) to %s",
-		index,
-		type_to_string (urf_device_get_device_type (device)),
-		block ? "block" : "unblock");
-
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
+	return result;
 }
 
 /**

@@ -60,10 +60,10 @@ typedef struct {
 	void			 (*set_state)			(UrfDevice	*device,
 								 KillswitchState state);
 	gboolean		 (*is_platform)			(UrfDevice	*device);
-	void			 (*set_hardware_blocked)	(UrfDevice	*device,
+	gboolean		 (*set_hardware_blocked)	(UrfDevice	*device,
 								 gboolean blocked);
 	gboolean		 (*is_hardware_blocked)		(UrfDevice	*device);
-	void			 (*set_software_blocked)	(UrfDevice	*device,
+	gboolean		 (*set_software_blocked)	(UrfDevice	*device,
 								 gboolean blocked);
 	gboolean		 (*is_software_blocked)		(UrfDevice	*device);
 } UrfDeviceClass;

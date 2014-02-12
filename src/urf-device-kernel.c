@@ -24,9 +24,14 @@
 
 #include <stdlib.h>
 #include <glib.h>
-#include <linux/rfkill.h>
 #include <gio/gio.h>
 #include <libudev.h>
+
+#include <linux/rfkill.h>
+
+#ifndef RFKILL_EVENT_SIZE_V1
+#define RFKILL_EVENT_SIZE_V1    8
+#endif
 
 #include "urf-device-kernel.h"
 
@@ -207,25 +212,47 @@ get_hard (UrfDevice *device)
 /**
  * set_soft:
  **/
-static void
+static gboolean
 set_soft (UrfDevice *device, gboolean blocked)
 {
 	UrfDeviceKernel *self = URF_DEVICE_KERNEL (device);
 	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (self);
+	struct rfkill_event event;
+	ssize_t len;
+
+	memset (&event, 0, sizeof(event));
+	event.op = RFKILL_OP_CHANGE_ALL;
+	event.type = priv->type;
+	event.soft = blocked;
+
+	g_message ("Setting %s to %s",
+	           type_to_string (priv->type),
+	           blocked ? "blocked" : "unblocked");
+
+	len = write (priv->fd, &event, sizeof(event));
+	if (len < 0) {
+		g_warning ("Failed to change RFKILL state: %s",
+			   g_strerror (errno));
+		return FALSE;
+	}
 
 	priv->soft = blocked;
+
+	return TRUE;
 }
 
 /**
  * set_hard:
  **/
-static void
+static gboolean
 set_hard (UrfDevice *device, gboolean blocked)
 {
 	UrfDeviceKernel *self = URF_DEVICE_KERNEL (device);
 	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (self);
 
 	priv->hard = blocked;
+
+	return TRUE;
 }
 
 /**

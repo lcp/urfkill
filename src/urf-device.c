@@ -137,25 +137,29 @@ urf_device_is_software_blocked (UrfDevice *device)
 /**
  * urf_device_set_hardware_blocked:
  **/
-void
+gboolean
 urf_device_set_hardware_blocked (UrfDevice *device, gboolean blocked)
 {
-	g_return_if_fail (URF_IS_DEVICE (device));
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
 	if (URF_GET_DEVICE_CLASS (device)->set_hardware_blocked)
-		URF_GET_DEVICE_CLASS (device)->set_hardware_blocked (device, blocked);
+		return URF_GET_DEVICE_CLASS (device)->set_hardware_blocked (device, blocked);
+
+	return FALSE;
 }
 
 /**
  * urf_device_set_software_blocked:
  **/
-void
+gboolean
 urf_device_set_software_blocked (UrfDevice *device, gboolean blocked)
 {
-	g_return_if_fail (URF_IS_DEVICE (device));
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
 	if (URF_GET_DEVICE_CLASS (device)->set_software_blocked)
-		URF_GET_DEVICE_CLASS (device)->set_software_blocked (device, blocked);
+		return URF_GET_DEVICE_CLASS (device)->set_software_blocked (device, blocked);
+
+	return FALSE;
 }
 
 /**
