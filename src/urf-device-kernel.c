@@ -23,6 +23,11 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <libudev.h>
@@ -84,6 +89,7 @@ struct _UrfDeviceKernelPrivate {
 	char		*object_path;
 	GDBusConnection	*connection;
 	GDBusNodeInfo	*introspection_data;
+	int		 fd;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (UrfDeviceKernel, urf_device_kernel, URF_TYPE_DEVICE)
@@ -384,10 +390,19 @@ static void
 urf_device_kernel_init (UrfDeviceKernel *device)
 {
 	UrfDeviceKernelPrivate *priv = URF_DEVICE_KERNEL_GET_PRIVATE (device);
+	int fd;
 
 	priv->name = NULL;
 	priv->platform = FALSE;
 	priv->object_path = NULL;
+
+	fd = open("/dev/rfkill", O_RDWR | O_NONBLOCK);
+	if (fd < 0) {
+		if (errno == EACCES)
+			g_warning ("Could not open RFKILL control device");
+	}
+
+	priv->fd = fd;
 }
 
 /**

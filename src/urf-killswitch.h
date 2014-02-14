@@ -63,6 +63,8 @@ KillswitchState		 urf_killswitch_get_state		(UrfKillswitch		*killswitch);
 KillswitchState		 urf_killswitch_get_saved_state		(UrfKillswitch		*killswitch);
 void			 urf_killswitch_set_saved_state		(UrfKillswitch		*killswitch,
 								 KillswitchState         state);
+gboolean		 urf_killswitch_set_software_blocked	(UrfKillswitch		*killswitch,
+								 gboolean		 blocked);
 
 G_END_DECLS
 

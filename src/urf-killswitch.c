@@ -239,6 +239,27 @@ urf_killswitch_del_device (UrfKillswitch *killswitch,
 }
 
 /**
+ * urf_killswitch_set_software_blocked:
+ **/
+gboolean
+urf_killswitch_set_software_blocked (UrfKillswitch *killswitch,
+                                     gboolean blocked)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GList *dev;
+	gboolean result, ret = TRUE;
+
+	for (dev = priv->devices; dev; dev = dev->next) {
+		result = urf_device_set_software_blocked (URF_DEVICE (dev->data), blocked);
+
+		if (!result)
+			ret = FALSE;
+	}
+
+	return ret;
+}
+
+/**
  * urf_killswitch_dispose:
  **/
 static void

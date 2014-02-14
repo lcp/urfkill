@@ -86,6 +86,8 @@ const char		*urf_device_get_name		(UrfDevice	*device);
 KillswitchState		 urf_device_get_state		(UrfDevice	*device);
 gboolean		 urf_device_is_platform		(UrfDevice	*device);
 gboolean		 urf_device_is_hardware_blocked	(UrfDevice	*device);
+gboolean		 urf_device_set_software_blocked (UrfDevice	*device,
+                                                          gboolean block);
 gboolean		 urf_device_is_software_blocked	(UrfDevice	*device);
 
 gboolean		 urf_device_register_device	(UrfDevice	*device,

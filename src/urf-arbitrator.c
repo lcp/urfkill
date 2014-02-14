@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/ioctl.h>
 
 #include <glib.h>
@@ -43,6 +42,7 @@
 #include "urf-killswitch.h"
 #include "urf-utils.h"
 
+#include "urf-device.h"
 #include "urf-device-kernel.h"
 
 enum {
@@ -99,20 +99,17 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
 			  const gboolean  block)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
-	GSList *devices;
 	gboolean result = FALSE;
 
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
-	if (device) {
-		g_message ("Setting %s devices to %s",
-                           type_to_string (type),
-                           block ? "blocked" : "unblocked");
+	g_message ("Setting %s devices to %s",
+                   type_to_string (type),
+                   block ? "blocked" : "unblocked");
 
-		result = urf_killswitch_set_software_blocked (priv->killswitch[type], block);
-	} else {
+	result = urf_killswitch_set_software_blocked (priv->killswitch[type], block);
+	if (!result)
 		g_warning ("No device with type %u to block", type);
-	}
 
 	return result;
 }
@@ -125,7 +122,6 @@ urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
 			      const guint     index,
 			      const gboolean  block)
 {
-	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	gboolean result = FALSE;
 
