@@ -225,33 +225,9 @@ urf_device_update_states (UrfDevice      *device,
 			  const gboolean  hard)
 {
 	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (device);
-	GError *error = NULL;
 
-	if (urf_device_is_software_blocked (device) != soft
-	    || urf_device_is_hardware_blocked (device) != hard) {
-		urf_device_set_software_blocked (device, soft);
-		urf_device_set_hardware_blocked (device, hard);
-		urf_device_set_state (device, event_to_state (soft, hard));
-
-		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
-		//emit_properites_changed (device);
-		g_dbus_connection_emit_signal (priv->connection,
-		                               NULL,
-		                               priv->object_path,
-		                               URF_DEVICE_INTERFACE,
-		                               "Changed",
-		                               NULL,
-		                               &error);
-		if (error) {
-			g_warning ("Failed to emit Changed: %s", error->message);
-			g_error_free (error);
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	return FALSE;
+	if (G_OBJECT_CLASS (urf_device_parent_class)->update_states)
+		G_OBJECT_CLASS (urf_device_parent_class)->update_states (object, soft, hard);
 }
 
 /**

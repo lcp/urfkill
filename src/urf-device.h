@@ -59,6 +59,9 @@ typedef struct {
 	KillswitchState		 (*get_state)			(UrfDevice	*device);
 	void			 (*set_state)			(UrfDevice	*device,
 								 KillswitchState state);
+	gboolean		 (*update_states)		(UrfDevice	*device,
+                                                                 gboolean soft,
+                                                                 gboolean hard);
 	gboolean		 (*is_platform)			(UrfDevice	*device);
 	gboolean		 (*set_hardware_blocked)	(UrfDevice	*device,
 								 gboolean blocked);
