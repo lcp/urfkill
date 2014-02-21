@@ -210,7 +210,7 @@ urf_device_is_platform (UrfDevice *device)
 	if (URF_GET_DEVICE_CLASS (device)->is_platform)
 		return URF_GET_DEVICE_CLASS (device)->is_platform (device);
 
-	return TRUE;
+	return FALSE;
 }
 
 /**
@@ -224,10 +224,10 @@ urf_device_update_states (UrfDevice      *device,
 			  const gboolean  soft,
 			  const gboolean  hard)
 {
-	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (device);
+	if (URF_GET_DEVICE_CLASS (device)->update_states)
+		return URF_GET_DEVICE_CLASS (device)->update_states (device, soft, hard);
 
-	if (G_OBJECT_CLASS (urf_device_parent_class)->update_states)
-		G_OBJECT_CLASS (urf_device_parent_class)->update_states (object, soft, hard);
+	return FALSE;
 }
 
 /**
@@ -266,8 +266,6 @@ constructor (GType type,
              GObjectConstructParam *construct_params)
 {
 	GObject *object;
-	UrfDevice *self;
-	UrfDevicePrivate *priv;
 
 	object = G_OBJECT_CLASS (urf_device_parent_class)->constructor (type,
 	                         n_construct_params,
@@ -275,11 +273,6 @@ constructor (GType type,
 
 	if (!object)
 		return NULL;
-
-	self = URF_DEVICE (object);
-	priv = URF_DEVICE_GET_PRIVATE (self);
-
-	g_warning ("(%s) device constructor", priv->object_path);
 
 	return object;
 }
