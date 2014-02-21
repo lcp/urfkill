@@ -36,6 +36,7 @@
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
+#include "urf-ofono-manager.h"
 
 #if defined SESSION_TRACKING_CK
 #include "urf-session-checker-consolekit.h"
@@ -129,6 +130,7 @@ struct UrfDaemonPrivate
 	UrfArbitrator		*arbitrator;
 	UrfInput		*input;
 	UrfSessionChecker	*session_checker;
+	UrfOfonoManager		*ofono_manager;
 	gboolean		 key_control;
 	gboolean		 flight_mode;
 	gboolean		 master_key;
@@ -569,6 +571,8 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
+	ret = urf_ofono_manager_startup (priv->ofono_manager, priv->arbitrator);
+
 	if (priv->key_control) {
 		/* start up input device monitor */
 		ret = urf_input_startup (priv->input);
@@ -698,6 +702,8 @@ urf_daemon_init (UrfDaemon *daemon)
 			  G_CALLBACK (urf_daemon_device_removed_cb), daemon);
 	g_signal_connect (daemon->priv->arbitrator, "device-changed",
 			  G_CALLBACK (urf_daemon_device_changed_cb), daemon);
+
+	daemon->priv->ofono_manager = urf_ofono_manager_new ();
 
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf-key-pressed",

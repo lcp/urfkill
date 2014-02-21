@@ -36,6 +36,8 @@ urfkilld_SOURCES =						\
 	urf-config.c						\
 	urf-polkit.h						\
 	urf-polkit.c						\
+	urf-ofono-manager.h					\
+	urf-ofono-manager.c					\
 	urf-utils.h						\
 	urf-utils.c						\
 	urf-daemon.h						\
