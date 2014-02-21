@@ -28,6 +28,8 @@ urfkilld_SOURCES =						\
 	urf-device.c						\
 	urf-device-kernel.h					\
 	urf-device-kernel.c					\
+	urf-device-ofono.h					\
+	urf-device-ofono.c					\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
 	urf-input.h						\
