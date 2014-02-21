@@ -67,6 +67,10 @@ UrfArbitrator		*urf_arbitrator_new			(void);
 gboolean		 urf_arbitrator_startup			(UrfArbitrator  *arbitrator,
 								 UrfConfig	*config);
 
+gboolean		 urf_arbitrator_add_device		(UrfArbitrator	*arbitrator,
+								 UrfDevice	*device);
+gboolean		 urf_arbitrator_remove_device		(UrfArbitrator	*arbitrator,
+								 UrfDevice	*device);
 gboolean		 urf_arbitrator_has_devices		(UrfArbitrator	*arbitrator);
 GList			*urf_arbitrator_get_devices		(UrfArbitrator	*arbitrator);
 UrfDevice		*urf_arbitrator_get_device		(UrfArbitrator  *arbitrator,

@@ -239,6 +239,34 @@ urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
 }
 
 /**
+ * urf_arbitrator_add_device:
+ **/
+gboolean
+urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	arbitrator->priv->devices = g_list_append (arbitrator->priv->devices, device);
+
+	return TRUE;
+}
+
+/**
+ * urf_arbitrator_remove_device:
+ **/
+gboolean
+urf_arbitrator_remove_device (UrfArbitrator *arbitrator, UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	arbitrator->priv->devices = g_list_remove (arbitrator->priv->devices, device);
+
+	return TRUE;
+}
+
+/**
  * urf_arbitrator_has_devices:
  **/
 gboolean
