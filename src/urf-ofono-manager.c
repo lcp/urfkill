@@ -136,11 +136,11 @@ ofono_get_modems_cb (GObject *source_object,
 		g_debug ("variant %p: %s", value, g_variant_get_type_string (value));
 
 		modems = g_variant_get_child_value (value, 0);
-		g_info ("found %zd modems", g_variant_n_children (modems));
+		g_debug ("found %zd modems", g_variant_n_children (modems));
 
 		g_variant_iter_init (&iter, modems);
 		while (g_variant_iter_next (&iter, "(oa{sv})", &modem_path, &dict_iter)) {
-			g_info ("Modem found: '%s'", modem_path);
+			g_message ("Modem found: '%s'", modem_path);
 
 			urf_ofono_manager_add_modem (ofono, modem_path);
 

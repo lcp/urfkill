@@ -178,14 +178,49 @@ get_soft (UrfDevice *device)
 	return soft;
 }
 
+static void
+set_online_cb (GObject *source_object,
+               GAsyncResult *res,
+               gpointer user_data)
+{
+	UrfDeviceOfono *modem = URF_DEVICE_OFONO (user_data);
+	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
+	GVariant *result;
+	GError *error = NULL;
+
+	result = g_dbus_proxy_call_finish (priv->proxy, res, &error);
+
+	if (!error) {
+		g_debug ("online change successful: %s",
+		         g_variant_print (result, TRUE));
+	} else {
+		g_warning ("Could not set Online property in oFono: %s",
+		           error ? error->message : "(unknown error)");
+	}
+}
+
 /**
  * set_soft:
  **/
 static gboolean
 set_soft (UrfDevice *device, gboolean blocked)
 {
-	/* TODO: trigger Online in oFono */
-	return FALSE;
+	UrfDeviceOfono *modem = URF_DEVICE_OFONO (device);
+	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
+
+	g_dbus_proxy_call (priv->proxy,
+	                   "SetProperty",
+	                   g_variant_new ("(sv)",
+	                                  "Online",
+                                          g_variant_new_boolean (!blocked)),
+	                   G_DBUS_CALL_FLAGS_NONE,
+	                   -1,
+	                   priv->cancellable,
+	                   (GAsyncReadyCallback) set_online_cb,
+	                   modem);
+
+	/* always succeeds since it's an async call */
+	return TRUE;
 }
 
 /**
@@ -258,7 +293,8 @@ get_properties_cb (GObject *source_object,
 		g_variant_unref (properties);
 		g_variant_unref (result);
 	} else {
-		g_warning ("Error getting properties: %s", error->message);
+		g_warning ("Error getting properties: %s",
+		           error ? error->message : "(unknown error)");
 	}
 }
 
@@ -286,7 +322,8 @@ proxy_ready_cb (GObject *source_object,
 		                   (GAsyncReadyCallback) get_properties_cb,
 		                   modem);
 	} else {
-		g_warning("Could not get oFono Modem proxy: %s", error->message);
+		g_warning ("Could not get oFono Modem proxy: %s",
+		           error ? error->message : "(unknown error)");
 	}
 }
 
@@ -489,7 +526,7 @@ urf_device_ofono_new (guint index, const char *object_path)
 	priv->index = index;
 	priv->object_path = g_strdup (object_path);
 
-	g_warning ("new ofono device: %p for %s", device, priv->object_path);
+	g_debug ("new ofono device: %p for %s", device, priv->object_path);
 
         if (!urf_device_register_device (URF_DEVICE (device), introspection_xml)) {
                 g_object_unref (device);
