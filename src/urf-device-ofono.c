@@ -72,6 +72,7 @@ struct _UrfDeviceOfonoPrivate {
 	char *object_path;
 	char *name;
 
+	GHashTable *properties;
 	gboolean soft;
 
 	GDBusProxy *proxy;
@@ -138,34 +139,23 @@ get_name (UrfDevice *device)
 	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
 	GVariant *manufacturer = NULL;
 	GVariant *model = NULL;
-	GString *name_str;
 
 	if (priv->name)
 		g_free (priv->name);
-
-	name_str = g_string_new ("");
 
 	if (!priv->proxy) {
 		g_debug( "have no proxy");
 	}
 
-	manufacturer = g_dbus_proxy_get_cached_property (priv->proxy, "Name");
-	model = g_dbus_proxy_get_cached_property (priv->proxy, "Model");
+	manufacturer = g_hash_table_lookup (priv->properties, "Manufacturer");
+	model = g_hash_table_lookup (priv->properties, "Model");
 
-	if (manufacturer) {
-		g_debug ( "manuf: %s", g_variant_get_string (manufacturer, NULL));
-		g_string_append (name_str, g_variant_get_string (manufacturer, NULL));
-		g_variant_unref (manufacturer);
-	}
+	priv->name = g_strjoin (" ",
+	                        g_variant_get_string (manufacturer, NULL),
+	                        g_variant_get_string (model, NULL),
+	                        NULL);
 
-	if (model) {
-		g_debug ( "model: %s", g_variant_get_string (manufacturer, NULL));
-		g_string_append (name_str, g_variant_get_string (model, NULL));
-		g_variant_unref (model);
-	}
-
-	g_debug ("%s: new name: %s", __func__, name_str->str);
-	priv->name = g_string_free (name_str, FALSE);
+	g_debug ("%s: new name: '%s'", __func__, priv->name);
 
 	return priv->name;
 }
@@ -176,8 +166,16 @@ get_name (UrfDevice *device)
 static gboolean
 get_soft (UrfDevice *device)
 {
-	/* TODO: get Online from oFono */
-	return FALSE;
+	UrfDeviceOfono *modem = URF_DEVICE_OFONO (device);
+	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
+	GVariant *online;
+	gboolean soft = FALSE;
+
+	online = g_hash_table_lookup (priv->properties, "Online");
+	if (online)
+		soft = !g_variant_get_boolean (online);
+
+	return soft;
 }
 
 /**
@@ -207,8 +205,60 @@ modem_signal_cb (GDBusProxy *proxy,
                  GVariant *parameters,
                  gpointer user_data)
 {
+	UrfDeviceOfono *modem = URF_DEVICE_OFONO (user_data);
+	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
+
 	if (g_strcmp0 (signal_name, "PropertyChanged") == 0) {
-		g_debug ("properties changed for %s", sender_name);
+		gchar *prop_name;
+		GVariant *prop_value = NULL;
+
+		g_debug ("properties changed for %s: %s",
+		         priv->object_path,
+		         g_variant_print (parameters, TRUE));
+
+		g_variant_get_child (parameters, 0, "s", &prop_name);
+		g_variant_get_child (parameters, 1, "v", &prop_value);
+
+		if (prop_value)
+			g_hash_table_replace (priv->properties,
+			                      g_strdup (prop_name),
+			                      g_variant_ref (prop_value));
+		g_free (prop_name);
+		g_variant_unref (prop_value);
+	}
+}
+
+static void
+get_properties_cb (GObject *source_object,
+                   GAsyncResult *res,
+                   gpointer user_data)
+{
+	UrfDeviceOfono *modem = URF_DEVICE_OFONO (user_data);
+	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
+	GVariant *result, *properties, *variant = NULL;
+	GVariantIter iter;
+	GError *error = NULL;
+	gchar *key;
+
+	result = g_dbus_proxy_call_finish (priv->proxy, res, &error);
+
+	if (!error) {
+		properties = g_variant_get_child_value (result, 0);
+		g_debug ("%zd properties for %s", g_variant_n_children (properties), priv->object_path);
+		g_debug ("%s", g_variant_print (properties, TRUE));
+
+		g_variant_iter_init (&iter, properties);
+		while (g_variant_iter_next (&iter, "{sv}", &key, &variant)) {
+			g_hash_table_insert (priv->properties, g_strdup (key),
+			                     g_variant_ref (variant));
+			g_variant_unref (variant);
+                        g_free (key);
+                }
+
+		g_variant_unref (properties);
+		g_variant_unref (result);
+	} else {
+		g_warning ("Error getting properties: %s", error->message);
 	}
 }
 
@@ -227,7 +277,14 @@ proxy_ready_cb (GObject *source_object,
 		g_cancellable_reset (priv->cancellable);
 		g_signal_connect (priv->proxy, "g-signal",
 		                  G_CALLBACK (modem_signal_cb), modem);
-		g_debug ("proxy ready");
+		g_dbus_proxy_call (priv->proxy,
+		                   "GetProperties",
+		                   NULL,
+		                   G_DBUS_CALL_FLAGS_NONE,
+		                   -1,
+		                   priv->cancellable,
+		                   (GAsyncReadyCallback) get_properties_cb,
+		                   modem);
 	} else {
 		g_warning("Could not get oFono Modem proxy: %s", error->message);
 	}
@@ -256,7 +313,7 @@ get_property (GObject    *object,
 		g_value_set_string (value, get_name (URF_DEVICE (device)));
 		break;
 	case PROP_SOFT:
-		g_value_set_boolean (value, priv->soft);
+		g_value_set_boolean (value, get_soft (URF_DEVICE (device)));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -312,6 +369,8 @@ urf_device_ofono_init (UrfDeviceOfono *device)
 	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (device);
 
 	priv->cancellable = g_cancellable_new ();
+	priv->properties = g_hash_table_new_full (g_str_hash, g_str_equal,
+	                                          g_free, (GDestroyNotify) g_variant_unref);
 }
 
 /**
@@ -391,7 +450,7 @@ handle_get_property (GDBusConnection *connection,
 	else if (g_strcmp0 (property_name, "type") == 0)
 		retval = g_variant_new_uint32 (RFKILL_TYPE_WWAN);
 	else if (g_strcmp0 (property_name, "soft") == 0)
-		retval = g_variant_new_boolean (priv->soft);
+		retval = g_variant_new_boolean (get_soft (URF_DEVICE (device)));
 	else if (g_strcmp0 (property_name, "name") == 0)
 		retval = g_variant_new_string (get_name (URF_DEVICE (device)));
 
