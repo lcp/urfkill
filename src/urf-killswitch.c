@@ -250,6 +250,10 @@ urf_killswitch_set_software_blocked (UrfKillswitch *killswitch,
 	gboolean result, ret = TRUE;
 
 	for (dev = priv->devices; dev; dev = dev->next) {
+		g_debug ("Setting device %s to %s",
+		         urf_device_get_object_path (URF_DEVICE (dev->data)),
+		         blocked ? "blocked" : "unblocked");
+
 		result = urf_device_set_software_blocked (URF_DEVICE (dev->data), blocked);
 
 		if (!result)

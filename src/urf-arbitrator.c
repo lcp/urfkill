@@ -244,10 +244,19 @@ urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
 gboolean
 urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 {
+	guint type;
+
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
+	type = urf_device_get_device_type (device);
+
 	arbitrator->priv->devices = g_list_append (arbitrator->priv->devices, device);
+
+	urf_killswitch_add_device (arbitrator->priv->killswitch[type], device);
+
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
+		       urf_device_get_object_path (device));
 
 	return TRUE;
 }
@@ -258,10 +267,19 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 gboolean
 urf_arbitrator_remove_device (UrfArbitrator *arbitrator, UrfDevice *device)
 {
+	guint type;
+
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
+	type = urf_device_get_device_type (device);
+
 	arbitrator->priv->devices = g_list_remove (arbitrator->priv->devices, device);
+
+	urf_killswitch_del_device (arbitrator->priv->killswitch[type], device);
+
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_REMOVED], 0,
+	               urf_device_get_object_path (device));
 
 	return TRUE;
 }
