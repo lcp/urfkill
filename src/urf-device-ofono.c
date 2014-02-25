@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <glib/gi18n-lib.h>
 
 #include <linux/rfkill.h>
 
@@ -151,8 +152,12 @@ get_name (UrfDevice *device)
 	model = g_hash_table_lookup (priv->properties, "Model");
 
 	priv->name = g_strjoin (" ",
-	                        g_variant_get_string (manufacturer, NULL),
-	                        g_variant_get_string (model, NULL),
+	                        manufacturer
+                                    ? g_variant_get_string (manufacturer, NULL)
+	                            : _("unknown"),
+	                        model
+	                            ? g_variant_get_string (model, NULL)
+	                            : _("unknown"),
 	                        NULL);
 
 	g_debug ("%s: new name: '%s'", __func__, priv->name);
