@@ -870,6 +870,6 @@ urf_daemon_new (UrfConfig *config)
 	daemon->priv->config = g_object_ref (config);
 	daemon->priv->key_control = urf_config_get_key_control (config);
 	daemon->priv->master_key = urf_config_get_master_key (config);
-	daemon->priv->flight_mode = urf_config_get_persist_state (config, KILLSWITCH_TYPE_ALL);
+	daemon->priv->flight_mode = urf_config_get_persist_state (config, RFKILL_TYPE_ALL);
 	return daemon;
 }
