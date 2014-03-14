@@ -358,8 +358,13 @@ urf_daemon_flight_mode (UrfDaemon             *daemon,
 
 	ret = urf_arbitrator_set_flight_mode (priv->arbitrator, block);
 
-	if (ret == TRUE)
+	if (ret == TRUE) {
 		priv->flight_mode = block;
+		urf_config_set_persist_state (priv->config, RFKILL_TYPE_ALL,
+		                              block
+		                              ? KILLSWITCH_STATE_SOFT_BLOCKED
+		                              : KILLSWITCH_STATE_UNBLOCKED);
+	}
 
 	g_dbus_method_invocation_return_value (invocation,
 	                                       g_variant_new ("(b)", ret));
@@ -865,5 +870,6 @@ urf_daemon_new (UrfConfig *config)
 	daemon->priv->config = g_object_ref (config);
 	daemon->priv->key_control = urf_config_get_key_control (config);
 	daemon->priv->master_key = urf_config_get_master_key (config);
+	daemon->priv->flight_mode = urf_config_get_persist_state (config, KILLSWITCH_TYPE_ALL);
 	return daemon;
 }

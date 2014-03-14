@@ -548,6 +548,11 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 		return FALSE;
 	}
 
+	/* Set initial flight mode state from persistence */
+	if (priv->persist)
+		urf_arbitrator_set_flight_mode (arbitrator,
+		                                urf_config_get_persist_state (config, KILLSWITCH_TYPE_ALL));
+
 	/* Disable rfkill input */
 	ioctl(fd, RFKILL_IOCTL_NOINPUT);
 
