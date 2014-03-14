@@ -32,6 +32,8 @@
 #include "urf-device-ofono.h"
 
 struct _UrfOfonoManager {
+	GObject parent_instance;
+
 	UrfArbitrator *arbitrator;
 
 	GDBusProxy *proxy;

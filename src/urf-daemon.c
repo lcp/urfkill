@@ -821,6 +821,11 @@ urf_daemon_dispose (GObject *object)
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
 
+	if (priv->ofono_manager) {
+		g_object_unref (priv->ofono_manager);
+		priv->ofono_manager = NULL;
+	}
+
 	if (priv->connection) {
 		g_object_unref (priv->connection);
 		priv->connection = NULL;
