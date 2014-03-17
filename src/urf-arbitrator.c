@@ -636,6 +636,7 @@ urf_arbitrator_dispose (GObject *object)
 	if (priv->persist) {
 		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
 			state = urf_killswitch_get_state (priv->killswitch[i]);
+                        g_debug("dispose arbitrator: state for %d is %d", i, state);
 			urf_config_set_persist_state (priv->config, i, state);
 		}
 	}
