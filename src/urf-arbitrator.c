@@ -110,6 +110,9 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
 	result = urf_killswitch_set_software_blocked (priv->killswitch[type], block);
 	if (!result)
 		g_warning ("No device with type %u to block", type);
+	else {
+		urf_config_set_persist_state (priv->config, type, block);
+	}
 
 	return result;
 }
@@ -156,6 +159,8 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
 	int i;
 
 	g_message("set_flight_mode: %d:", (int) block);
+
+        urf_config_set_persist_state (priv->config, RFKILL_TYPE_ALL, block);
 
 	for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
 		state = urf_killswitch_get_state (priv->killswitch[i]);

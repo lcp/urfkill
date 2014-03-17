@@ -868,12 +868,6 @@ urf_config_dispose (GObject *object)
 {
 	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
 
-	if (priv->persistence_file) {
-		urf_config_save_persistence_file (URF_CONFIG (object));
-		g_key_file_free (priv->persistence_file);
-		priv->persistence_file = NULL;
-	}
-
 	G_OBJECT_CLASS(urf_config_parent_class)->dispose(object);
 }
 
@@ -884,6 +878,12 @@ static void
 urf_config_finalize (GObject *object)
 {
 	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
+
+	if (priv->persistence_file) {
+		urf_config_save_persistence_file (URF_CONFIG (object));
+		g_key_file_free (priv->persistence_file);
+		priv->persistence_file = NULL;
+	}
 
 	g_free (priv->user);
 
