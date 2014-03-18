@@ -249,12 +249,19 @@ urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
 gboolean
 urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 {
+	UrfArbitratorPrivate *priv;
 	guint type;
+	guint index;
+	gboolean soft;
+	KillswitchState state;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
+	priv = arbitrator->priv;
 	type = urf_device_get_device_type (device);
+	index = urf_device_get_index (device);
+	soft = urf_device_is_software_blocked (device);
 
 	arbitrator->priv->devices = g_list_append (arbitrator->priv->devices, device);
 
@@ -262,6 +269,26 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 
 	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
 		       urf_device_get_object_path (device));
+
+	if (priv->force_sync && !urf_device_is_platform (device)) {
+		urf_arbitrator_set_block_idx (arbitrator, index, soft);
+	}
+
+	if (priv->persist) {
+		/* If the global state for a killswitch type is not unblocked,
+		 * use the saved persistence state as a default state to
+		 * use for the new killswitch.
+		 *
+		 * This makes sure devices that appear after urfkill has
+		 * started still get to the right state from what was saved
+		 * to the persistence file.
+		 */
+		state = urf_killswitch_get_state (priv->killswitch[type]);
+		if (state != RFKILL_STATE_UNBLOCKED) {
+			soft = urf_config_get_persist_state (priv->config, type);
+			urf_arbitrator_set_block_idx (arbitrator, index, soft);
+		}
+	}
 
 	return TRUE;
 }
@@ -416,7 +443,6 @@ add_killswitch (UrfArbitrator *arbitrator,
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	KillswitchState state;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device != NULL) {
@@ -430,29 +456,6 @@ add_killswitch (UrfArbitrator *arbitrator,
 	priv->devices = g_list_append (priv->devices, device);
 
 	urf_killswitch_add_device (priv->killswitch[type], device);
-
-	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
-		       urf_device_get_object_path (device));
-
-	if (priv->force_sync && !urf_device_is_platform (device)) {
-		urf_arbitrator_set_block_idx (arbitrator, index, soft);
-	}
-
-	if (priv->persist) {
-		/* If the global state for a killswitch type is not unblocked,
-		 * use the saved persistence state as a default state to
-		 * use for the new killswitch.
-		 *
-		 * This makes sure devices that appear after urfkill has
-		 * started still get to the right state from what was saved
-		 * to the persistence file.
-		 */
-		state = urf_killswitch_get_state (priv->killswitch[type]);
-		if (state != RFKILL_STATE_UNBLOCKED) {
-			soft = urf_config_get_persist_state (priv->config, type);
-			urf_arbitrator_set_block_idx (arbitrator, index, soft);
-		}
-	}
 }
 
 static const char *
