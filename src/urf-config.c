@@ -793,9 +793,9 @@ urf_config_set_persist_state (UrfConfig *config,
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 
-	g_debug ("setting state for device %s: %s", type_to_string(type), state != 0 ? "blocked" : "unblocked");
+	g_debug ("setting state for device %s: %s", type_to_string(type), state > 0 ? "blocked" : "unblocked");
 
-	g_key_file_set_boolean (priv->persistence_file, type_to_string (type), "soft", state != 0);
+	g_key_file_set_boolean (priv->persistence_file, type_to_string (type), "soft", state > 0);
 }
 
 static void
