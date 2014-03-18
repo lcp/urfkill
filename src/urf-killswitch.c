@@ -64,26 +64,6 @@ G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 				URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
 KillswitchState
-urf_killswitch_get_state (UrfKillswitch *killswitch)
-{
-	return killswitch->priv->state;
-}
-
-KillswitchState
-urf_killswitch_get_saved_state (UrfKillswitch *killswitch)
-
-{
-	return killswitch->priv->saved_state;
-}
-
-void
-urf_killswitch_set_saved_state (UrfKillswitch *killswitch,
-				KillswitchState state)
-{
-	killswitch->priv->saved_state = state;
-}
-
-KillswitchState
 aggregate_states (KillswitchState platform,
 		  KillswitchState non_platform)
 {
@@ -188,6 +168,27 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 			g_error_free (error);
 		}
 	}
+}
+
+KillswitchState
+urf_killswitch_get_state (UrfKillswitch *killswitch)
+{
+	urf_killswitch_state_refresh (killswitch);
+	return killswitch->priv->state;
+}
+
+KillswitchState
+urf_killswitch_get_saved_state (UrfKillswitch *killswitch)
+
+{
+	return killswitch->priv->saved_state;
+}
+
+void
+urf_killswitch_set_saved_state (UrfKillswitch *killswitch,
+				KillswitchState state)
+{
+	killswitch->priv->saved_state = state;
 }
 
 static void
