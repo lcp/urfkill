@@ -253,7 +253,6 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 	guint type;
 	guint index;
 	gboolean soft;
-	KillswitchState state;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
@@ -275,19 +274,15 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 	}
 
 	if (priv->persist) {
-		/* If the global state for a killswitch type is not unblocked,
-		 * use the saved persistence state as a default state to
+		/* use the saved persistence state as a default state to
 		 * use for the new killswitch.
 		 *
 		 * This makes sure devices that appear after urfkill has
 		 * started still get to the right state from what was saved
 		 * to the persistence file.
 		 */
-		state = urf_killswitch_get_state (priv->killswitch[type]);
-		if (state != RFKILL_STATE_UNBLOCKED) {
-			soft = urf_config_get_persist_state (priv->config, type);
-			urf_arbitrator_set_block_idx (arbitrator, index, soft);
-		}
+		soft = urf_config_get_persist_state (priv->config, type);
+		urf_arbitrator_set_block_idx (arbitrator, index, soft);
 	}
 
 	return TRUE;
