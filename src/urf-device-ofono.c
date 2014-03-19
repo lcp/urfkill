@@ -234,13 +234,11 @@ set_soft (UrfDevice *device, gboolean blocked)
 static KillswitchState
 get_state (UrfDevice *device)
 {
-	UrfDeviceOfono *modem = URF_DEVICE_OFONO (device);
-	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
 	KillswitchState state = KILLSWITCH_STATE_UNBLOCKED;
+	gboolean soft;
 
-	online = g_hash_table_lookup (priv->properties, "Online");
-
-	if (online)
+	soft = get_soft (device);
+	if (soft)
 		state = KILLSWITCH_STATE_SOFT_BLOCKED;
 
 	return state;
