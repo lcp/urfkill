@@ -262,9 +262,9 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 	index = urf_device_get_index (device);
 	soft = urf_device_is_software_blocked (device);
 
-	arbitrator->priv->devices = g_list_append (arbitrator->priv->devices, device);
+	priv->devices = g_list_append (priv->devices, device);
 
-	urf_killswitch_add_device (arbitrator->priv->killswitch[type], device);
+	urf_killswitch_add_device (priv->killswitch[type], device);
 
 	if (priv->force_sync && !urf_device_is_platform (device)) {
 		urf_arbitrator_set_block_idx (arbitrator, index, soft);
@@ -448,7 +448,6 @@ add_killswitch (UrfArbitrator *arbitrator,
 	g_message ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 
 	device = urf_device_kernel_new (index, type, soft, hard);
-	priv->devices = g_list_append (priv->devices, device);
 
 	urf_arbitrator_add_device (arbitrator, device);
 }
