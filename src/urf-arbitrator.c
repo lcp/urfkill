@@ -266,9 +266,6 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 
 	urf_killswitch_add_device (arbitrator->priv->killswitch[type], device);
 
-	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
-		       urf_device_get_object_path (device));
-
 	if (priv->force_sync && !urf_device_is_platform (device)) {
 		urf_arbitrator_set_block_idx (arbitrator, index, soft);
 	}
@@ -284,6 +281,9 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 		soft = urf_config_get_persist_state (priv->config, type);
 		urf_arbitrator_set_block_idx (arbitrator, index, soft);
 	}
+
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
+		       urf_device_get_object_path (device));
 
 	return TRUE;
 }
@@ -450,7 +450,7 @@ add_killswitch (UrfArbitrator *arbitrator,
 	device = urf_device_kernel_new (index, type, soft, hard);
 	priv->devices = g_list_append (priv->devices, device);
 
-	urf_killswitch_add_device (priv->killswitch[type], device);
+	urf_arbitrator_add_device (arbitrator, device);
 }
 
 static const char *
