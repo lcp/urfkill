@@ -213,6 +213,7 @@ set_soft (UrfDevice *device, gboolean blocked)
 	UrfDeviceOfono *modem = URF_DEVICE_OFONO (device);
 	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (modem);
 
+	priv->soft = blocked;
 	g_dbus_proxy_call (priv->proxy,
 	                   "SetProperty",
 	                   g_variant_new ("(sv)",
@@ -269,6 +270,16 @@ modem_signal_cb (GDBusProxy *proxy,
 			g_hash_table_replace (priv->properties,
 			                      g_strdup (prop_name),
 			                      g_variant_ref (prop_value));
+
+		if (g_strcmp0 ("Powered", prop_name) == 0) {
+			gboolean powered = FALSE;
+
+			powered = g_variant_get_boolean (prop_value);
+
+			if (powered)
+				set_soft (URF_DEVICE (modem), priv->soft);
+		}
+
 		g_free (prop_name);
 		g_variant_unref (prop_value);
 	}
@@ -419,6 +430,7 @@ urf_device_ofono_init (UrfDeviceOfono *device)
 	priv->cancellable = g_cancellable_new ();
 	priv->properties = g_hash_table_new_full (g_str_hash, g_str_equal,
 	                                          g_free, (GDestroyNotify) g_variant_unref);
+	priv->soft = FALSE;
 }
 
 /**
