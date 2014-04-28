@@ -38,22 +38,14 @@
 #define URF_DEVICE_OFONO_INTERFACE "org.freedesktop.URfkill.Device.Ofono"
 
 static const char introspection_xml[] =
-"<node>"
 "  <interface name='org.freedesktop.URfkill.Device.Ofono'>"
 "    <signal name='Changed'/>"
-"    <property name='index' type='u' access='read'/>"
-"    <property name='type' type='u' access='read'/>"
-"    <property name='name' type='s' access='read'/>"
 "    <property name='soft' type='b' access='read'/>"
-"  </interface>"
-"</node>";
+"  </interface>";
 
 enum
 {
 	PROP_0,
-	PROP_INDEX,
-	PROP_NAME,
-	PROP_TYPE,
 	PROP_SOFT,
 	PROP_LAST
 };
@@ -128,6 +120,12 @@ get_rf_type (UrfDevice *device)
 {
 	/* oFono devices are modems so always of the WWAN type */
 	return RFKILL_TYPE_WWAN;
+}
+
+static const char *
+get_urf_type (UrfDevice *device)
+{
+	return URF_DEVICE_OFONO_INTERFACE;
 }
 
 /**
@@ -359,18 +357,8 @@ get_property (GObject    *object,
 	      GParamSpec *pspec)
 {
 	UrfDeviceOfono *device = URF_DEVICE_OFONO (object);
-	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (device);
 
 	switch (prop_id) {
-	case PROP_INDEX:
-		g_value_set_uint (value, priv->index);
-		break;
-	case PROP_TYPE:
-		g_value_set_uint (value, RFKILL_TYPE_WWAN);
-		break;
-	case PROP_NAME:
-		g_value_set_string (value, get_name (URF_DEVICE (device)));
-		break;
 	case PROP_SOFT:
 		g_value_set_boolean (value, get_soft (URF_DEVICE (device)));
 		break;
@@ -451,6 +439,7 @@ urf_device_ofono_class_init(UrfDeviceOfonoClass *class)
 	parent_class->get_index = get_index;
 	parent_class->get_state = get_state;
 	parent_class->get_name = get_name;
+	parent_class->get_urf_type = get_urf_type;
 	parent_class->get_device_type = get_rf_type;
 	parent_class->is_software_blocked = get_soft;
 	parent_class->set_software_blocked = set_soft;
@@ -463,15 +452,6 @@ urf_device_ofono_class_init(UrfDeviceOfonoClass *class)
 			      g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0, G_TYPE_NONE);
 
-	pspec = g_param_spec_uint ("index",
-	                           "Index",
-	                           "The Index of the device",
-	                           0, G_MAXUINT, 0,
-	                           G_PARAM_READABLE);
-	g_object_class_install_property (object_class,
-					 PROP_INDEX,
-					 pspec);
-
 	pspec = g_param_spec_boolean ("soft",
 				      "Soft Block",
 				      "The soft block of the device",
@@ -479,15 +459,6 @@ urf_device_ofono_class_init(UrfDeviceOfonoClass *class)
 				      G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_SOFT,
-					 pspec);
-
-	pspec = g_param_spec_string ("name",
-				     "Device Name",
-				     "The name of the device",
-				     NULL,
-				     G_PARAM_READABLE);
-	g_object_class_install_property (object_class,
-					 PROP_NAME,
 					 pspec);
 }
 
@@ -501,18 +472,11 @@ handle_get_property (GDBusConnection *connection,
                      gpointer user_data)
 {
 	UrfDeviceOfono *device = URF_DEVICE_OFONO (user_data);
-	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (device);
 
 	GVariant *retval = NULL;
 
-	if (g_strcmp0 (property_name, "index") == 0)
-		retval = g_variant_new_uint32 (priv->index);
-	else if (g_strcmp0 (property_name, "type") == 0)
-		retval = g_variant_new_uint32 (RFKILL_TYPE_WWAN);
-	else if (g_strcmp0 (property_name, "soft") == 0)
+	if (g_strcmp0 (property_name, "soft") == 0)
 		retval = g_variant_new_boolean (get_soft (URF_DEVICE (device)));
-	else if (g_strcmp0 (property_name, "name") == 0)
-		retval = g_variant_new_string (get_name (URF_DEVICE (device)));
 
 	return retval;
 }
@@ -551,7 +515,7 @@ urf_device_ofono_new (guint index, const char *object_path)
 
 	g_debug ("new ofono device: %p for %s", device, priv->object_path);
 
-        if (!urf_device_register_device (URF_DEVICE (device), introspection_xml)) {
+        if (!urf_device_register_device (URF_DEVICE (device), interface_vtable, introspection_xml)) {
                 g_object_unref (device);
                 return NULL;
         }
