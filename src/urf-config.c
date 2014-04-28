@@ -866,8 +866,6 @@ urf_config_init (UrfConfig *config)
 static void
 urf_config_dispose (GObject *object)
 {
-	UrfConfigPrivate *priv = URF_CONFIG(object)->priv;
-
 	G_OBJECT_CLASS(urf_config_parent_class)->dispose(object);
 }
 

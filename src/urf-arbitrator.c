@@ -436,7 +436,6 @@ add_killswitch (UrfArbitrator *arbitrator,
 		gboolean       hard)
 
 {
-	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 
 	device = urf_arbitrator_find_device (arbitrator, index);
