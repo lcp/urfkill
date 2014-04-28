@@ -22,6 +22,7 @@
 #define __URF_DEVICE_H__
 
 #include <glib-object.h>
+#include <gio/gio.h>
 #include "urf-utils.h"
 
 G_BEGIN_DECLS
@@ -55,6 +56,7 @@ typedef struct {
 	GObjectClass parent;
 	gint			 (*get_index)			(UrfDevice	*device);
 	guint			 (*get_device_type)		(UrfDevice	*device);
+	const char		*(*get_urf_type)		(UrfDevice	*device);
 	const char		*(*get_name)			(UrfDevice	*device);
 	KillswitchState		 (*get_state)			(UrfDevice	*device);
 	void			 (*set_state)			(UrfDevice	*device,
@@ -93,8 +95,9 @@ gboolean		 urf_device_set_software_blocked (UrfDevice	*device,
                                                           gboolean block);
 gboolean		 urf_device_is_software_blocked	(UrfDevice	*device);
 
-gboolean		 urf_device_register_device	(UrfDevice	*device,
-							 const char	*introspection_xml);
+gboolean		 urf_device_register_device	(UrfDevice			*device,
+							 const GDBusInterfaceVTable	 vtable,
+							 const char			*xml);
 
 G_END_DECLS
 

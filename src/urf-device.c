@@ -34,12 +34,22 @@
 
 #define URF_DEVICE_INTERFACE "org.freedesktop.URfkill.Device"
 
+static const char introspection_generic[] =
+"  <interface name='org.freedesktop.URfkill.Device'>"
+"    <signal name='Changed'/>"
+"    <property name='index' type='i' access='read'/>"
+"    <property name='type' type='u' access='read'/>"
+"    <property name='urftype' type='s' access='read'/>"
+"    <property name='name' type='s' access='read'/>"
+"    <property name='platform' type='b' access='read'/>"
+"  </interface>";
 
 enum
 {
 	PROP_0,
 	PROP_DEVICE_INDEX,
 	PROP_DEVICE_TYPE,
+	PROP_URF_TYPE,
 	PROP_DEVICE_NAME,
 	PROP_DEVICE_STATE,
 	PROP_DEVICE_PLATFORM,
@@ -90,6 +100,20 @@ urf_device_get_device_type (UrfDevice *device)
 		return URF_GET_DEVICE_CLASS (device)->get_device_type (device);
 
 	return TRUE;
+}
+
+/**
+ * urf_device_get_urf_type:
+ **/
+const char *
+urf_device_get_urf_type (UrfDevice *device)
+{
+	g_return_val_if_fail (URF_IS_DEVICE (device), NULL);
+
+	if (URF_GET_DEVICE_CLASS (device)->get_urf_type)
+		return URF_GET_DEVICE_CLASS (device)->get_urf_type (device);
+
+	return URF_DEVICE_INTERFACE;
 }
 
 /**
@@ -251,6 +275,9 @@ urf_device_get_property (GObject    *object,
 	case PROP_DEVICE_NAME:
 		g_value_set_string (value, urf_device_get_name (device));
 		break;
+	case PROP_URF_TYPE:
+		g_value_set_string (value, urf_device_get_urf_type (device));
+		break;
 	case PROP_DEVICE_PLATFORM:
 		g_value_set_boolean (value, urf_device_is_platform (device));
 		break;
@@ -365,6 +392,15 @@ urf_device_class_init(UrfDeviceClass *class)
 					 PROP_DEVICE_TYPE,
 					 pspec);
 
+	pspec = g_param_spec_string ("urftype",
+				     "Device Type for urfkill",
+				     "The device dbus interface",
+				     NULL,
+				     G_PARAM_READABLE);
+	g_object_class_install_property (object_class,
+					 PROP_URF_TYPE,
+					 pspec);
+
 	pspec = g_param_spec_string ("name",
 				     "Killswitch Name",
 				     "The name of the killswitch device",
@@ -403,14 +439,12 @@ handle_get_property (GDBusConnection *connection,
 		retval = g_variant_new_uint32 (urf_device_get_device_type (device));
 	else if (g_strcmp0 (property_name, "state") == 0)
 		retval = g_variant_new_int32 (urf_device_get_state (device));
+	else if (g_strcmp0 (property_name, "urftype") == 0)
+		retval = g_variant_new_string (urf_device_get_urf_type (device));
 	else if (g_strcmp0 (property_name, "name") == 0)
 		retval = g_variant_new_string (urf_device_get_name (device));
 	else if (g_strcmp0 (property_name, "platform") == 0)
 		retval = g_variant_new_boolean (urf_device_is_platform (device));
-	else if (g_strcmp0 (property_name, "soft") == 0)
-		retval = g_variant_new_boolean (urf_device_is_software_blocked (device));
-	else if (g_strcmp0 (property_name, "hard") == 0)
-		retval = g_variant_new_boolean (urf_device_is_hardware_blocked (device));
 
 	return retval;
 }
@@ -437,15 +471,24 @@ urf_device_compute_object_path (UrfDevice *device)
  * urf_device_register_device:
  **/
 gboolean
-urf_device_register_device (UrfDevice *device, const char *introspection_xml)
+urf_device_register_device (UrfDevice *device, const GDBusInterfaceVTable vtable, const char *xml)
 {
 	UrfDevicePrivate *priv = URF_DEVICE_GET_PRIVATE (device);
 	GDBusInterfaceInfo **infos;
 	guint reg_id;
 	GError *error = NULL;
+	GString *introspection_xml;
+	gchar *xml_data;
 
-	priv->introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
+	introspection_xml = g_string_new ("<node>");
+	introspection_xml = g_string_append (introspection_xml, introspection_generic);
+	introspection_xml = g_string_append (introspection_xml, xml);
+	introspection_xml = g_string_append (introspection_xml, "</node>");
+	xml_data = g_string_free (introspection_xml, FALSE);
+
+	priv->introspection_data = g_dbus_node_info_new_for_xml (xml_data, NULL);
 	g_assert (priv->introspection_data != NULL);
+	g_free (xml_data);
 
 	priv->connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (priv->connection == NULL) {
@@ -460,6 +503,14 @@ urf_device_register_device (UrfDevice *device, const char *introspection_xml)
 		                                    priv->object_path,
 		                                    infos[0],
 		                                    &interface_vtable,
+		                                    device,
+		                                    NULL,
+		                                    NULL);
+	g_assert (reg_id > 0);
+	reg_id = g_dbus_connection_register_object (priv->connection,
+		                                    priv->object_path,
+		                                    infos[1],
+		                                    &vtable,
 		                                    device,
 		                                    NULL,
 		                                    NULL);
