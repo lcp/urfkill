@@ -413,6 +413,7 @@ urf_device_kernel_class_init(UrfDeviceKernelClass *class)
 	parent_class->is_software_blocked = get_soft;
 	parent_class->set_software_blocked = set_soft;
 	parent_class->is_platform = is_platform;
+	parent_class->update_states = urf_device_kernel_update_states;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",
