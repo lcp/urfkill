@@ -128,7 +128,7 @@ emit_properites_changed (UrfDeviceKernel *device)
  *               otherwise #FALSE
  **/
 gboolean
-urf_device_kernel_update_states (UrfDeviceKernel      *device,
+urf_device_kernel_update_states (UrfDevice *device,
                                  const gboolean  soft,
                                  const gboolean  hard)
 {
@@ -140,7 +140,7 @@ urf_device_kernel_update_states (UrfDeviceKernel      *device,
 		priv->hard = hard;
 
 		g_signal_emit (G_OBJECT (device), signals[SIGNAL_CHANGED], 0);
-		emit_properites_changed (device);
+		emit_properites_changed (URF_DEVICE_KERNEL (device));
 		g_dbus_connection_emit_signal (priv->connection,
 		                               NULL,
 		                               priv->object_path,
