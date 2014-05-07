@@ -91,6 +91,9 @@ static const char introspection_xml[] =
 "    <signal name='DeviceChanged'>"
 "      <arg type='o' name='device' direction='out'/>"
 "    </signal>"
+"    <signal name='FlightModeChanged'>"
+"      <arg type='b' name='flight_mode' direction='out'/>"
+"    </signal>"
 "    <signal name='UrfkeyPressed'>"
 "      <arg type='i' name='keycode' direction='out'/>"
 "    </signal>"
@@ -117,6 +120,7 @@ enum
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_FLIGHT_MODE_CHANGED,
 	SIGNAL_URFKEY_PRESSED,
 	SIGNAL_LAST,
 };
@@ -345,6 +349,7 @@ urf_daemon_flight_mode (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+	GError *error = NULL;
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -364,6 +369,19 @@ urf_daemon_flight_mode (UrfDaemon             *daemon,
 		                              block
 		                              ? KILLSWITCH_STATE_SOFT_BLOCKED
 		                              : KILLSWITCH_STATE_UNBLOCKED);
+
+		g_signal_emit (daemon, signals[SIGNAL_FLIGHT_MODE_CHANGED], 0, priv->flight_mode);
+		g_dbus_connection_emit_signal (priv->connection,
+		                               NULL,
+		                               URFKILL_OBJECT_PATH,
+		                               URFKILL_DBUS_INTERFACE,
+		                               "FlightModeChanged",
+		                               g_variant_new ("(b)", priv->flight_mode),
+		                               &error);
+		if (error) {
+			g_warning ("Failed to emit UrfkeyPressed: %s", error->message);
+			g_error_free (error);
+		}
 	}
 
 	g_dbus_method_invocation_return_value (invocation,
@@ -791,6 +809,14 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      0, NULL, NULL,
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
+
+	signals[SIGNAL_FLIGHT_MODE_CHANGED] =
+		g_signal_new ("flight-mode-changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__BOOLEAN,
+			      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
 	signals[SIGNAL_URFKEY_PRESSED] =
 		g_signal_new ("urfkey-pressed",
