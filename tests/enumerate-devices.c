@@ -6,7 +6,8 @@
 static void
 print_urf_device (UrfDevice *device)
 {
-	guint index, type;
+	gint index;
+	guint type;
 	gboolean soft, hard, platform;
 	char *name;
 
