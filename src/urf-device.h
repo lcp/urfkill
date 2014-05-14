@@ -55,7 +55,7 @@ typedef struct {
 typedef struct {
 	GObjectClass parent;
 	gint			 (*get_index)			(UrfDevice	*device);
-	guint			 (*get_device_type)		(UrfDevice	*device);
+	gint			 (*get_device_type)		(UrfDevice	*device);
 	const char		*(*get_urf_type)		(UrfDevice	*device);
 	const char		*(*get_name)			(UrfDevice	*device);
 	KillswitchState		 (*get_state)			(UrfDevice	*device);
@@ -75,8 +75,8 @@ typedef struct {
 
 GType			 urf_device_get_type		(void);
 
-UrfDevice		*urf_device_new			(guint		 index,
-							 guint		 type,
+UrfDevice		*urf_device_new			(gint		 index,
+							 gint		 type,
 							 gboolean	 soft,
 							 gboolean	 hard);
 
@@ -86,7 +86,7 @@ gboolean		 urf_device_update_states	(UrfDevice	*device,
 
 gint			 urf_device_get_index		(UrfDevice	*device);
 const char		*urf_device_get_object_path	(UrfDevice	*device);
-guint			 urf_device_get_device_type	(UrfDevice	*device);
+gint			 urf_device_get_device_type	(UrfDevice	*device);
 const char		*urf_device_get_name		(UrfDevice	*device);
 KillswitchState		 urf_device_get_state		(UrfDevice	*device);
 gboolean		 urf_device_is_platform		(UrfDevice	*device);

@@ -61,7 +61,7 @@ static int signals[LAST_SIGNAL] = { 0 };
                                            URF_TYPE_DEVICE_OFONO, UrfDeviceOfonoPrivate))
 
 struct _UrfDeviceOfonoPrivate {
-	guint index;
+	gint index;
 	char *object_path;
 	char *name;
 
@@ -115,7 +115,7 @@ get_index (UrfDevice *device)
 /**
  * get_rf_type:
  **/
-static guint
+static gint
 get_rf_type (UrfDevice *device)
 {
 	/* oFono devices are modems so always of the WWAN type */
@@ -505,7 +505,7 @@ static const GDBusInterfaceVTable interface_vtable =
  * urf_device_ofono_new:
  */
 UrfDevice *
-urf_device_ofono_new (guint index, const char *object_path)
+urf_device_ofono_new (gint index, const char *object_path)
 {
 	UrfDeviceOfono *device = g_object_new (URF_TYPE_DEVICE_OFONO, NULL);
 	UrfDeviceOfonoPrivate *priv = URF_DEVICE_OFONO_GET_PRIVATE (device);

@@ -47,7 +47,7 @@ typedef GObjectClass UrfOfonoManagerClass;
 
 G_DEFINE_TYPE (UrfOfonoManager, urf_ofono_manager, G_TYPE_OBJECT)
 
-static guint modem_idx = 100;
+static gint modem_idx = 100;
 
 static void
 urf_ofono_manager_finalize (GObject *object)
@@ -239,7 +239,7 @@ on_ofono_vanished (GDBusConnection *connection,
 	}
 
 	if (ofono->devices) {
-		modem_idx = 0;
+		modem_idx = 100;
 		urf_ofono_manager_remove_all_modems (ofono);
 	}
 }

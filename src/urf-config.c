@@ -762,11 +762,13 @@ urf_config_get_persist (UrfConfig *config)
  **/
 gboolean
 urf_config_get_persist_state (UrfConfig *config,
-                              const guint type)
+                              const gint type)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
 	gboolean state = FALSE;
 	GError *error = NULL;
+
+	g_return_val_if_fail (type >= 0, FALSE);
 
 	state = g_key_file_get_boolean (priv->persistence_file, type_to_string(type), "soft", &error);
 
@@ -788,10 +790,12 @@ urf_config_get_persist_state (UrfConfig *config,
  **/
 void
 urf_config_set_persist_state (UrfConfig *config,
-                              const guint type,
+                              const gint type,
                               const KillswitchState state)
 {
 	UrfConfigPrivate *priv = URF_CONFIG_GET_PRIVATE (config);
+
+	g_return_if_fail (type >= 0);
 
 	g_debug ("setting state for device %s: %s", type_to_string(type), state > 0 ? "blocked" : "unblocked");
 

@@ -71,7 +71,7 @@ static int signals[LAST_SIGNAL] = { 0 };
 
 struct _UrfDeviceKernelPrivate {
 	gint		 index;
-	guint		 type;
+	gint		 type;
 	char		*name;
 	gboolean	 soft;
 	gboolean	 hard;
@@ -172,7 +172,7 @@ get_index (UrfDevice *device)
 /**
  * get_rf_type:
  **/
-static guint
+static gint
 get_rf_type (UrfDevice *device)
 {
 	return URF_DEVICE_KERNEL_GET_PRIVATE (device)->type;
@@ -522,7 +522,7 @@ get_udev_attrs (UrfDeviceKernel *device)
  */
 UrfDevice *
 urf_device_kernel_new (gint    index,
-                       guint    type,
+                       gint    type,
                        gboolean soft,
                        gboolean hard)
 {

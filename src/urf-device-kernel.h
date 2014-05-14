@@ -52,7 +52,7 @@ typedef struct {
 GType			 urf_device_kernel_get_type		(void);
 
 UrfDevice		*urf_device_kernel_new			(gint			 index,
-								 guint			 type,
+								 gint			 type,
 								 gboolean		 soft,
 								 gboolean		 hard);
 

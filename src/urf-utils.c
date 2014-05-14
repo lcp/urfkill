@@ -92,12 +92,14 @@ dmi_info_free (DmiInfo *info)
  **/
 struct udev_device *
 get_rfkill_device_by_index (struct udev *udev,
-			    guint        index)
+			    gint         index)
 {
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices;
 	struct udev_list_entry *dev_list_entry;
 	struct udev_device *dev;
+
+	g_return_val_if_fail (index >= 0, NULL);
 
 	enumerate = udev_enumerate_new(udev);
 	udev_enumerate_add_match_subsystem(enumerate, "rfkill");
@@ -150,9 +152,11 @@ state_to_string (KillswitchState state)
 }
 
 const char *
-type_to_string (guint type)
+type_to_string (gint type)
 {
 	switch (type) {
+	case -1:
+		return "unknown";
 	case RFKILL_TYPE_ALL:
 		return "ALL";
 	case RFKILL_TYPE_WLAN:

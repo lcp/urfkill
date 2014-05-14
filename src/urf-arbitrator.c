@@ -75,11 +75,13 @@ G_DEFINE_TYPE(UrfArbitrator, urf_arbitrator, G_TYPE_OBJECT)
  **/
 static UrfDevice *
 urf_arbitrator_find_device (UrfArbitrator *arbitrator,
-                            guint          index)
+                            gint           index)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	GList *item;
+
+	g_return_val_if_fail (index >= 0, NULL);
 
 	for (item = priv->devices; item != NULL; item = item->next) {
 		device = (UrfDevice *)item->data;
@@ -95,12 +97,13 @@ urf_arbitrator_find_device (UrfArbitrator *arbitrator,
  **/
 gboolean
 urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
-			  const guint     type,
+			  const gint      type,
 			  const gboolean  block)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	gboolean result = FALSE;
 
+	g_return_val_if_fail (type >= 0, FALSE);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
 	g_message ("Setting %s devices to %s",
@@ -122,11 +125,13 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
  **/
 gboolean
 urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
-			      const guint     index,
+			      const gint      index,
 			      const gboolean  block)
 {
 	UrfDevice *device;
 	gboolean result = FALSE;
+
+	g_return_val_if_fail (index >= 0, FALSE);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 
@@ -196,12 +201,13 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
  **/
 KillswitchState
 urf_arbitrator_get_state (UrfArbitrator *arbitrator,
-			  guint          type)
+			  gint           type)
 {
 	UrfArbitratorPrivate *priv;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
+	g_return_val_if_fail (type >= 0, state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
 
 	priv = arbitrator->priv;
@@ -221,13 +227,14 @@ urf_arbitrator_get_state (UrfArbitrator *arbitrator,
  **/
 KillswitchState
 urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
-			      guint          index)
+			      gint           index)
 {
 	UrfArbitratorPrivate *priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
+	g_return_val_if_fail (index >= 0, state);
 
 	priv = arbitrator->priv;
 
@@ -250,8 +257,8 @@ gboolean
 urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 {
 	UrfArbitratorPrivate *priv;
-	guint type;
-	guint index;
+	gint type;
+	gint index;
 	gboolean soft;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
@@ -294,12 +301,14 @@ urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
 gboolean
 urf_arbitrator_remove_device (UrfArbitrator *arbitrator, UrfDevice *device)
 {
-	guint type;
+	gint type;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
 	type = urf_device_get_device_type (device);
+
+	g_return_val_if_fail (type >= 0, FALSE);
 
 	arbitrator->priv->devices = g_list_remove (arbitrator->priv->devices, device);
 
@@ -338,11 +347,12 @@ urf_arbitrator_get_devices (UrfArbitrator *arbitrator)
  **/
 UrfDevice *
 urf_arbitrator_get_device (UrfArbitrator *arbitrator,
-			   const guint    index)
+			   const gint     index)
 {
 	UrfDevice *device;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), NULL);
+	g_return_val_if_fail (index >= 0, NULL);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device)
@@ -356,7 +366,7 @@ urf_arbitrator_get_device (UrfArbitrator *arbitrator,
  **/
 static void
 update_killswitch (UrfArbitrator *arbitrator,
-		   guint          index,
+		   gint           index,
 		   gboolean       soft,
 		   gboolean       hard)
 {
@@ -364,6 +374,8 @@ update_killswitch (UrfArbitrator *arbitrator,
 	UrfDevice *device;
 	gboolean changed, old_hard = FALSE;
 	char *object_path;
+
+	g_return_if_fail (index >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
@@ -397,13 +409,15 @@ update_killswitch (UrfArbitrator *arbitrator,
  **/
 static void
 remove_killswitch (UrfArbitrator *arbitrator,
-		   guint          index)
+		   gint           index)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	guint type;
+	gint type;
 	const char *name;
 	char *object_path = NULL;
+
+	g_return_if_fail (index >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
@@ -430,13 +444,16 @@ remove_killswitch (UrfArbitrator *arbitrator,
  **/
 static void
 add_killswitch (UrfArbitrator *arbitrator,
-		guint          index,
-		guint          type,
+		gint           index,
+		gint           type,
 		gboolean       soft,
 		gboolean       hard)
 
 {
 	UrfDevice *device;
+
+	g_return_if_fail (index >= 0);
+	g_return_if_fail (type >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device != NULL) {

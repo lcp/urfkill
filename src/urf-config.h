@@ -64,9 +64,9 @@ gboolean	 urf_config_get_force_sync	(UrfConfig	*config);
 gboolean	 urf_config_get_persist		(UrfConfig	*config);
 
 gboolean	 urf_config_get_persist_state	(UrfConfig	*config,
-						 const guint type);
+						 const gint type);
 void		 urf_config_set_persist_state	(UrfConfig *config,
-						 const guint type,
+						 const gint type,
 						 const KillswitchState state);
 
 G_END_DECLS

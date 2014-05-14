@@ -38,7 +38,7 @@ static const char introspection_generic[] =
 "  <interface name='org.freedesktop.URfkill.Device'>"
 "    <signal name='Changed'/>"
 "    <property name='index' type='i' access='read'/>"
-"    <property name='type' type='u' access='read'/>"
+"    <property name='type' type='i' access='read'/>"
 "    <property name='urftype' type='s' access='read'/>"
 "    <property name='name' type='s' access='read'/>"
 "    <property name='platform' type='b' access='read'/>"
@@ -91,7 +91,7 @@ urf_device_get_index (UrfDevice *device)
 /**
  * urf_device_get_device_type:
  **/
-guint
+gint
 urf_device_get_device_type (UrfDevice *device)
 {
 	g_return_val_if_fail (URF_IS_DEVICE (device), -1);
@@ -270,7 +270,7 @@ urf_device_get_property (GObject    *object,
 		g_value_set_int (value, urf_device_get_index (device));
 		break;
 	case PROP_DEVICE_TYPE:
-		g_value_set_uint (value, urf_device_get_device_type (device));
+		g_value_set_int (value, urf_device_get_device_type (device));
 		break;
 	case PROP_DEVICE_NAME:
 		g_value_set_string (value, urf_device_get_name (device));
@@ -377,17 +377,17 @@ urf_device_class_init(UrfDeviceClass *class)
 	pspec = g_param_spec_int ("index",
 				   "Killswitch Index",
 				   "The Index of the killswitch device",
-				   0, G_MAXINT, 0,
+				   -1, G_MAXINT, 0,
 				   G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_INDEX,
 					 pspec);
 
-	pspec = g_param_spec_uint ("type",
-				   "Killswitch Type",
-				   "The type of the killswitch device",
-				   0, NUM_RFKILL_TYPES, 0,
-				   G_PARAM_READABLE);
+	pspec = g_param_spec_int ("type",
+				  "Killswitch Type",
+				  "The type of the killswitch device",
+				  -1, NUM_RFKILL_TYPES, 0,
+				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class,
 					 PROP_DEVICE_TYPE,
 					 pspec);
@@ -436,7 +436,7 @@ handle_get_property (GDBusConnection *connection,
 	if (g_strcmp0 (property_name, "index") == 0)
 		retval = g_variant_new_int32 (urf_device_get_index (device));
 	else if (g_strcmp0 (property_name, "type") == 0)
-		retval = g_variant_new_uint32 (urf_device_get_device_type (device));
+		retval = g_variant_new_int32 (urf_device_get_device_type (device));
 	else if (g_strcmp0 (property_name, "state") == 0)
 		retval = g_variant_new_int32 (urf_device_get_state (device));
 	else if (g_strcmp0 (property_name, "urftype") == 0)

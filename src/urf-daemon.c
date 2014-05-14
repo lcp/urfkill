@@ -226,13 +226,15 @@ out:
  **/
 gboolean
 urf_daemon_block (UrfDaemon             *daemon,
-		  const guint            type,
+		  const gint             type,
 		  const gboolean         block,
 		  GDBusMethodInvocation *invocation)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+
+	g_return_val_if_fail (type >= 0, FALSE);
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -260,13 +262,15 @@ out:
  **/
 gboolean
 urf_daemon_block_idx (UrfDaemon             *daemon,
-		      const guint            index,
+		      const gint             index,
 		      const gboolean         block,
 		      GDBusMethodInvocation *invocation)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+
+	g_return_val_if_fail (index >= 0, FALSE);
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -447,13 +451,13 @@ handle_method_call_main (UrfDaemon             *daemon,
                          GDBusMethodInvocation *invocation)
 {
 	if (g_strcmp0 (method_name, "Block") == 0) {
-		guint type;
+		gint type;
 		gboolean block;
 		g_variant_get (parameters, "(ub)", &type, &block);
 		urf_daemon_block (daemon, type, block, invocation);
 		return;
 	} else if (g_strcmp0 (method_name, "BlockIdx") == 0) {
-		guint index;
+		gint index;
 		gboolean block;
 		g_variant_get (parameters, "(ub)", &index, &block);
 		urf_daemon_block_idx (daemon, index, block, invocation);

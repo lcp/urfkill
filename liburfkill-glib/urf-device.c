@@ -48,7 +48,7 @@ struct _UrfDevicePrivate
 	GDBusProxy *specialized_proxy;
 	char       *object_path;
 	gint        index;
-	guint       type;
+	gint        type;
 	gboolean    soft;
 	gboolean    hard;
 	char       *name;
@@ -98,7 +98,7 @@ urf_device_refresh_private (UrfDevice *device,
 	priv->index = g_variant_get_int32 (value);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "type");
-	priv->type = g_variant_get_uint32 (value);
+	priv->type = g_variant_get_int32 (value);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "platform");
 	priv->platform = g_variant_get_boolean (value);
@@ -325,7 +325,7 @@ urf_device_get_property (GObject    *object,
 		g_value_set_int (value, priv->index);
 		break;
 	case PROP_DEVICE_TYPE:
-		g_value_set_uint (value, priv->type);
+		g_value_set_int (value, priv->type);
 		break;
 	case PROP_DEVICE_SOFT:
 		g_value_set_boolean (value, priv->soft);
@@ -413,7 +413,7 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 */
 	pspec = g_param_spec_int ("index",
 				  "Index", "The index of the rfkill device",
-				  0, G_MAXINT, 0,
+				  -1, G_MAXINT, 0,
 				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_INDEX, pspec);
 
@@ -424,10 +424,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 *
 	 * Since: 0.2.0
 	 */
-	pspec = g_param_spec_uint ("type",
-				   "Type", "The type of the rfkill device",
-				   0, URF_ENUM_TYPE_NUM-1, 0,
-				   G_PARAM_READABLE);
+	pspec = g_param_spec_int ("type",
+				  "Type", "The type of the rfkill device",
+				  -1, URF_ENUM_TYPE_NUM-1, 0,
+				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 
 	/**
