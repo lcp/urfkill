@@ -52,7 +52,7 @@ typedef struct {
 
 GType			 urf_device_ofono_get_type		(void);
 
-UrfDevice		*urf_device_ofono_new			(guint index, const char *object_path);
+UrfDevice		*urf_device_ofono_new			(gint index, const char *object_path);
 
 gchar			*urf_device_ofono_get_path		(UrfDeviceOfono *ofono);
 
