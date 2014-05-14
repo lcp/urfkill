@@ -29,12 +29,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/ioctl.h>
 
 #include <glib.h>
-
-#include <linux/rfkill.h>
 
 #ifndef RFKILL_EVENT_SIZE_V1
 #define RFKILL_EVENT_SIZE_V1    8
@@ -44,6 +41,9 @@
 #include "urf-arbitrator.h"
 #include "urf-killswitch.h"
 #include "urf-utils.h"
+
+#include "urf-device.h"
+#include "urf-device-kernel.h"
 
 enum {
 	DEVICE_ADDED,
@@ -75,11 +75,13 @@ G_DEFINE_TYPE(UrfArbitrator, urf_arbitrator, G_TYPE_OBJECT)
  **/
 static UrfDevice *
 urf_arbitrator_find_device (UrfArbitrator *arbitrator,
-			    guint          index)
+                            gint           index)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
 	GList *item;
+
+	g_return_val_if_fail (index >= 0, NULL);
 
 	for (item = priv->devices; item != NULL; item = item->next) {
 		device = (UrfDevice *)item->data;
@@ -95,28 +97,27 @@ urf_arbitrator_find_device (UrfArbitrator *arbitrator,
  **/
 gboolean
 urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
-			  const guint     type,
+			  const gint      type,
 			  const gboolean  block)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
-	struct rfkill_event event;
-	ssize_t len;
+	gboolean result = FALSE;
 
+	g_return_val_if_fail (type >= 0, FALSE);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, FALSE);
 
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE_ALL;
-	event.type = type;
-	event.soft = block;
+	g_message ("Setting %s devices to %s",
+                   type_to_string (type),
+                   block ? "blocked" : "unblocked");
 
-	g_message ("Setting %s to %s", type_to_string (type), block?"blocked":"unblocked");
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
+	result = urf_killswitch_set_software_blocked (priv->killswitch[type], block);
+	if (!result)
+		g_warning ("No device with type %u to block", type);
+	else {
+		urf_config_set_persist_state (priv->config, type, block);
 	}
-	return TRUE;
+
+	return result;
 }
 
 /**
@@ -124,37 +125,28 @@ urf_arbitrator_set_block (UrfArbitrator  *arbitrator,
  **/
 gboolean
 urf_arbitrator_set_block_idx (UrfArbitrator  *arbitrator,
-			      const guint     index,
+			      const gint      index,
 			      const gboolean  block)
 {
-	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	struct rfkill_event event;
-	ssize_t len;
+	gboolean result = FALSE;
+
+	g_return_val_if_fail (index >= 0, FALSE);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
-	if (device == NULL) {
+
+	if (device) {
+		g_message ("Setting device %u (%s) to %s",
+                           index,
+                           type_to_string (urf_device_get_device_type (device)),
+                           block ? "blocked" : "unblocked");
+
+		result = urf_device_set_software_blocked (device, block);
+	} else {
 		g_warning ("Block index: No device with index %u", index);
-		return FALSE;
 	}
 
-	memset (&event, 0, sizeof(event));
-	event.op = RFKILL_OP_CHANGE;
-	event.idx = index;
-	event.soft = block;
-
-	g_message ("Setting device %u (%s) to %s",
-		index,
-		type_to_string (urf_device_get_rf_type (device)),
-		block ? "block" : "unblock");
-
-	len = write (priv->fd, &event, sizeof(event));
-	if (len < 0) {
-		g_warning ("Failed to change RFKILL state: %s",
-			   g_strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
+	return result;
 }
 
 /**
@@ -172,6 +164,8 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
 	int i;
 
 	g_message("set_flight_mode: %d:", (int) block);
+
+        urf_config_set_persist_state (priv->config, RFKILL_TYPE_ALL, block);
 
 	for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
 		state = urf_killswitch_get_state (priv->killswitch[i]);
@@ -207,12 +201,13 @@ urf_arbitrator_set_flight_mode (UrfArbitrator  *arbitrator,
  **/
 KillswitchState
 urf_arbitrator_get_state (UrfArbitrator *arbitrator,
-			  guint          type)
+			  gint           type)
 {
 	UrfArbitratorPrivate *priv;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
+	g_return_val_if_fail (type >= 0, state);
 	g_return_val_if_fail (type < NUM_RFKILL_TYPES, state);
 
 	priv = arbitrator->priv;
@@ -232,13 +227,14 @@ urf_arbitrator_get_state (UrfArbitrator *arbitrator,
  **/
 KillswitchState
 urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
-			      guint          index)
+			      gint           index)
 {
 	UrfArbitratorPrivate *priv;
 	UrfDevice *device;
 	int state = KILLSWITCH_STATE_NO_ADAPTER;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), state);
+	g_return_val_if_fail (index >= 0, state);
 
 	priv = arbitrator->priv;
 
@@ -252,6 +248,76 @@ urf_arbitrator_get_state_idx (UrfArbitrator *arbitrator,
 	}
 
 	return state;
+}
+
+/**
+ * urf_arbitrator_add_device:
+ **/
+gboolean
+urf_arbitrator_add_device (UrfArbitrator *arbitrator, UrfDevice *device)
+{
+	UrfArbitratorPrivate *priv;
+	gint type;
+	gint index;
+	gboolean soft;
+
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	priv = arbitrator->priv;
+	type = urf_device_get_device_type (device);
+	index = urf_device_get_index (device);
+	soft = urf_device_is_software_blocked (device);
+
+	priv->devices = g_list_append (priv->devices, device);
+
+	urf_killswitch_add_device (priv->killswitch[type], device);
+
+	if (priv->force_sync && !urf_device_is_platform (device)) {
+		urf_arbitrator_set_block_idx (arbitrator, index, soft);
+	}
+
+	if (priv->persist) {
+		/* use the saved persistence state as a default state to
+		 * use for the new killswitch.
+		 *
+		 * This makes sure devices that appear after urfkill has
+		 * started still get to the right state from what was saved
+		 * to the persistence file.
+		 */
+		soft = urf_config_get_persist_state (priv->config, type);
+		urf_arbitrator_set_block_idx (arbitrator, index, soft);
+	}
+
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
+		       urf_device_get_object_path (device));
+
+	return TRUE;
+}
+
+/**
+ * urf_arbitrator_remove_device:
+ **/
+gboolean
+urf_arbitrator_remove_device (UrfArbitrator *arbitrator, UrfDevice *device)
+{
+	gint type;
+
+	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), FALSE);
+	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+
+	type = urf_device_get_device_type (device);
+
+	g_return_val_if_fail (type >= 0, FALSE);
+
+	arbitrator->priv->devices = g_list_remove (arbitrator->priv->devices, device);
+
+	urf_killswitch_del_device (arbitrator->priv->killswitch[type], device);
+
+	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_REMOVED], 0,
+	               urf_device_get_object_path (device));
+
+	return TRUE;
 }
 
 /**
@@ -281,11 +347,12 @@ urf_arbitrator_get_devices (UrfArbitrator *arbitrator)
  **/
 UrfDevice *
 urf_arbitrator_get_device (UrfArbitrator *arbitrator,
-			   const guint    index)
+			   const gint     index)
 {
 	UrfDevice *device;
 
 	g_return_val_if_fail (URF_IS_ARBITRATOR (arbitrator), NULL);
+	g_return_val_if_fail (index >= 0, NULL);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device)
@@ -299,14 +366,16 @@ urf_arbitrator_get_device (UrfArbitrator *arbitrator,
  **/
 static void
 update_killswitch (UrfArbitrator *arbitrator,
-		   guint          index,
+		   gint           index,
 		   gboolean       soft,
 		   gboolean       hard)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	gboolean changed, old_hard;
+	gboolean changed, old_hard = FALSE;
 	char *object_path;
+
+	g_return_if_fail (index >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
@@ -314,7 +383,8 @@ update_killswitch (UrfArbitrator *arbitrator,
 		return;
 	}
 
-	old_hard = urf_device_get_hard (device);
+	old_hard = urf_device_is_hardware_blocked (device);
+
 	changed = urf_device_update_states (device, soft, hard);
 
 	if (changed == TRUE) {
@@ -339,13 +409,15 @@ update_killswitch (UrfArbitrator *arbitrator,
  **/
 static void
 remove_killswitch (UrfArbitrator *arbitrator,
-		   guint          index)
+		   gint           index)
 {
 	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	guint type;
+	gint type;
 	const char *name;
 	char *object_path = NULL;
+
+	g_return_if_fail (index >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device == NULL) {
@@ -354,7 +426,7 @@ remove_killswitch (UrfArbitrator *arbitrator,
 	}
 
 	priv->devices = g_list_remove (priv->devices, device);
-	type = urf_device_get_rf_type (device);
+	type = urf_device_get_device_type (device);
 	object_path = g_strdup (urf_device_get_object_path(device));
 
 	name = urf_device_get_name (device);
@@ -372,15 +444,16 @@ remove_killswitch (UrfArbitrator *arbitrator,
  **/
 static void
 add_killswitch (UrfArbitrator *arbitrator,
-		guint          index,
-		guint          type,
+		gint           index,
+		gint           type,
 		gboolean       soft,
 		gboolean       hard)
 
 {
-	UrfArbitratorPrivate *priv = arbitrator->priv;
 	UrfDevice *device;
-	KillswitchState state;
+
+	g_return_if_fail (index >= 0);
+	g_return_if_fail (type >= 0);
 
 	device = urf_arbitrator_find_device (arbitrator, index);
 	if (device != NULL) {
@@ -390,33 +463,9 @@ add_killswitch (UrfArbitrator *arbitrator,
 
 	g_message ("adding killswitch idx %d soft %d hard %d", index, soft, hard);
 
-	device = urf_device_new (index, type, soft, hard);
-	priv->devices = g_list_append (priv->devices, device);
+	device = urf_device_kernel_new (index, type, soft, hard);
 
-	urf_killswitch_add_device (priv->killswitch[type], device);
-
-	g_signal_emit (G_OBJECT (arbitrator), signals[DEVICE_ADDED], 0,
-		       urf_device_get_object_path (device));
-
-	if (priv->force_sync && !urf_device_is_platform (device)) {
-		urf_arbitrator_set_block_idx (arbitrator, index, soft);
-	}
-
-	if (priv->persist) {
-		/* If the global state for a killswitch type is not unblocked,
-		 * use the saved persistence state as a default state to
-		 * use for the new killswitch.
-		 *
-		 * This makes sure devices that appear after urfkill has
-		 * started still get to the right state from what was saved
-		 * to the persistence file.
-		 */
-		state = urf_killswitch_get_state (priv->killswitch[type]);
-		if (state != RFKILL_STATE_UNBLOCKED) {
-			soft = urf_config_get_persist_state (priv->config, type);
-			urf_arbitrator_set_block_idx (arbitrator, index, soft);
-		}
-	}
+	urf_arbitrator_add_device (arbitrator, device);
 }
 
 static const char *
@@ -517,6 +566,11 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 		return FALSE;
 	}
 
+	/* Set initial flight mode state from persistence */
+	if (priv->persist)
+		urf_arbitrator_set_flight_mode (arbitrator,
+		                                urf_config_get_persist_state (config, RFKILL_TYPE_ALL));
+
 	/* Disable rfkill input */
 	ioctl(fd, RFKILL_IOCTL_NOINPUT);
 
@@ -595,6 +649,7 @@ urf_arbitrator_dispose (GObject *object)
 	if (priv->persist) {
 		for (i = RFKILL_TYPE_ALL + 1; i < NUM_RFKILL_TYPES; i++) {
 			state = urf_killswitch_get_state (priv->killswitch[i]);
+                        g_debug("dispose arbitrator: state for %d is %d", i, state);
 			urf_config_set_persist_state (priv->config, i, state);
 		}
 	}

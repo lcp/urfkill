@@ -351,7 +351,7 @@ out:
  **/
 gboolean
 urf_client_set_block_idx (UrfClient      *client,
-			  const guint     index,
+			  const gint      index,
 			  const gboolean  block,
 			  GCancellable   *cancellable,
 			  GError         **error)
@@ -362,6 +362,7 @@ urf_client_set_block_idx (UrfClient      *client,
 
 	g_return_val_if_fail (URF_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (client->priv->proxy != NULL, FALSE);
+	g_return_val_if_fail (index >= 0, FALSE);
 
 	retval = g_dbus_proxy_call_sync (client->priv->proxy, "BlockIdx",
 	                                 g_variant_new ("(ub)", index, block),

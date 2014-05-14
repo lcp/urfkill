@@ -64,26 +64,6 @@ G_DEFINE_TYPE (UrfKillswitch, urf_killswitch, G_TYPE_OBJECT)
 				URF_TYPE_KILLSWITCH, UrfKillswitchPrivate))
 
 KillswitchState
-urf_killswitch_get_state (UrfKillswitch *killswitch)
-{
-	return killswitch->priv->state;
-}
-
-KillswitchState
-urf_killswitch_get_saved_state (UrfKillswitch *killswitch)
-
-{
-	return killswitch->priv->saved_state;
-}
-
-void
-urf_killswitch_set_saved_state (UrfKillswitch *killswitch,
-				KillswitchState state)
-{
-	killswitch->priv->saved_state = state;
-}
-
-KillswitchState
 aggregate_states (KillswitchState platform,
 		  KillswitchState non_platform)
 {
@@ -190,6 +170,27 @@ urf_killswitch_state_refresh (UrfKillswitch *killswitch)
 	}
 }
 
+KillswitchState
+urf_killswitch_get_state (UrfKillswitch *killswitch)
+{
+	urf_killswitch_state_refresh (killswitch);
+	return killswitch->priv->state;
+}
+
+KillswitchState
+urf_killswitch_get_saved_state (UrfKillswitch *killswitch)
+
+{
+	return killswitch->priv->saved_state;
+}
+
+void
+urf_killswitch_set_saved_state (UrfKillswitch *killswitch,
+				KillswitchState state)
+{
+	killswitch->priv->saved_state = state;
+}
+
 static void
 device_changed_cb (UrfDevice     *device,
 		   UrfKillswitch *killswitch)
@@ -207,13 +208,13 @@ urf_killswitch_add_device (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
-	if (urf_device_get_rf_type (device) != priv->type ||
+	if (urf_device_get_device_type (device) != priv->type ||
 	    g_list_find (priv->devices, (gconstpointer)device) != NULL)
 		return;
 
 	priv->devices = g_list_prepend (priv->devices,
 					(gpointer)g_object_ref (device));
-	g_signal_connect (G_OBJECT (device), "changed",
+	g_signal_connect (G_OBJECT (device), "state-changed",
 			  G_CALLBACK (device_changed_cb), killswitch);
 
 	urf_killswitch_state_refresh (killswitch);
@@ -228,7 +229,7 @@ urf_killswitch_del_device (UrfKillswitch *killswitch,
 {
 	UrfKillswitchPrivate *priv = killswitch->priv;
 
-	if (urf_device_get_rf_type (device) != priv->type ||
+	if (urf_device_get_device_type (device) != priv->type ||
 	    g_list_find (priv->devices, (gconstpointer)device) == NULL)
 		return;
 
@@ -236,6 +237,31 @@ urf_killswitch_del_device (UrfKillswitch *killswitch,
 	g_object_unref (device);
 
 	urf_killswitch_state_refresh (killswitch);
+}
+
+/**
+ * urf_killswitch_set_software_blocked:
+ **/
+gboolean
+urf_killswitch_set_software_blocked (UrfKillswitch *killswitch,
+                                     gboolean blocked)
+{
+	UrfKillswitchPrivate *priv = killswitch->priv;
+	GList *dev;
+	gboolean result, ret = TRUE;
+
+	for (dev = priv->devices; dev; dev = dev->next) {
+		g_debug ("Setting device %s to %s",
+		         urf_device_get_object_path (URF_DEVICE (dev->data)),
+		         blocked ? "blocked" : "unblocked");
+
+		result = urf_device_set_software_blocked (URF_DEVICE (dev->data), blocked);
+
+		if (!result)
+			ret = FALSE;
+	}
+
+	return ret;
 }
 
 /**

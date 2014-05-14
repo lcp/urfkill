@@ -67,22 +67,26 @@ UrfArbitrator		*urf_arbitrator_new			(void);
 gboolean		 urf_arbitrator_startup			(UrfArbitrator  *arbitrator,
 								 UrfConfig	*config);
 
+gboolean		 urf_arbitrator_add_device		(UrfArbitrator	*arbitrator,
+								 UrfDevice	*device);
+gboolean		 urf_arbitrator_remove_device		(UrfArbitrator	*arbitrator,
+								 UrfDevice	*device);
 gboolean		 urf_arbitrator_has_devices		(UrfArbitrator	*arbitrator);
 GList			*urf_arbitrator_get_devices		(UrfArbitrator	*arbitrator);
 UrfDevice		*urf_arbitrator_get_device		(UrfArbitrator  *arbitrator,
-								 const guint	 index);
+								 const gint	 index);
 gboolean		 urf_arbitrator_set_block		(UrfArbitrator	*arbitrator,
-								 const guint	 type,
+								 const gint	 type,
 								 const gboolean	 block);
 gboolean		 urf_arbitrator_set_block_idx		(UrfArbitrator	*arbitrator,
-								 const guint	 index,
+								 const gint	 index,
 								 const gboolean	 block);
 gboolean		 urf_arbitrator_set_flight_mode		(UrfArbitrator	*arbitrator,
 								 const gboolean	 block);
 KillswitchState		 urf_arbitrator_get_state		(UrfArbitrator	*arbitrator,
-								 guint 		 type);
+								 gint 		 type);
 KillswitchState		 urf_arbitrator_get_state_idx		(UrfArbitrator	*arbitrator,
-								 guint 		 index);
+								 gint 		 index);
 
 G_END_DECLS
 

@@ -44,10 +44,10 @@ typedef struct {
 DmiInfo			*get_dmi_info			(void);
 void			 dmi_info_free			(DmiInfo	*info);
 struct udev_device 	*get_rfkill_device_by_index	(struct udev	*udev,
-							 guint		 index);
+							 gint		 index);
 KillswitchState		 event_to_state			(gboolean	 soft,
 							 gboolean	 hard);
 const char 		*state_to_string		(KillswitchState state);
-const char		*type_to_string			(guint		 type);
+const char		*type_to_string			(gint		 type);
 
 #endif /* __URF_UTILS_H__ */

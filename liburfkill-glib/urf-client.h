@@ -92,7 +92,7 @@ gboolean	 urf_client_set_block 			(UrfClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 urf_client_set_block_idx 		(UrfClient	*client,
-							 const guint	 index,
+							 const gint	 index,
 							 const gboolean	 block,
 							 GCancellable	*cancellable,
 							 GError		**error);

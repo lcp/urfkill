@@ -36,6 +36,7 @@
 #include "urf-input.h"
 #include "urf-utils.h"
 #include "urf-config.h"
+#include "urf-ofono-manager.h"
 
 #if defined SESSION_TRACKING_CK
 #include "urf-session-checker-consolekit.h"
@@ -90,6 +91,9 @@ static const char introspection_xml[] =
 "    <signal name='DeviceChanged'>"
 "      <arg type='o' name='device' direction='out'/>"
 "    </signal>"
+"    <signal name='FlightModeChanged'>"
+"      <arg type='b' name='flight_mode' direction='out'/>"
+"    </signal>"
 "    <signal name='UrfkeyPressed'>"
 "      <arg type='i' name='keycode' direction='out'/>"
 "    </signal>"
@@ -116,6 +120,7 @@ enum
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_FLIGHT_MODE_CHANGED,
 	SIGNAL_URFKEY_PRESSED,
 	SIGNAL_LAST,
 };
@@ -129,6 +134,7 @@ struct UrfDaemonPrivate
 	UrfArbitrator		*arbitrator;
 	UrfInput		*input;
 	UrfSessionChecker	*session_checker;
+	UrfOfonoManager		*ofono_manager;
 	gboolean		 key_control;
 	gboolean		 flight_mode;
 	gboolean		 master_key;
@@ -220,13 +226,15 @@ out:
  **/
 gboolean
 urf_daemon_block (UrfDaemon             *daemon,
-		  const guint            type,
+		  const gint             type,
 		  const gboolean         block,
 		  GDBusMethodInvocation *invocation)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+
+	g_return_val_if_fail (type >= 0, FALSE);
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -254,13 +262,15 @@ out:
  **/
 gboolean
 urf_daemon_block_idx (UrfDaemon             *daemon,
-		      const guint            index,
+		      const gint             index,
 		      const gboolean         block,
 		      GDBusMethodInvocation *invocation)
 {
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+
+	g_return_val_if_fail (index >= 0, FALSE);
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -343,6 +353,7 @@ urf_daemon_flight_mode (UrfDaemon             *daemon,
 	UrfDaemonPrivate *priv = daemon->priv;
 	PolkitSubject *subject = NULL;
 	gboolean ret = FALSE;
+	GError *error = NULL;
 
 	if (!urf_arbitrator_has_devices (priv->arbitrator))
 		goto out;
@@ -356,8 +367,26 @@ urf_daemon_flight_mode (UrfDaemon             *daemon,
 
 	ret = urf_arbitrator_set_flight_mode (priv->arbitrator, block);
 
-	if (ret == TRUE)
+	if (ret == TRUE) {
 		priv->flight_mode = block;
+		urf_config_set_persist_state (priv->config, RFKILL_TYPE_ALL,
+		                              block
+		                              ? KILLSWITCH_STATE_SOFT_BLOCKED
+		                              : KILLSWITCH_STATE_UNBLOCKED);
+
+		g_signal_emit (daemon, signals[SIGNAL_FLIGHT_MODE_CHANGED], 0, priv->flight_mode);
+		g_dbus_connection_emit_signal (priv->connection,
+		                               NULL,
+		                               URFKILL_OBJECT_PATH,
+		                               URFKILL_DBUS_INTERFACE,
+		                               "FlightModeChanged",
+		                               g_variant_new ("(b)", priv->flight_mode),
+		                               &error);
+		if (error) {
+			g_warning ("Failed to emit UrfkeyPressed: %s", error->message);
+			g_error_free (error);
+		}
+	}
 
 	g_dbus_method_invocation_return_value (invocation,
 	                                       g_variant_new ("(b)", ret));
@@ -422,13 +451,13 @@ handle_method_call_main (UrfDaemon             *daemon,
                          GDBusMethodInvocation *invocation)
 {
 	if (g_strcmp0 (method_name, "Block") == 0) {
-		guint type;
+		gint type;
 		gboolean block;
 		g_variant_get (parameters, "(ub)", &type, &block);
 		urf_daemon_block (daemon, type, block, invocation);
 		return;
 	} else if (g_strcmp0 (method_name, "BlockIdx") == 0) {
-		guint index;
+		gint index;
 		gboolean block;
 		g_variant_get (parameters, "(ub)", &index, &block);
 		urf_daemon_block_idx (daemon, index, block, invocation);
@@ -569,6 +598,8 @@ urf_daemon_startup (UrfDaemon *daemon)
 		goto out;
 	}
 
+	ret = urf_ofono_manager_startup (priv->ofono_manager, priv->arbitrator);
+
 	if (priv->key_control) {
 		/* start up input device monitor */
 		ret = urf_input_startup (priv->input);
@@ -699,6 +730,8 @@ urf_daemon_init (UrfDaemon *daemon)
 	g_signal_connect (daemon->priv->arbitrator, "device-changed",
 			  G_CALLBACK (urf_daemon_device_changed_cb), daemon);
 
+	daemon->priv->ofono_manager = urf_ofono_manager_new ();
+
 	daemon->priv->input = urf_input_new ();
 	g_signal_connect (daemon->priv->input, "rf-key-pressed",
 			  G_CALLBACK (urf_daemon_input_event_cb), daemon);
@@ -781,6 +814,14 @@ urf_daemon_class_init (UrfDaemonClass *klass)
 			      g_cclosure_marshal_VOID__STRING,
 			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
+	signals[SIGNAL_FLIGHT_MODE_CHANGED] =
+		g_signal_new ("flight-mode-changed",
+			      G_OBJECT_CLASS_TYPE (klass),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			      0, NULL, NULL,
+			      g_cclosure_marshal_VOID__BOOLEAN,
+			      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+
 	signals[SIGNAL_URFKEY_PRESSED] =
 		g_signal_new ("urfkey-pressed",
 			      G_OBJECT_CLASS_TYPE (klass),
@@ -814,6 +855,11 @@ urf_daemon_dispose (GObject *object)
 {
 	UrfDaemon *daemon = URF_DAEMON (object);
 	UrfDaemonPrivate *priv = daemon->priv;
+
+	if (priv->ofono_manager) {
+		g_object_unref (priv->ofono_manager);
+		priv->ofono_manager = NULL;
+	}
 
 	if (priv->connection) {
 		g_object_unref (priv->connection);
@@ -854,5 +900,6 @@ urf_daemon_new (UrfConfig *config)
 	daemon->priv->config = g_object_ref (config);
 	daemon->priv->key_control = urf_config_get_key_control (config);
 	daemon->priv->master_key = urf_config_get_master_key (config);
+	daemon->priv->flight_mode = urf_config_get_persist_state (config, RFKILL_TYPE_ALL);
 	return daemon;
 }

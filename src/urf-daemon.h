@@ -62,11 +62,11 @@ UrfDaemon	*urf_daemon_new			(UrfConfig		*config);
 
 gboolean	 urf_daemon_startup		(UrfDaemon		*daemon);
 gboolean	 urf_daemon_block		(UrfDaemon		*daemon,
-						 const guint		 type,
+						 const gint		 type,
 						 const gboolean		 block,
 						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_block_idx		(UrfDaemon		*daemon,
-						 const guint		 index,
+						 const gint		 index,
 						 const gboolean		 block,
 						 GDBusMethodInvocation  *invocation);
 gboolean	 urf_daemon_enumerate_devices	(UrfDaemon		*daemon,

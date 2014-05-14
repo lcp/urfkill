@@ -45,12 +45,14 @@
 struct _UrfDevicePrivate
 {
 	GDBusProxy *proxy;
+	GDBusProxy *specialized_proxy;
 	char       *object_path;
-	guint       index;
-	guint       type;
+	gint        index;
+	gint        type;
 	gboolean    soft;
 	gboolean    hard;
 	char       *name;
+	char       *urftype;
 	gboolean    platform;
 	gboolean    is_initialized;
 };
@@ -79,26 +81,31 @@ urf_device_refresh_private (UrfDevice *device,
 	GVariant *value;
 	gsize length;
 
-	value = g_dbus_proxy_get_cached_property (priv->proxy, "soft");
-	priv->soft = g_variant_get_boolean (value);
+	if (priv->specialized_proxy) {
+		value = g_dbus_proxy_get_cached_property (priv->specialized_proxy, "soft");
+		if (value)
+			priv->soft = g_variant_get_boolean (value);
 
-	value = g_dbus_proxy_get_cached_property (priv->proxy, "hard");
-	priv->hard = g_variant_get_boolean (value);
+		value = g_dbus_proxy_get_cached_property (priv->specialized_proxy, "hard");
+		if (value)
+			priv->hard = g_variant_get_boolean (value);
+	}
 
 	if (priv->is_initialized)
 		return;
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "index");
-	priv->index = g_variant_get_uint32 (value);
+	priv->index = g_variant_get_int32 (value);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "type");
-	priv->type = g_variant_get_uint32 (value);
+	priv->type = g_variant_get_int32 (value);
+
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "platform");
+	priv->platform = g_variant_get_boolean (value);
 
 	value = g_dbus_proxy_get_cached_property (priv->proxy, "name");
 	priv->name = g_variant_dup_string (value, &length);
 
-	value = g_dbus_proxy_get_cached_property (priv->proxy, "platform");
-	priv->platform = g_variant_get_boolean (value);
 }
 
 /**
@@ -137,6 +144,8 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 	UrfDevicePrivate *priv = device->priv;
 	GError *error_local = NULL;
 	gboolean ret = FALSE;
+	GVariant *value;
+	gsize length;
 
 	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
 
@@ -167,11 +176,31 @@ urf_device_set_object_path_sync (UrfDevice    *device,
 
         priv->object_path = g_strdup (object_path);
 
+	value = g_dbus_proxy_get_cached_property (priv->proxy, "urftype");
+	priv->urftype = g_variant_dup_string (value, &length);
+
+	priv->specialized_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+	                                                         G_DBUS_PROXY_FLAGS_NONE,
+	                                                         NULL,
+	                                                         "org.freedesktop.URfkill",
+	                                                         priv->object_path,
+	                                                         priv->urftype,
+	                                                         NULL,
+	                                                         &error_local);
+	if (error_local) {
+		g_warning ("Couldn't connect to specialized device proxy: %s", error_local->message);
+		g_set_error (error, 1, 0, "%s", error_local->message);
+		priv->specialized_proxy = NULL;
+		return FALSE;
+	}
+
 	urf_device_refresh_private (device, &error_local);
 	priv->is_initialized = TRUE;
 
 	/* connect signals */
 	g_signal_connect (priv->proxy, "g-properties-changed",
+	                  G_CALLBACK (urf_device_changed_cb), device);
+	g_signal_connect (priv->specialized_proxy, "g-properties-changed",
 	                  G_CALLBACK (urf_device_changed_cb), device);
 out:
 	return ret;
@@ -293,10 +322,10 @@ urf_device_get_property (GObject    *object,
 
 	switch (prop_id) {
 	case PROP_DEVICE_INDEX:
-		g_value_set_uint (value, priv->index);
+		g_value_set_int (value, priv->index);
 		break;
 	case PROP_DEVICE_TYPE:
-		g_value_set_uint (value, priv->type);
+		g_value_set_int (value, priv->type);
 		break;
 	case PROP_DEVICE_SOFT:
 		g_value_set_boolean (value, priv->soft);
@@ -346,6 +375,11 @@ urf_device_dispose (GObject *object)
 
 	priv = URF_DEVICE (object)->priv;
 
+	if (priv->specialized_proxy) {
+		g_object_unref (priv->specialized_proxy);
+		priv->specialized_proxy = NULL;
+	}
+
 	if (priv->proxy) {
 		g_object_unref (priv->proxy);
 		priv->proxy = NULL;
@@ -377,10 +411,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 *
 	 * Since: 0.2.0
 	 */
-	pspec = g_param_spec_uint ("index",
-				   "Index", "The index of the rfkill device",
-				   0, G_MAXUINT, 0,
-				   G_PARAM_READABLE);
+	pspec = g_param_spec_int ("index",
+				  "Index", "The index of the rfkill device",
+				  -1, G_MAXINT, 0,
+				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_INDEX, pspec);
 
 	/**
@@ -390,10 +424,10 @@ urf_device_class_init(UrfDeviceClass *klass)
 	 *
 	 * Since: 0.2.0
 	 */
-	pspec = g_param_spec_uint ("type",
-				   "Type", "The type of the rfkill device",
-				   0, URF_ENUM_TYPE_NUM-1, 0,
-				   G_PARAM_READABLE);
+	pspec = g_param_spec_int ("type",
+				  "Type", "The type of the rfkill device",
+				  -1, URF_ENUM_TYPE_NUM-1, 0,
+				  G_PARAM_READABLE);
 	g_object_class_install_property (object_class, PROP_DEVICE_TYPE, pspec);
 
 	/**
@@ -462,6 +496,8 @@ urf_device_init (UrfDevice *device)
 	device->priv->name = NULL;
 	device->priv->object_path = NULL;
 	device->priv->is_initialized = FALSE;
+	device->priv->proxy = NULL;
+	device->priv->specialized_proxy = NULL;
 }
 
 /**

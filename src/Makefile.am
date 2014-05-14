@@ -26,6 +26,10 @@ urfkilld_SOURCES =						\
 	urf-arbitrator.c					\
 	urf-device.h						\
 	urf-device.c						\
+	urf-device-kernel.h					\
+	urf-device-kernel.c					\
+	urf-device-ofono.h					\
+	urf-device-ofono.c					\
 	urf-killswitch.h					\
 	urf-killswitch.c					\
 	urf-input.h						\
@@ -34,6 +38,8 @@ urfkilld_SOURCES =						\
 	urf-config.c						\
 	urf-polkit.h						\
 	urf-polkit.c						\
+	urf-ofono-manager.h					\
+	urf-ofono-manager.c					\
 	urf-utils.h						\
 	urf-utils.c						\
 	urf-daemon.h						\
