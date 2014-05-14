@@ -94,12 +94,12 @@ urf_device_get_index (UrfDevice *device)
 guint
 urf_device_get_device_type (UrfDevice *device)
 {
-	g_return_val_if_fail (URF_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (URF_IS_DEVICE (device), -1);
 
 	if (URF_GET_DEVICE_CLASS (device)->get_device_type)
 		return URF_GET_DEVICE_CLASS (device)->get_device_type (device);
 
-	return TRUE;
+	return -1;
 }
 
 /**
