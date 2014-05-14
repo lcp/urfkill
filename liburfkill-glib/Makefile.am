@@ -1,6 +1,6 @@
 NULL =
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	$(GLIB_CFLAGS)						\
 	$(GIO_CFLAGS)						\
 	-I$(top_srcdir)						\
@@ -67,7 +67,7 @@ introspection_sources =						\
 
 Urfkill-@GIR_VERSION@.gir: liburfkill-glib.la
 Urfkill_@GIR_VERSION_AM@_gir_INCLUDES = GObject-2.0 Gio-2.0
-Urfkill_@GIR_VERSION_AM@_gir_CFLAGS = $(INCLUDES)
+Urfkill_@GIR_VERSION_AM@_gir_CFLAGS = $(AM_CPPFLAGS)
 Urfkill_@GIR_VERSION_AM@_gir_LIBS = liburfkill-glib.la
 Urfkill_@GIR_VERSION_AM@_gir_FILES = $(introspection_sources)
 Urfkill_@GIR_VERSION_AM@_gir_SCANNERFLAGS = --identifier-prefix=Urf --warn-all
