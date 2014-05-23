@@ -304,6 +304,11 @@ get_properties_cb (GObject *source_object,
 
 		g_variant_iter_init (&iter, properties);
 		while (g_variant_iter_next (&iter, "{sv}", &key, &variant)) {
+			if (g_strcmp0 ("Powered", key) == 0 &&
+			    g_variant_get_boolean (variant) == TRUE) {
+				set_soft (URF_DEVICE (modem), priv->soft);
+			}
+
 			g_hash_table_insert (priv->properties, g_strdup (key),
 			                     g_variant_ref (variant));
 			g_variant_unref (variant);
