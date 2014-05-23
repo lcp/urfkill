@@ -564,17 +564,17 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 		if (errno == EACCES)
 			g_warning ("Could not open RFKILL control device, please verify your installation");
 		return FALSE;
+	} else {
+		/* Disable rfkill input */
+		ioctl(fd, RFKILL_IOCTL_NOINPUT);
+
+		priv->fd = fd;
 	}
 
 	/* Set initial flight mode state from persistence */
 	if (priv->persist)
 		urf_arbitrator_set_flight_mode (arbitrator,
 		                                urf_config_get_persist_state (config, RFKILL_TYPE_ALL));
-
-	/* Disable rfkill input */
-	ioctl(fd, RFKILL_IOCTL_NOINPUT);
-
-	priv->fd = fd;
 
 	while (1) {
 		ssize_t len;
