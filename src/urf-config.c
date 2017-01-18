@@ -607,7 +607,7 @@ urf_config_load_profile (UrfConfig *config)
 		 * control to be enabled: there would not be a way to disable
 		 * it for devices that don't have it.
 		 */
-		priv->options->key_control = FALSE;
+		priv->options.key_control = FALSE;
 
 		return;
 	}
