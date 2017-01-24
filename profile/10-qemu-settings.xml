@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<profile version="0.1">
+  <device>
+    <match key="bios_vendor" contains_ncase="qemu">
+      <option key="key_control" type="bool">false</option>
+      <option key="master_key" type="bool">false</option>
+      <option key="force_sync" type="bool">false</option>
+    </match>
+  </device>
+</profile>

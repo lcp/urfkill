@@ -563,7 +563,43 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 	if (fd < 0) {
 		if (errno == EACCES)
 			g_warning ("Could not open RFKILL control device, please verify your installation");
-		return FALSE;
+	} else {
+		/* Disable rfkill input */
+		ioctl(fd, RFKILL_IOCTL_NOINPUT);
+
+		priv->fd = fd;
+
+		while (1) {
+			ssize_t len;
+
+			len = read(fd, &event, sizeof(event));
+			if (len < 0) {
+				if (errno == EAGAIN)
+					break;
+				g_debug ("Reading of RFKILL events failed");
+				break;
+			}
+
+			if (len != RFKILL_EVENT_SIZE_V1) {
+				g_warning("Wrong size of RFKILL event\n");
+				continue;
+			}
+
+			if (event.op != RFKILL_OP_ADD)
+				continue;
+			if (event.type >= NUM_RFKILL_TYPES)
+				continue;
+
+			add_killswitch (arbitrator, event.idx, event.type, event.soft, event.hard);
+		}
+
+		/* Setup monitoring */
+		priv->channel = g_io_channel_unix_new (priv->fd);
+		g_io_channel_set_encoding (priv->channel, NULL, NULL);
+		priv->watch_id = g_io_add_watch (priv->channel,
+		                                 G_IO_IN | G_IO_HUP | G_IO_ERR,
+		                                 (GIOFunc) event_cb,
+		                                 arbitrator);
 	}
 
 	/* Set initial flight mode state from persistence */
@@ -571,42 +607,6 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 		urf_arbitrator_set_flight_mode (arbitrator,
 		                                urf_config_get_persist_state (config, RFKILL_TYPE_ALL));
 
-	/* Disable rfkill input */
-	ioctl(fd, RFKILL_IOCTL_NOINPUT);
-
-	priv->fd = fd;
-
-	while (1) {
-		ssize_t len;
-
-		len = read(fd, &event, sizeof(event));
-		if (len < 0) {
-			if (errno == EAGAIN)
-				break;
-			g_debug ("Reading of RFKILL events failed");
-			break;
-		}
-
-		if (len != RFKILL_EVENT_SIZE_V1) {
-			g_warning("Wrong size of RFKILL event\n");
-			continue;
-		}
-
-		if (event.op != RFKILL_OP_ADD)
-			continue;
-		if (event.type >= NUM_RFKILL_TYPES)
-			continue;
-
-		add_killswitch (arbitrator, event.idx, event.type, event.soft, event.hard);
-	}
-
-	/* Setup monitoring */
-	priv->channel = g_io_channel_unix_new (priv->fd);
-	g_io_channel_set_encoding (priv->channel, NULL, NULL);
-	priv->watch_id = g_io_add_watch (priv->channel,
-					 G_IO_IN | G_IO_HUP | G_IO_ERR,
-					 (GIOFunc) event_cb,
-					 arbitrator);
 
 	if (priv->persist) {
 		/* Set all the devices that had saved state to what was saved */ 
