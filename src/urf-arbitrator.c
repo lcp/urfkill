@@ -587,7 +587,12 @@ urf_arbitrator_startup (UrfArbitrator *arbitrator,
 			break;
 		}
 
-		if (len != RFKILL_EVENT_SIZE_V1) {
+		/* There has been a change in the kernel that allows for an extra
+                 * byte in the rfkill event struct that tracks a reason field.
+		 * see commit id 14486c82612a177cb910980c70ba900827ca0894 for
+                 * more information
+		 */
+		if (len < RFKILL_EVENT_SIZE_V1) {
 			g_warning("Wrong size of RFKILL event\n");
 			continue;
 		}
